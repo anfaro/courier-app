@@ -208,7 +208,6 @@ export default function WaybillsManager({ customerId, customerName, initialDeliv
               </div>
 
               <div>
-                {console.log(selectedWaybill.proofOfDeliveryUrl)}
                 <ImageInput
                   label="Proof of Delivery Photo (Optional)"
                   existingImageUrl={selectedWaybill.proofOfDeliveryUrl}
