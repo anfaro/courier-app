@@ -134,7 +134,7 @@ export default async function CustomerDetailsPage({
           </div>
         </div>
 
-        <WaybillsManager customerId={customerId} initialDeliveries={deliveryHistory} />
+        <WaybillsManager customerId={customerId} customerName={customerData.name} initialDeliveries={deliveryHistory} />
 
       </main>
     </div>
