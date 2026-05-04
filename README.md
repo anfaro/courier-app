@@ -69,7 +69,7 @@ A high-performance, mobile-first web application designed for couriers to manage
    NEXTAUTH_HOST="http://localhost:3000"
    NEXTAUTH_SECRET="write-your-secret-key-here"
    DATABASE_URL="postgres://user:password@localhost:5432/cms_db"
-  ```
+   ```
 
 4. Database Migration
    ```bash
