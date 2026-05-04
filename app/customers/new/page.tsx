@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -23,14 +24,15 @@ export default function NewCustomerPage() {
 
   // --- TABS STATE ---
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single");
-  const [bulkMethod, setBulkMethod] = useState<"manual" | "paste">("manual");
 
-  // --- NEW BULK STATE (Draft vs List) ---
+  // --- NEW BULK STATE (Unified Draft vs List) ---
   const [bulkDraft, setBulkDraft] = useState({
     name: "", phoneNumber: "", address: "", notes: "", latitude: "", longitude: "", housePictureUrl: null as string | null
   });
   const [bulkList, setBulkList] = useState<any[]>([]);
   const [pasteText, setPasteText] = useState("");
+  const [isParsing, setIsParsing] = useState(false);
+  const [isFormVisible, setIsFormVisible] = useState(true);
 
   // --- PRESERVED SINGLE HELPERS (UNTOUCHED) ---
   const getLocation = () => {
@@ -62,13 +64,41 @@ export default function NewCustomerPage() {
   };
 
   const handleAddDraftToList = () => {
-    if (!bulkDraft.name || !bulkDraft.address) {
-      setError("Name and Address are required for the list.");
+    setError("");
+
+    if (pasteText.trim()) {
+      setIsParsing(true);
+      try {
+        const lines = pasteText.trim().split("\n");
+        const newCustomers = lines.map((line) => {
+          const columns = line.includes("\t") ? line.split("\t") : line.split(",");
+          return {
+            name: columns[0]?.trim() || "Unknown",
+            phoneNumber: columns[1]?.replace(/\D/g, "") || "",
+            address: columns[2]?.trim() || "No Address",
+            notes: columns[3]?.trim() || "",
+            latitude: "",
+            longitude: "",
+            housePictureUrl: null
+          };
+        });
+        setBulkList([...bulkList, ...newCustomers]);
+        setPasteText("");
+      } catch (err) {
+        setError("Failed to parse paste data. Check your format.");
+      } finally {
+        setIsParsing(false);
+      }
       return;
     }
+
+    if (!bulkDraft.name || !bulkDraft.address) {
+      setError("Please fill in Name and Address or paste data into the box.");
+      return;
+    }
+
     setBulkList([...bulkList, bulkDraft]);
     setBulkDraft({ name: "", phoneNumber: "", address: "", notes: "", latitude: "", longitude: "", housePictureUrl: null });
-    setError("");
   };
 
   // --- SUBMISSION LOGIC ---
@@ -182,151 +212,132 @@ export default function NewCustomerPage() {
             </form>
           )}
 
-          {/* ================= BULK TAB (NEW DRAFTING LOGIC) ================= */}
+          {/* ================= BULK TAB (UNIFIED & ANIMATED) ================= */}
           {activeTab === "bulk" && (
-            <div className="mt-8 space-y-8">
-              <div className="flex justify-center gap-2">
-                <button onClick={() => setBulkMethod("manual")} className={`rounded-full px-5 py-2 text-xs font-black uppercase tracking-widest transition ${bulkMethod === "manual" ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-400"}`}>Manual</button>
-                <button onClick={() => setBulkMethod("paste")} className={`rounded-full px-5 py-2 text-xs font-black uppercase tracking-widest transition ${bulkMethod === "paste" ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-400"}`}>Paste</button>
+            <div className="mt-8 space-y-6">
+              {/* WORKSPACE HEADER with Toggle */}
+              <div className="flex items-center justify-between px-4">
+                <h3 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.2em]">
+                  {isFormVisible ? "Entry Workspace" : "Workspace Minimized"}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setIsFormVisible(!isFormVisible)}
+                  className={`group flex items-center gap-2 rounded-full px-4 py-1.5 text-[10px] font-black transition-all ${isFormVisible ? "bg-gray-100 text-gray-500" : "bg-blue-600 text-white shadow-md shadow-blue-200"
+                    }`}
+                >
+                  {isFormVisible ? "CLOSE" : "OPEN FORM"}
+                  <svg
+                    className={`h-3 w-3 transition-transform duration-500 ${isFormVisible ? "rotate-180" : ""}`}
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
               </div>
 
-              {bulkMethod === "manual" ? (
-                <div className="space-y-6">
-                  {/* ACTIVE DRAFT AREA */}
-                  <div className="rounded-[2rem] border-2 border-blue-100 bg-white p-6 shadow-sm space-y-4">
-                    <h3 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.2em]">Active Entry</h3>
-
-                    {/* Name */}
-                    <input
-                      type="text"
-                      value={bulkDraft.name}
-                      onChange={(e) => setBulkDraft({ ...bulkDraft, name: e.target.value })}
-                      placeholder="Full Name"
-                      className={inputClass}
-                    />
-
-                    {/* Phone Number - Fixed Visibility */}
-                    <div className="flex items-center rounded-2xl bg-gray-100 border border-transparent focus-within:border-blue-600 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-600/10 transition-all">
-                      <span className="flex select-none items-center pl-5 pr-2 text-[15px] font-bold text-gray-500">
-                        +62
-                      </span>
-                      <input
-                        type="tel"
-                        value={bulkDraft.phoneNumber}
-                        onChange={(e) => setBulkDraft({ ...bulkDraft, phoneNumber: e.target.value.replace(/\D/g, "") })}
-                        placeholder="812 3456 7890"
-                        className="w-full bg-transparent py-4 pr-5 text-[15px] font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none"
-                      />
-                    </div>
-
-                    {/* Address */}
+              {/* ANIMATED COLLAPSIBLE CONTAINER */}
+              <div
+                className={`overflow-hidden transition-all duration-500 ease-in-out ${isFormVisible ? "max-h-[1200px] opacity-100 mt-4" : "max-h-0 opacity-0 mt-0 pointer-events-none"
+                  }`}
+              >
+                <div className="rounded-[2rem] border-2 border-blue-100 bg-white p-6 shadow-sm space-y-5">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase ml-2 italic">Option 1: Smart Paste</label>
                     <textarea
-                      value={bulkDraft.address}
-                      onChange={(e) => setBulkDraft({ ...bulkDraft, address: e.target.value })}
-                      placeholder="Full Address"
-                      rows={2}
-                      className={inputClass}
+                      value={pasteText}
+                      onChange={(e) => setPasteText(e.target.value)}
+                      placeholder="Paste multiple rows here..."
+                      rows={3}
+                      className={`${inputClass} font-mono text-[13px] border-dashed border-gray-300 bg-gray-50/50`}
                     />
+                  </div>
 
-                    {/* GPS */}
-                    <div className="grid grid-cols-2 gap-3 items-center">
-                      <button
-                        type="button"
-                        onClick={() => getLocation("bulk")}
-                        className="rounded-xl bg-blue-50 py-3 text-xs font-bold text-blue-700 active:scale-95 transition"
-                      >
-                        📍 Pin GPS
-                      </button>
-                      <div className="text-[10px] text-gray-400 font-mono leading-tight">
-                        Lat: {bulkDraft.latitude || "-"}<br />Lng: {bulkDraft.longitude || "-"}
-                      </div>
+                  <div className="relative py-1 flex items-center justify-center">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
+                    <span className="relative bg-white px-4 text-[10px] font-bold text-gray-300 uppercase tracking-widest">OR</span>
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black text-gray-400 uppercase ml-2">Option 2: Manual Entry</label>
+                    <input type="text" value={bulkDraft.name} onChange={(e) => setBulkDraft({ ...bulkDraft, name: e.target.value })} placeholder="Full Name" className={inputClass} />
+
+                    <div className="flex items-center rounded-2xl bg-gray-100 border border-transparent focus-within:border-blue-600 focus-within:bg-white transition-all">
+                      <span className="pl-5 pr-2 text-[15px] font-bold text-gray-500">+62</span>
+                      <input type="tel" value={bulkDraft.phoneNumber} onChange={(e) => setBulkDraft({ ...bulkDraft, phoneNumber: e.target.value.replace(/\D/g, "") })} placeholder="812 3456 7890" className="w-full bg-transparent py-4 text-[15px] font-medium text-gray-900 focus:outline-none" />
                     </div>
 
-                    {/* Photo */}
-                    <ImageInput
-                      label="House Photo"
-                      onImageChange={(img) => setBulkDraft({ ...bulkDraft, housePictureUrl: img })}
-                    />
+                    <textarea value={bulkDraft.address} onChange={(e) => setBulkDraft({ ...bulkDraft, address: e.target.value })} placeholder="Full Address" rows={2} className={inputClass} />
 
-                    {/* Notes */}
-                    <input
-                      type="text"
-                      value={bulkDraft.notes}
-                      onChange={(e) => setBulkDraft({ ...bulkDraft, notes: e.target.value })}
-                      placeholder="Notes (Optional)"
-                      className={inputClass}
-                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <button type="button" onClick={() => getBulkLocation()} className="rounded-xl bg-blue-50 py-3 text-xs font-bold text-blue-700 active:scale-95 transition">📍 Pin GPS</button>
+                      <div className="text-[10px] text-gray-400 font-mono flex items-center leading-tight">Lat: {bulkDraft.latitude?.slice(0, 8) || "-"}<br />Lng: {bulkDraft.longitude?.slice(0, 8) || "-"}</div>
+                    </div>
 
-                    {/* Add to List Button */}
-                    <button
-                      type="button"
-                      onClick={handleAddDraftToList}
-                      className="w-full rounded-2xl bg-blue-600 py-4 font-bold text-white shadow-md active:scale-95 transition-all"
-                    >
-                      + Add to List
-                    </button>
+                    <ImageInput label="House Photo" onImageChange={(img) => setBulkDraft({ ...bulkDraft, housePictureUrl: img })} />
                   </div>
 
-
-                  {/* SAVE ALL BUTTON */}
-                  <button onClick={handleSubmit} disabled={isLoading || bulkList.length === 0} className="w-full rounded-full bg-green-600 py-4 font-black text-white shadow-xl disabled:bg-gray-200">
-                    {isLoading ? "Saving..." : `🚀 Final Save (${bulkList.length})`}
+                  <button
+                    type="button"
+                    onClick={handleAddDraftToList}
+                    disabled={isParsing}
+                    className="w-full rounded-2xl bg-blue-600 py-4 font-black text-white shadow-md active:scale-95 transition-all"
+                  >
+                    {isParsing ? "Processing..." : (pasteText ? "✅ Parse & Add Paste" : "+ Add to List")}
                   </button>
-
-                  {/* CARDS BELOW BUTTON */}
-                  <div className="space-y-3">
-                    {/* CONDENSED CARD LIST - Now with full details */}
-                    {bulkList.length > 0 && (
-                      <div className="space-y-3 pt-6 border-t border-gray-100 mt-6">
-                        <h4 className="px-4 text-[11px] font-black uppercase tracking-widest text-gray-400">
-                          Ready to Upload ({bulkList.length})
-                        </h4>
-                        {bulkList.map((c, i) => (
-                          <div key={i} className="group flex items-center gap-4 rounded-[1.5rem] bg-gray-50 border border-gray-100 p-3 shadow-sm animate-[fadeIn_0.2s_ease-out]">
-
-                            {/* Thumbnail Image */}
-                            <div className="h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-white bg-white shadow-sm flex items-center justify-center">
-                              {c.housePictureUrl ? (
-                                <img src={c.housePictureUrl} className="h-full w-full object-cover" alt="" />
-                              ) : (
-                                <span className="text-2xl">🏠</span>
-                              )}
-                            </div>
-
-                            {/* Details Text */}
-                            <div className="flex-1 min-w-0">
-                              <p className="font-bold text-gray-900 truncate text-[15px]">{c.name}</p>
-                              <div className="flex flex-col gap-0.5">
-                                <p className="text-[12px] font-medium text-blue-600 truncate">
-                                  {c.phoneNumber ? `📞 +62${c.phoneNumber}` : "No Phone"}
-                                </p>
-                                <p className="text-[12px] text-gray-500 truncate leading-tight">
-                                  {c.address}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Remove Button */}
-                            <button
-                              type="button"
-                              onClick={() => setBulkList(bulkList.filter((_, idx) => idx !== i))}
-                              className="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-white text-gray-300 shadow-sm transition hover:text-red-500 active:scale-90"
-                            >
-                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                  </div>
                 </div>
-              ) : (
+              </div>
+
+              {/* FINAL SAVE BUTTON */}
+              {bulkList.length > 0 && (
+                <button
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  className="sticky top-4 z-10 w-full rounded-full bg-green-600 py-4 font-black text-white shadow-xl active:scale-95 transition-all disabled:bg-gray-200"
+                >
+                  {isLoading ? "Saving..." : `🚀 FINAL SAVE (${bulkList.length} CUSTOMERS)`}
+                </button>
+              )}
+
+              {/* LIST RENDER */}
+              {bulkList.length > 0 && (
                 <div className="space-y-4">
-                  <textarea value={pasteText} onChange={(e) => setPasteText(e.target.value)} placeholder="Paste Excel rows here..." rows={6} className={`${inputClass} font-mono text-xs`} />
-                  <button onClick={handleSubmit} className="w-full rounded-full bg-blue-600 py-4 font-black text-white">Save Bulk Paste</button>
+                  <div className="flex justify-between items-center px-4">
+                    <div className="flex gap-2">
+                      <span className="text-[10px] font-bold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md">{bulkList.length} Total</span>
+                      <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-md">{bulkList.filter(c => c.housePictureUrl).length} Photos</span>
+                    </div>
+                    <button onClick={() => confirm("Clear all?") && setBulkList([])} className="text-[10px] font-bold text-red-400 uppercase">Clear All</button>
+                  </div>
+
+                  <div className="max-h-[60vh] overflow-y-auto space-y-3 pb-20 pr-1 custom-scrollbar">
+                    {bulkList.map((c, i) => (
+                      <div key={i} className="flex items-center gap-4 rounded-[1.5rem] bg-white border border-gray-100 p-3 shadow-sm">
+                        <label className="relative h-14 w-14 shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 flex items-center justify-center">
+                          {c.housePictureUrl ? <img src={c.housePictureUrl} className="h-full w-full object-cover" /> : <span className="text-xl">🏠</span>}
+                          <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                const newList = [...bulkList];
+                                newList[i].housePictureUrl = reader.result as string;
+                                setBulkList(newList);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          />
+                        </label>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-gray-900 truncate text-[14px] leading-tight">{c.name}</p>
+                          <p className="text-[11px] font-medium text-blue-600 truncate">📞 {c.phoneNumber || "No Phone"}</p>
+                          <p className="text-[11px] text-gray-400 truncate">{c.address}</p>
+                        </div>
+                        <button type="button" onClick={() => setBulkList(bulkList.filter((_, idx) => idx !== i))} className="h-8 w-8 text-gray-300 hover:text-red-500">✕</button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
