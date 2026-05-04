@@ -36,11 +36,11 @@ A high-performance, mobile-first web application designed for couriers to manage
 
 ### Phase 1: Smart Data Intake 
 - [x] Manual Bulk Customer Entry
-- [ ] **Excel/Sheets Smart Paste:** Regex-based parsing of tab-separated values.
-- [ ] **Preview Validation:** UI table to verify parsed data before database commit.
+- [x] **Excel/Sheets Smart Paste:** Regex-based parsing of tab-separated values.
+- [x] **Preview Validation:** UI table to verify parsed data before database commit.
 
 ### Phase 2: Waybill Logistics 
-- [ ] **Bulk Waybill Entry:** Creating multiple package entries linked to existing customers.
+- [x] **Bulk Waybill Entry:** Creating multiple package entries linked to existing customers.
 - [ ] **Scanning Support:** Integration for barcode/QR scanning via camera.
 
 ### Phase 3: Intelligence & Routing 
@@ -50,6 +50,24 @@ A high-performance, mobile-first web application designed for couriers to manage
 ### Phase 4: UI Refinement 
 - [ ] **M3 Header:** Glass-morphism navigation with system status indicators.
 - [ ] **Courier Dashboard:** KPI cards for daily success rates and pending tasks.
+
+
+## Recent Architectural Updates (May 5, 2026)
+
+### Global Waybill Entry System
+We have moved away from customer-nested waybill entry to a **Global Independent Entry** model. 
+  This allows couriers to:
+- Process packages for multiple customers in a single "Global Scan" session.
+- **Smart Matching:** Clipboard data is automatically cross-referenced with the customer database.
+- **On-the-fly Linking:** Unknown customers can be created via a "Quick-Add" drawer without 
+  interrupting the bulk scan flow.
+
+## Routes & Navigation
+- `/customers`: Manage recipient database and neighborhood clusters.
+- `/deliveries/new`: The primary hub for batch package entry and scanning.
+- `/customers/[id]/new-waybill`: *Legacy support* - now redirects to Global Entry 
+  with the `customerId` pre-selected.
+
 
 ---
 
