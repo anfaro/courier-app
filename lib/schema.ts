@@ -97,3 +97,11 @@ export const customerClustersRelations = relations(customerClusters, ({ one }) =
     references: [clusters.id],
   }),
 }));
+
+export const deliveriesRelations = relations(deliveries, ({ one }) => ({
+  // This tells Drizzle: "One delivery belongs to exactly one customer"
+  customer: one(customers, {
+    fields: [deliveries.customerId],
+    references: [customers.id],
+  }),
+}));

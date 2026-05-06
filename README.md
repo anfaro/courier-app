@@ -10,16 +10,22 @@ A high-performance, mobile-first web application designed for couriers to manage
 
 ### 👥 Customer Management
 * **Single Entry:** Detailed form with name, phone (+62 formatting), address, and additional notes.
-* **Manual Bulk Import:** A "Draft-to-Card" workflow where couriers can rapidly fill out forms and push them into a condensed list before saving all at once.
-* **GPS Pinning:** High-accuracy geolocation capture with a single tap.
+* **GPS Pinning & Resolution:** High-accuracy geolocation capture with a single tap, plus an automatic Google Maps link resolver.
 * **Image Support:** Capture house pictures via the `ImageInput` component for easier package drop-offs.
-* **Smart Search:** Real-time, debounced search (300ms) that filters customers by name, address, or phone number directly from the server.
+* **Smart Search:** Real-time, debounced search that filters customers by name, address, or phone number directly from the server.
+
+### 📦 Delivery & Waybill Management
+* **Global Entry Hub (`/deliveries/new`):** Unified tabbed interface for both Manual Entry and Bulk Paste modes.
+* **Intelligent Bulk Paste:** Paste Excel/Sheets data (Waybill, COD, Name) and automatically cross-reference with the customer database.
+* **"Resolve All" Engine:** Instantly generate new customer profiles for unknown names found during bulk pasting via a highly optimized bulk API endpoint.
+* **Searchable Customer Modal:** MD3 Expressive custom dropdown that filters customers instantly without breaking the mobile layout.
+* **Digital Receipt UI:** A stunning, physical-receipt-inspired waybill details page featuring dynamic status banners, absolute actions, and tear-off style COD summary blocks.
+* **Scroll-Optimized Dashboard:** Sticky headers, search bars, and filter pills with an independently scrolling card list to maximize mobile viewport space.
 
 ### 🛠 Technical Core
 * **Next.js 15 (App Router):** Using Server Components for data fetching and Client Components for interactive forms.
-* **Drizzle ORM:** Type-safe SQL builder for Postgres, handling complex bulk inserts and `ilike` search queries.
-* **M3 Expressive UI:** Clean, spacious design with "Glass-morphism" headers, rounded-full buttons, and high-contrast typography for field use.
-* **Optimized API:** Dedicated bulk endpoints to handle array-based data processing.
+* **Drizzle ORM:** Type-safe SQL builder for Postgres, leveraging Relational Queries (`with: { customer: true }`) for effortless table joins and highly optimized bulk inserts.
+* **M3 Expressive UI:** Clean, spacious design with high corner radii (`rounded-[32px]`), tonal color palettes, and glass-morphism overlays.
 
 ---
 
@@ -36,42 +42,45 @@ A high-performance, mobile-first web application designed for couriers to manage
 
 ### Phase 1: Smart Data Intake 
 - [x] Manual Bulk Customer Entry
-- [x] **Excel/Sheets Smart Paste:** Regex-based parsing of tab-separated values.
-- [x] **Preview Validation:** UI table to verify parsed data before database commit.
+- [x] **Excel/Sheets Smart Paste:** Regex-based parsing of tab-separated and comma-separated values.
+- [x] **Preview Validation:** UI list to verify parsed data, resolve unknown customers, and commit to DB.
 
 ### Phase 2: Waybill Logistics 
-- [x] **Bulk Waybill Entry:** Creating multiple package entries linked to existing customers.
+- [x] **Global Bulk Waybill Entry:** Creating multiple package entries linked to existing customers.
+- [x] **Digital Receipt Details View:** High-fidelity delivery details page.
+- [ ] **Waybill Edit Page:** Update delivery status, receiver info, and proof of delivery (Scheduled).
 - [ ] **Scanning Support:** Integration for barcode/QR scanning via camera.
 
 ### Phase 3: Intelligence & Routing 
 - [ ] **Enhanced Clustering:** Adding "Districts" and "Priority Zones" to schema for neighborhood grouping.
 - [ ] **Heatmap Visualization:** Dashboard view showing delivery density.
 
-### Phase 4: UI Refinement 
-- [ ] **M3 Header:** Glass-morphism navigation with system status indicators.
-- [ ] **Courier Dashboard:** KPI cards for daily success rates and pending tasks.
-
-
-## Recent Architectural Updates (May 5, 2026)
-
-### Global Waybill Entry System
-We have moved away from customer-nested waybill entry to a **Global Independent Entry** model. 
-  This allows couriers to:
-- Process packages for multiple customers in a single "Global Scan" session.
-- **Smart Matching:** Clipboard data is automatically cross-referenced with the customer database.
-- **On-the-fly Linking:** Unknown customers can be created via a "Quick-Add" drawer without 
-  interrupting the bulk scan flow.
-
-## Routes & Navigation
-- `/customers`: Manage recipient database and neighborhood clusters.
-- `/deliveries/new`: The primary hub for batch package entry and scanning.
-- `/customers/[id]/new-waybill`: *Legacy support* - now redirects to Global Entry 
-  with the `customerId` pre-selected.
+### Phase 4: UI Refinement (Up Next)
+- [ ] **M3 Header & Breadcrumbs Redesign:** Transitioning to a cleaner, glass-morphism navigation system.
+- [ ] **Home Page (`/`) Redesign:** Adding quick-action hero buttons for the Global Entry Hub and KPI stats.
+- [x] **Expressive Delivery Dashboard:** Sticky filters, search, and distinct COD indicators.
 
 
 ---
 
-## 🛠 Installation & Setup
+## 🏗 Recent Architectural Updates (May 7, 2026)
+
+### Unified Delivery Hub & Relational Queries
+We fully deprecated the nested `/customers/[id]/new-waybill` route. Waybill creation is now exclusively handled by the **Global Delivery Hub (`/deliveries/new`)**.
+* **URL Parameter Locking:** We pass `?customerId=[id]` to lock the hub to a specific customer when adding from their profile.
+* **Drizzle Relations:** Implemented robust schema relations allowing us to query deliveries and their associated customer data in a single, lightweight server call.
+* **Bulk Resolving:** Replaced multiple sequential `POST` requests with a single `/api/customers/bulk` endpoint to handle massive Excel pastes without hitting rate limits.
+
+### Routes & Navigation
+- `/` : *Pending Redesign*
+- `/customers` : Manage recipient database and neighborhood clusters.
+- `/deliveries` : Main dashboard with sticky filters, search, and dynamic status cards.
+- `/deliveries/new` : The primary hub for batch package entry and manual scanning.
+- `/deliveries/[id]` : Detailed "Digital Receipt" view for individual waybills.
+
+---
+
+## ⚙️ Installation & Setup
 
 1. **Clone the repo:**
    ```bash
@@ -95,8 +104,7 @@ We have moved away from customer-nested waybill entry to a **Global Independent 
 5. Run Development Server
    ```bash
    npm run dev
-   or
-   ```bash
+   # or
    pnpm run dev
 
 ## 📱 Mobile Workflow

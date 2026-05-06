@@ -37,3 +37,19 @@ export async function PUT(
   }
 }
 
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const resolvedParams = await params;
+    const deliveryId = parseInt(resolvedParams.id);
+
+    await db.delete(deliveries).where(eq(deliveries.id, deliveryId));
+
+    return NextResponse.json({ message: "Delivery deleted successfully" }, { status: 200 });
+  } catch (error) {
+    console.error("Error deleting delivery:", error);
+    return NextResponse.json({ message: "Failed to delete delivery" }, { status: 500 });
+  }
+}

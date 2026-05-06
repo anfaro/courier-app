@@ -3,6 +3,18 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { clusters, customerClusters } from "@/lib/schema"; // FIXED: Import the join table
 
+// Add this GET function if it's missing!
+export async function GET() {
+  try {
+    const allClusters = await db.select().from(clusters);
+
+    return NextResponse.json({ clusters: allClusters }, { status: 200 });
+  } catch (error) {
+    console.error("Failed to fetch clusters:", error);
+    return NextResponse.json({ error: "Failed to fetch clusters" }, { status: 500 });
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
