@@ -38,27 +38,32 @@ A high-performance, mobile-first web application designed for couriers to manage
 
 ---
 
+
 ## 📅 Development Roadmap
 
-### Phase 1: Smart Data Intake 
-- [x] Manual Bulk Customer Entry
-- [x] **Excel/Sheets Smart Paste:** Regex-based parsing of tab-separated and comma-separated values.
-- [x] **Preview Validation:** UI list to verify parsed data, resolve unknown customers, and commit to DB.
+### Phase 1: Core App Completion (Up Next)
+- [x] **Waybill Edit Page:** Update delivery status, receiver info, and proof of delivery (`/deliveries/[id]/edit`).
+- [x] **Home Page (`/`) Redesign:** Adding quick-action hero buttons for the Global Entry Hub and KPI stats.
+- [x] **M3 Navigation Redesign:** Transitioning Header and Breadcrumbs to a cleaner, glass-morphism system.
 
-### Phase 2: Waybill Logistics 
-- [x] **Global Bulk Waybill Entry:** Creating multiple package entries linked to existing customers.
-- [x] **Digital Receipt Details View:** High-fidelity delivery details page.
-- [ ] **Waybill Edit Page:** Update delivery status, receiver info, and proof of delivery (Scheduled).
-- [ ] **Scanning Support:** Integration for barcode/QR scanning via camera.
+### Phase 2: Intelligence, Routing & Scanning
+- [ ] **Scanning Support:** Integration for barcode/QR scanning via mobile camera to quickly find or input waybills.
+- [ ] **Enhanced Clustering:** Adding "Districts" and "Priority Zones" to the schema for neighborhood grouping.
+- [ ] **Heatmap Visualization:** Dashboard view showing delivery density for the day.
 
-### Phase 3: Intelligence & Routing 
-- [ ] **Enhanced Clustering:** Adding "Districts" and "Priority Zones" to schema for neighborhood grouping.
-- [ ] **Heatmap Visualization:** Dashboard view showing delivery density.
+### Phase 3: Authorization & Admin Controls (New!)
+- [ ] **Role-Based Access Control (RBAC):** Implement `superadmin`, `admin`, and `courier` roles in the database and NextAuth JWT.
+- [ ] **Middleware Route Protection:** Secure pages based on user roles.
+- [ ] **Admin Command Center:** Hidden dashboard for superadmins containing:
+  - User management (assign roles, revoke access).
+  - System analytics and delivery KPIs.
+  - User activity history and audit logs.
+  - Application error and access logs.
 
-### Phase 4: UI Refinement (Up Next)
-- [ ] **M3 Header & Breadcrumbs Redesign:** Transitioning to a cleaner, glass-morphism navigation system.
-- [ ] **Home Page (`/`) Redesign:** Adding quick-action hero buttons for the Global Entry Hub and KPI stats.
-- [x] **Expressive Delivery Dashboard:** Sticky filters, search, and distinct COD indicators.
+### Phase 4: Multi-Device Architecture (New!)
+- [ ] **Device Detection Guard:** Use Next.js Middleware to detect user agents and restrict desktop access to the mobile app view.
+- [ ] **Desktop-Optimized Layout:** Build a distinct, multi-column dashboard view specifically designed for desktop fleet managers and dispatchers.
+
 
 
 ---

@@ -53,3 +53,33 @@ export async function DELETE(
     return NextResponse.json({ message: "Failed to delete delivery" }, { status: 500 });
   }
 }
+
+// NEW: Add PATCH to handle updates
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const resolvedParams = await params;
+    const deliveryId = parseInt(resolvedParams.id);
+    const body = await req.json();
+
+    const { waybillNumber, receiverName, codAmount, status, proofOfDeliveryUrl } = body;
+
+    await db.update(deliveries)
+      .set({
+        waybillNumber,
+        receiverName,
+        codAmount: parseInt(codAmount) || 0,
+        status,
+        proofOfDeliveryUrl,
+        updatedAt: new Date(), // Always good to update the timestamp
+      })
+      .where(eq(deliveries.id, deliveryId));
+
+    return NextResponse.json({ message: "Delivery updated successfully" }, { status: 200 });
+  } catch (error) {
+    console.error("Error updating delivery:", error);
+    return NextResponse.json({ message: "Failed to update delivery" }, { status: 500 });
+  }
+}

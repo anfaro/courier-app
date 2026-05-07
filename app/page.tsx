@@ -1,81 +1,137 @@
 // app/page.tsx
+
+import { db } from "@/lib/db";
+import { deliveries } from "@/lib/schema";
+import { eq } from "drizzle-orm";
+import { getServerSession } from "next-auth";
 import Header from "@/components/header";
 import Link from "next/link";
 
-export default function HomePage() {
+export default async function HomePage() {
+  // 1. Attempt to get the user session (Fallback to Nobleman001 if session isn't explicitly passed)
+  const session = await getServerSession();
+  const userName = session?.user?.name || "Nobleman001";
+
+  // 2. Fetch Daily Stats from Drizzle
+  const pendingDeliveries = await db.query.deliveries.findMany({
+    where: eq(deliveries.status, "Pending"),
+  });
+
+  const pendingCount = pendingDeliveries.length;
+  const totalCodPending = pendingDeliveries.reduce((sum, d) => sum + (d.codAmount || 0), 0);
+
+  // 3. Format today's date for the header
+  const today = new Date().toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-24">
       <Header />
 
-      <main className="mx-auto max-w-3xl p-4 sm:p-6 space-y-6">
+      <main className="mx-auto max-w-xl p-4 sm:p-6 space-y-8 mt-2">
 
-        {/* M3 Expressive Welcome Banner */}
-        <div className="rounded-[2.5rem] bg-blue-600 p-8 sm:p-10 text-white shadow-md relative overflow-hidden">
-          {/* Background decorative shape */}
-          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-blue-500/50 blur-2xl pointer-events-none"></div>
+        {/* --- WELCOME BANNER --- */}
+        <div>
+          <p className="text-[13px] font-black uppercase tracking-widest text-gray-400 mb-1">
+            {today}
+          </p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900">
+            Good morning,<br />
+            <span className="text-blue-600">{userName}</span>
+          </h1>
+        </div>
 
-          <div className="relative z-10">
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2">
-              Hello, Courier! 👋
-            </h1>
-            <p className="text-blue-100 text-[15px] font-medium max-w-xs leading-relaxed">
-              Ready to hit the road? Let's get these packages delivered safely.
-            </p>
+        {/* --- DAILY SNAPSHOT (Clickable Stats) --- */}
+        <div>
+          <h2 className="text-[14px] font-bold tracking-tight text-gray-900 mb-3">Daily Snapshot</h2>
+          <div className="flex gap-3">
+
+            {/* Tapping this stat takes you directly to the Deliveries Dashboard */}
+            <Link href="/deliveries?filter=Pending" className="flex-1 rounded-[24px] bg-white p-5 shadow-sm border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all active:scale-95 flex flex-col justify-center relative overflow-hidden group">
+              <div className="absolute right-0 top-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity text-blue-500">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
+              </div>
+              <p className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-1">Pending Waybills</p>
+              <p className="text-[28px] leading-none font-black text-gray-900">{pendingCount}</p>
+            </Link>
+
+            <div className="flex-[1.2] rounded-[24px] bg-orange-50 p-5 shadow-sm border border-orange-100 flex flex-col justify-center">
+              <p className="text-[11px] font-black uppercase tracking-widest text-orange-400 mb-1">To Collect (COD)</p>
+              <div className="flex items-baseline gap-1 whitespace-nowrap">
+                <span className="text-[14px] font-bold text-orange-600">Rp</span>
+                <span className="text-[24px] leading-none font-black text-orange-700 tracking-tight">
+                  {totalCodPending.toLocaleString('id-ID')}
+                </span>
+              </div>
+            </div>
+
           </div>
         </div>
 
-        <div className="pt-4 px-2">
-          <h2 className="text-xl font-bold tracking-tight text-gray-900">Quick Actions</h2>
+        {/* --- MASSIVE QUICK ACTIONS --- */}
+        <div>
+          <h2 className="text-[14px] font-bold tracking-tight text-gray-900 mb-3">Command Center</h2>
+          <div className="space-y-4">
+
+            {/* ACTION 1: GLOBAL ENTRY HUB */}
+            <Link href="/deliveries/new" className="block group">
+              <div className="relative overflow-hidden rounded-[32px] bg-[#0A2FFF] p-8 shadow-xl shadow-blue-600/20 transition-all active:scale-[0.98]">
+                {/* Ambient Glow */}
+                <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/10 blur-3xl group-hover:bg-white/20 transition-all duration-500"></div>
+
+                <div className="relative z-10 flex items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-[26px] leading-tight font-black text-white mb-2 tracking-tight">
+                      Global Entry Hub
+                    </h2>
+                    <p className="text-blue-200 font-medium text-[14px] leading-snug pr-4">
+                      Paste Excel data or manually input new waybills instantly.
+                    </p>
+                  </div>
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white text-[#0A2FFF] shadow-md transition-transform duration-500 group-hover:rotate-12 group-active:scale-90">
+                    <span className="text-3xl">📦</span>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            {/* ACTION 2: MANAGE CUSTOMERS */}
+            <Link href="/customers" className="block group">
+              <div className="relative overflow-hidden rounded-[32px] bg-[#6B21A8] p-8 shadow-xl shadow-purple-600/20 transition-all active:scale-[0.98]">
+                {/* Ambient Glow */}
+                <div className="absolute -left-10 -bottom-10 h-48 w-48 rounded-full bg-white/10 blur-3xl group-hover:bg-white/20 transition-all duration-500"></div>
+
+                <div className="relative z-10 flex items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-[26px] leading-tight font-black text-white mb-2 tracking-tight">
+                      Manage Database
+                    </h2>
+                    <p className="text-purple-200 font-medium text-[14px] leading-snug pr-4">
+                      View customers, pinned GPS locations, and delivery notes.
+                    </p>
+                  </div>
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white text-[#6B21A8] shadow-md transition-transform duration-500 group-hover:-rotate-12 group-active:scale-90">
+                    <span className="text-3xl">👥</span>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+          </div>
         </div>
 
-        {/* Tactile Navigation Grid */}
-        <div className="grid grid-cols-2 gap-4 sm:gap-6">
-
-          {/* Customers Module */}
-          <Link
-            href="/customers"
-            className="group flex flex-col items-center justify-center gap-4 rounded-[2rem] bg-white p-6 shadow-sm border border-gray-50 transition-all hover:bg-blue-50/50 active:scale-95 active:bg-blue-100 focus:outline-none focus:ring-4 focus:ring-blue-500/20"
-          >
-            <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-blue-50 text-3xl transition-transform group-hover:scale-110 group-active:scale-95 shadow-sm border border-blue-100">
-              👥
+        {/* --- SECONDARY LINKS --- */}
+        <div className="pt-2">
+          <Link href="/clusters" className="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors active:scale-98">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-lg">📍</div>
+              <span className="text-[15px] font-bold text-gray-800">Neighborhood Clusters</span>
             </div>
-            <span className="text-[16px] font-bold text-gray-800">Customers</span>
+            <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
           </Link>
-
-          {/* Clusters Module */}
-          <Link
-            href="/clusters"
-            className="group flex flex-col items-center justify-center gap-4 rounded-[2rem] bg-white p-6 shadow-sm border border-gray-50 transition-all hover:bg-purple-50/50 active:scale-95 active:bg-purple-100 focus:outline-none focus:ring-4 focus:ring-purple-500/20"
-          >
-            <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-purple-50 text-3xl transition-transform group-hover:scale-110 group-active:scale-95 shadow-sm border border-purple-100">
-              📦
-            </div>
-            <span className="text-[16px] font-bold text-gray-800">Clusters</span>
-          </Link>
-
-          {/* Add Customer Shortcut */}
-          <Link
-            href="/customers/new"
-            className="group flex flex-col items-center justify-center gap-4 rounded-[2rem] bg-white p-6 shadow-sm border border-gray-50 transition-all hover:bg-green-50/50 active:scale-95 active:bg-green-100 focus:outline-none focus:ring-4 focus:ring-green-500/20"
-          >
-            <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-green-50 text-3xl transition-transform group-hover:scale-110 group-active:scale-95 shadow-sm border border-green-100">
-              ➕
-            </div>
-            <span className="text-[16px] font-bold text-gray-800 text-center">Add<br />Customer</span>
-          </Link>
-
-          {/* Add Cluster Shortcut */}
-          <Link
-            href="/clusters/new"
-            className="group flex flex-col items-center justify-center gap-4 rounded-[2rem] bg-white p-6 shadow-sm border border-gray-50 transition-all hover:bg-orange-50/50 active:scale-95 active:bg-orange-100 focus:outline-none focus:ring-4 focus:ring-orange-500/20"
-          >
-            <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-orange-50 text-3xl transition-transform group-hover:scale-110 group-active:scale-95 shadow-sm border border-orange-100">
-              📍
-            </div>
-            <span className="text-[16px] font-bold text-gray-800 text-center">New<br />Cluster</span>
-          </Link>
-
         </div>
+
       </main>
     </div>
   );
