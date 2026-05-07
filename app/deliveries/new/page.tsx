@@ -1,3 +1,4 @@
+// app/deliveries/new/page.tsx
 
 "use client";
 
@@ -5,6 +6,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/header";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ScannerModal from "@/components/ScannerModal";
 
 function DeliveryHubContent() {
   const router = useRouter();
@@ -19,6 +21,7 @@ function DeliveryHubContent() {
   const [inputMode, setInputMode] = useState<"manual" | "bulk">("manual");
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const [customerSearchQuery, setCustomerSearchQuery] = useState("");
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   // --- QUICK RESOLVE UNKNOWN CUSTOMER STATE ---
   const [showQuickAdd, setShowQuickAdd] = useState(false);
@@ -74,6 +77,12 @@ function DeliveryHubContent() {
       }
     }
   }, [inputMode, isLocked, customers]);
+
+  // --- SCANNER SUCCESS CALLBACK ---
+  const handleScanSuccess = (decodedText: string) => {
+    setManualWaybill(decodedText);
+    setIsScannerOpen(false);
+  };
 
   const handleAddManual = () => {
     if (!manualWaybill.trim()) {
@@ -178,7 +187,6 @@ function DeliveryHubContent() {
     }
   };
 
-  // --- HANDLE QUICK CREATE & LINK (Single) ---
   const handleCreateAndLink = async () => {
     if (!qaName.trim()) return;
     const finalAddress = qaAddress.trim() || "Address not provided";
@@ -229,18 +237,15 @@ function DeliveryHubContent() {
     }
   };
 
-  // --- UPDATED: BULK RESOLVE ALL UNKNOWN CUSTOMERS ---
   const handleResolveAll = async () => {
     setIsResolvingAll(true);
     setError("");
 
     try {
-      // 1. Get unique unlinked names to avoid duplicates
       const unlinkedNames = Array.from(new Set(pendingList.filter(item => item.isUnlinked).map(item => item.customerName)));
 
       if (unlinkedNames.length === 0) return;
 
-      // 2. Map into the payload format expected by api/customers/bulk/route.ts
       const bulkPayload = unlinkedNames.map((name) => ({
         name: name.trim(),
         address: "Address not provided",
@@ -251,7 +256,6 @@ function DeliveryHubContent() {
         notes: null
       }));
 
-      // 3. Send a single POST request to the bulk endpoint
       const res = await fetch("/api/customers/bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -262,12 +266,10 @@ function DeliveryHubContent() {
         throw new Error("Failed to bulk resolve customers.");
       }
 
-      // 4. Fetch the fresh list from DB to get the new automatically generated IDs
       const fetchRes = await fetch("/api/customers");
       const fetchData = await fetchRes.json();
       const updatedCustomersList = fetchData.customers || fetchData || [];
 
-      // 5. Update the entire pending list linking the new IDs
       setPendingList(prevList => prevList.map(item => {
         if (item.isUnlinked) {
           const match = updatedCustomersList.find((c: any) => c.name === item.customerName);
@@ -282,7 +284,6 @@ function DeliveryHubContent() {
         return item;
       }));
 
-      // 6. Update global customers state
       setCustomers(updatedCustomersList);
 
     } catch (err: any) {
@@ -310,7 +311,7 @@ function DeliveryHubContent() {
 
   return (
     <>
-      <main className="mx-auto max-w-2xl p-4 sm:p-6">
+      <main className="mx-auto max-w-2xl p-4 sm:p-6 pb-32">
         <div className="mb-6">
           <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">New Deliveries</h1>
           {isLocked && (
@@ -349,7 +350,25 @@ function DeliveryHubContent() {
               <div className="space-y-5 animate-in fade-in slide-in-from-left-4 duration-300">
                 <div>
                   <label className="mb-2 block text-[13px] font-black text-gray-800 uppercase tracking-wide">Waybill Number</label>
-                  <input type="text" value={manualWaybill} onChange={(e) => setManualWaybill(e.target.value)} placeholder="e.g. JP123456789" className={inputClass} />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={manualWaybill}
+                      onChange={(e) => setManualWaybill(e.target.value)}
+                      placeholder="e.g. JP123456789 or scan..."
+                      className={`${inputClass} pr-16`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setIsScannerOpen(true)}
+                      className="absolute right-2 top-2 bottom-2 flex w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 transition-all hover:bg-blue-200 active:scale-95"
+                      title="Scan Barcode"
+                    >
+                      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4M4 8h16M4 16h16" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -414,7 +433,7 @@ function DeliveryHubContent() {
               </button>
             </div>
 
-            <div className="max-h-[50vh] overflow-y-auto space-y-3 pb-6 pr-1 custom-scrollbar">
+            <div className="space-y-3 custom-scrollbar">
               {pendingList.map((item, i) => (
                 <div key={i} className={`p-4 rounded-[24px] border transition-all ${item.isUnlinked ? 'bg-orange-50/50 border-orange-200' : 'bg-white border-gray-100 shadow-sm'}`}>
                   <div className="flex items-start justify-between">
@@ -460,7 +479,7 @@ function DeliveryHubContent() {
               ))}
             </div>
 
-            <div className="sticky bottom-4 mt-4 z-20">
+            <div className="sticky bottom-4 mt-8 z-20">
               <button
                 onClick={handleFinalSave}
                 disabled={isLoading || unlinkedCount > 0}
@@ -473,7 +492,7 @@ function DeliveryHubContent() {
         )}
       </main>
 
-      {/* --- QUICK ADD / RESOLVE MODAL (Single) --- */}
+      {/* --- QUICK ADD / RESOLVE MODAL --- */}
       {showQuickAdd && (
         <div className="fixed inset-0 z-[60] flex items-end justify-center p-4 sm:items-center">
           <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowQuickAdd(false)}></div>
@@ -568,18 +587,42 @@ function DeliveryHubContent() {
           </div>
         </div>
       )}
+
+      {/* --- SCANNER MODAL --- */}
+      {isScannerOpen && (
+        <ScannerModal
+          onScanSuccess={handleScanSuccess}
+          onClose={() => setIsScannerOpen(false)}
+        />
+      )}
     </>
   );
 }
 
+// -------------------------------------------------------------
+// MAIN PAGE EXPORT: Fixed to use the 100dvh sticky layout
+// -------------------------------------------------------------
 export default function GlobalDeliveryPage() {
   return (
-    <div className="min-h-screen bg-[#F8F9FA] pb-20">
-      <Header />
-      <Breadcrumbs />
-      <Suspense fallback={<div className="flex justify-center p-10"><span className="animate-pulse font-bold text-gray-400">Loading Workspace...</span></div>}>
-        <DeliveryHubContent />
-      </Suspense>
+    <div className="flex flex-col h-[100dvh] bg-[#F8F9FA] overflow-hidden">
+
+      {/* Fixed Header & Breadcrumbs */}
+      <div className="shrink-0 z-30 bg-[#F8F9FA]">
+        <Header />
+        <Breadcrumbs />
+      </div>
+
+      {/* Scrollable Main Content Area */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar relative">
+        <Suspense fallback={
+          <div className="flex h-full items-center justify-center">
+            <span className="animate-pulse font-bold text-gray-400">Loading Hub...</span>
+          </div>
+        }>
+          <DeliveryHubContent />
+        </Suspense>
+      </div>
+
     </div>
   );
 }

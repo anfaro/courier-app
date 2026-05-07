@@ -47,9 +47,9 @@ A high-performance, mobile-first web application designed for couriers to manage
 - [x] **M3 Navigation Redesign:** Transitioning Header and Breadcrumbs to a cleaner, glass-morphism system.
 
 ### Phase 2: Intelligence, Routing & Scanning
-- [ ] **Scanning Support:** Integration for barcode/QR scanning via mobile camera to quickly find or input waybills.
-- [ ] **Enhanced Clustering:** Adding "Districts" and "Priority Zones" to the schema for neighborhood grouping.
-- [ ] **Heatmap Visualization:** Dashboard view showing delivery density for the day.
+- [x] **Scanning Support:** Integration for barcode/QR scanning via mobile camera to quickly find or input waybills.
+- [x] **Enhanced Clustering:** Adding "Districts" and "Priority Zones" to the schema for neighborhood grouping.
+- [x] **Heatmap Visualization:** Dashboard view showing delivery density for the day.
 
 ### Phase 3: Authorization & Admin Controls (New!)
 - [ ] **Role-Based Access Control (RBAC):** Implement `superadmin`, `admin`, and `courier` roles in the database and NextAuth JWT.
