@@ -15,7 +15,9 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 256 }),
   email: varchar("email", { length: 256 }).notNull().unique(),
-  password: text("password").notNull(), // This will store the HASHED password
+  password: text("password").notNull(),
+  // NEW: Role column with a strict default
+  role: varchar("role", { length: 50 }).default("courier").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -54,12 +56,13 @@ export const customers = pgTable("customers", {
 export const deliveries = pgTable("deliveries", {
   id: serial("id").primaryKey(),
   waybillNumber: varchar("waybill_number", { length: 256 }).notNull().unique(),
-  // Link this delivery to a specific customer
-  customerId: integer("customer_id").references(() => customers.id),
-  // Store the URL of the signature or photo proof
+
+  // THE FIX: Changed to "cascade"
+  customerId: integer("customer_id").references(() => customers.id, { onDelete: "cascade" }),
+
   proofOfDeliveryUrl: text("proof_of_delivery_url"),
   status: varchar("status", { length: 50 }).default("Pending"),
-  codAmount: integer("cod_amount").default(0), // Store as an integer (e.g., 50000 for Rp 50.000)
+  codAmount: integer("cod_amount").default(0),
   receiverName: varchar("receiver_name", { length: 256 }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

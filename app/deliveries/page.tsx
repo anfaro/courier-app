@@ -58,7 +58,7 @@ function DeliveriesDashboardContent() {
     .reduce((sum, d) => sum + (parseInt(d.codAmount) || 0), 0);
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 sm:px-6 flex-1 overflow-y-auto custom-scrollbar relative pb-12">
+    <main className="mx-auto w-full max-w-2xl px-4 sm:px-6 flex-1 overflow-y-auto custom-scrollbar relative pb-32">
 
       {/* --- TOP SECTION --- */}
       <div className="pt-4 mb-6 flex items-center justify-between">
@@ -138,8 +138,8 @@ function DeliveriesDashboardContent() {
               key={f}
               onClick={() => setFilter(f as any)}
               className={`whitespace-nowrap rounded-full px-6 py-2.5 text-[14px] font-bold transition-all active:scale-95 ${filter === f
-                  ? "bg-gray-900 text-white shadow-md"
-                  : "bg-white text-gray-500 border border-gray-200 hover:bg-gray-50"
+                ? "bg-gray-900 text-white shadow-md"
+                : "bg-white text-gray-500 border border-gray-200 hover:bg-gray-50"
                 }`}
             >
               {f}
@@ -196,8 +196,8 @@ function DeliveriesDashboardContent() {
                   </div>
 
                   <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-wider ${delivery.status === 'Pending' ? 'bg-orange-100 text-orange-700' :
-                      delivery.status === 'Delivered' ? 'bg-green-100 text-green-700' :
-                        'bg-red-100 text-red-700'
+                    delivery.status === 'Delivered' ? 'bg-green-100 text-green-700' :
+                      'bg-red-100 text-red-700'
                     }`}>
                     {delivery.status}
                   </span>
