@@ -1,10 +1,16 @@
+import { logServerAccess } from "@/lib/logger";
 // app/api/upload/route.ts
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { getToken } from "next-auth/jwt";
+import { logActivity } from "@/lib/logger";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (token) await logServerAccess(req, token);
+    
     // 1. Grab the form data (which contains the file)
     const formData = await req.formData();
     const file = formData.get("file") as File;
@@ -29,22 +35,30 @@ export async function POST(req: Request) {
     }
 
     // 4. Create the absolute path to the public folder
-    // process.cwd() gets the root of your project
     const uploadDir = path.join(process.cwd(), "public", folderPath);
 
-    // 5. Make sure the folder exists (recursive: true creates parent folders if missing)
+    // 5. Make sure the folder exists
     await mkdir(uploadDir, { recursive: true });
 
-    // 6. Create a unique filename so files don't overwrite each other
-    // e.g., 1700000000000-myphoto.jpg
+    // 6. Create a unique filename
     const uniqueFilename = `${Date.now()}-${file.name.replace(/\s/g, "_")}`;
     const filePath = path.join(uploadDir, uniqueFilename);
 
-    // 7. Write the file to your hard drive (or Android phone storage)
+    // 7. Write the file
     await writeFile(filePath, buffer);
 
-    // 8. Return the public URL that Next.js can read
+    // 8. Return the public URL
     const publicUrl = `/${folderPath}/${uniqueFilename}`;
+
+    // Log the upload
+    if (token) {
+        await logActivity({
+          userId: token.id as number,
+          userName: token.name as string,
+          action: "DELIVERY_UPDATED", // Generic update log
+          details: `Uploaded ${type} image: ${file.name}`,
+        });
+    }
 
     return NextResponse.json(
       { message: "File uploaded successfully", url: publicUrl },
@@ -58,4 +72,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

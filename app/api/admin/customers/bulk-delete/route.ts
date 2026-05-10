@@ -4,6 +4,7 @@ import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
 import { customers } from "@/lib/schema";
 import { inArray } from "drizzle-orm";
+import { logActivity, logServerAccess } from "@/lib/logger";
 
 export async function DELETE(req: NextRequest) {
   try {
@@ -18,6 +19,8 @@ export async function DELETE(req: NextRequest) {
         { status: 403 }
       );
     }
+
+    await logServerAccess(req, token);
 
     // 3. Extract the IDs from the incoming request body
     const body = await req.json();
@@ -34,7 +37,15 @@ export async function DELETE(req: NextRequest) {
     // 4. THE EXECUTION: Tell Drizzle to delete all records where the ID is in our array
     await db.delete(customers).where(inArray(customers.id, ids));
 
-    // 5. Success!
+    // 5. LOG THE ACTIVITY
+    await logActivity({
+      userId: token.id as number,
+      userName: token.name as string,
+      action: "CUSTOMER_DELETED",
+      details: `Bulk deleted ${ids.length} customers and their linked data.`,
+    });
+
+    // 6. Success!
     return NextResponse.json(
       { message: `Successfully deleted ${ids.length} customers.` },
       { status: 200 }

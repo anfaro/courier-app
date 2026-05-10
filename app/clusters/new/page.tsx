@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Header from "@/components/header";
 import Breadcrumbs from "@/components/Breadcrumbs";
 
 type Customer = {
@@ -69,12 +68,11 @@ export default function NewClusterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] pb-20">
-      <Header />
+    <div className="min-h-screen bg-background pb-20">
       <Breadcrumbs />
 
       <main className="mx-auto max-w-2xl p-4 sm:p-6">
-        <div className="mt-4 rounded-[2.5rem] bg-white p-6 sm:p-10 shadow-sm border border-gray-50">
+        <div className="mt-4 rounded-[2.5rem] bg-card p-6 sm:p-10 shadow-sm border border-gray-50">
           <div className="mb-8">
             <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">New Cluster</h1>
             <p className="mt-2 text-base text-gray-500">Group your customers into a new region.</p>
@@ -127,7 +125,7 @@ export default function NewClusterPage() {
                           onClick={() => toggleCustomer(customer.id)}
                           className={`flex w-full items-center rounded-[1.5rem] p-4 text-left transition-all ${isSelected
                             ? "bg-blue-50 border-2 border-blue-600"
-                            : "bg-white border-2 border-gray-100 hover:border-gray-300 hover:bg-gray-50"
+                            : "bg-card border-2 border-gray-100 hover:border-gray-300 hover:bg-gray-50"
                             }`}
                         >
                           <div className={`mr-4 flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-colors ${isSelected ? "bg-blue-600 text-white" : "border-2 border-gray-300"

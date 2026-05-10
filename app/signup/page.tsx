@@ -4,8 +4,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useLanguage } from "@/components/LanguageProvider";
+import AuthLanguageSelector from "@/components/AuthLanguageSelector";
 
 export default function SignUpPage() {
+  const { t } = useLanguage();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
@@ -27,7 +30,7 @@ export default function SignUpPage() {
 
     // 1. Check if passwords match before doing anything else
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("auth.passwords_not_match"));
       return;
     }
 
@@ -44,36 +47,37 @@ export default function SignUpPage() {
         router.push("/login");
       } else {
         const data = await res.json();
-        setError(data.message || "Registration failed");
+        setError(data.message || t("auth.registration_failed"));
       }
     } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
+      setError(t("auth.unexpected_error"));
     } finally {
       setIsLoading(false);
     }
   };
 
   // M3 Expressive Input Style: Soft resting state, bright white active state with soft glow
-  const inputClass = "w-full rounded-2xl border border-transparent bg-gray-100 px-5 py-4 text-[15px] text-gray-900 transition-all focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-600/15";
+  const inputClass = "w-full rounded-2xl border border-transparent bg-gray-100 px-5 py-4 text-[15px] text-gray-900 transition-all focus:border-blue-600 focus:bg-card focus:outline-none focus:ring-4 focus:ring-blue-600/15";
 
   return (
-    <div className="flex min-h-screen flex-col justify-center bg-[#F8F9FA] py-12 px-4 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen flex-col justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
+      <AuthLanguageSelector />
       {/* M3 Header Section */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-blue-600 text-3xl shadow-md border border-blue-700">
           👋
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold tracking-tight text-gray-900">
-          Create an Account
+          {t("auth.create_account")}
         </h2>
         <p className="mt-2 text-center text-[15px] text-gray-600">
-          Join the Courier SuperApp platform
+          {t("auth.signup_subtitle")}
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         {/* M3 Expressive Card */}
-        <div className="rounded-[2.5rem] bg-white px-6 py-10 shadow-sm border border-gray-50 sm:px-10">
+        <div className="rounded-[2.5rem] bg-card px-6 py-10 shadow-sm border border-gray-50 sm:px-10">
 
           {error && (
             <div className="mb-6 rounded-2xl bg-red-50 p-4 text-center text-[15px] font-medium text-red-700 border border-red-100 animate-[fadeIn_0.3s_ease-out]">
@@ -84,20 +88,20 @@ export default function SignUpPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="mb-2 block text-[15px] font-bold text-gray-700">
-                Full Name
+                {t("auth.full_name")}
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className={inputClass}
-                placeholder="John Doe"
+                placeholder={t("auth.full_name_placeholder")}
               />
             </div>
 
             <div>
               <label className="mb-2 block text-[15px] font-bold text-gray-700">
-                Email Address
+                {t("auth.email")}
               </label>
               <input
                 type="email"
@@ -105,13 +109,13 @@ export default function SignUpPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className={inputClass}
-                placeholder="jsmith@example.com"
+                placeholder={t("auth.email_placeholder")}
               />
             </div>
 
             <div>
               <label className="mb-2 block text-[15px] font-bold text-gray-700">
-                Password
+                {t("auth.password")}
               </label>
               <div className="relative flex items-center">
                 <input
@@ -121,21 +125,21 @@ export default function SignUpPage() {
                   required
                   // Add padding to the right so text doesn't hide under the button
                   className={`${inputClass} pr-20`}
-                  placeholder="Create a password"
+                  placeholder={t("auth.password_placeholder")}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 rounded-xl bg-gray-200/50 px-3 py-1.5 text-sm font-bold text-gray-600 transition hover:bg-gray-200 hover:text-gray-900 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="absolute right-3 rounded-xl bg-gray-200/50 px-3 py-1.5 text-sm font-bold text-gray-600 transition hover:bg-gray-200 hover:text-gray-900 active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {showPassword ? "Hide" : "Show"}
+                  {showPassword ? t("auth.hide") : t("auth.show")}
                 </button>
               </div>
             </div>
 
             <div>
               <label className="mb-2 block text-[15px] font-bold text-gray-700">
-                Confirm Password
+                {t("auth.confirm_password")}
               </label>
               <div className="relative flex items-center">
                 <input
@@ -144,14 +148,14 @@ export default function SignUpPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   className={`${inputClass} pr-20`}
-                  placeholder="Confirm your password"
+                  placeholder={t("auth.confirm_password_placeholder")}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 rounded-xl bg-gray-200/50 px-3 py-1.5 text-sm font-bold text-gray-600 transition hover:bg-gray-200 hover:text-gray-900 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="absolute right-3 rounded-xl bg-gray-200/50 px-3 py-1.5 text-sm font-bold text-gray-600 transition hover:bg-gray-200 hover:text-gray-900 active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {showConfirmPassword ? "Hide" : "Show"}
+                  {showConfirmPassword ? t("auth.hide") : t("auth.show")}
                 </button>
               </div>
             </div>
@@ -160,17 +164,17 @@ export default function SignUpPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex w-full justify-center rounded-full bg-blue-600 px-8 py-4 text-[16px] font-bold text-white shadow-sm transition hover:bg-blue-700 active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-500/30 disabled:bg-blue-400 disabled:active:scale-100"
+                className="flex w-full justify-center rounded-full bg-blue-600 px-8 py-4 text-[16px] font-bold text-white shadow-sm transition hover:bg-blue-700 active:scale-90 focus:outline-none focus:ring-4 focus:ring-blue-500/30 disabled:bg-blue-400 disabled:active:scale-100"
               >
-                {isLoading ? "Signing up..." : "Sign Up"}
+                {isLoading ? t("auth.signing_up") : t("auth.signup")}
               </button>
             </div>
           </form>
 
           <div className="mt-8 text-center text-[15px] text-gray-600">
-            Already have an account?{" "}
+            {t("auth.already_have_account")}{" "}
             <Link href="/login" className="font-bold text-blue-600 transition hover:text-blue-500">
-              Log in here
+              {t("auth.login_here")}
             </Link>
           </div>
         </div>

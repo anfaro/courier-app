@@ -2,12 +2,25 @@
 "use client";
 
 import { useState } from "react";
+import { useLanguage } from "@/components/LanguageProvider";
+import { useToast } from "@/components/ToastProvider";
+import { useConfirmation } from "@/components/ConfirmationProvider";
 
 export default function AdminClusterTable({ initialClusters }: { initialClusters: any[] }) {
+  const { t } = useLanguage();
+  const { showToast } = useToast();
+  const { askConfirmation } = useConfirmation();
+  
   const [clusterList, setClusterList] = useState(initialClusters);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  // --- SEARCH STATE ---
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredClusters = clusterList.filter(c =>
+    c.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const toggleSelection = (id: number) => {
     setSelectedIds((prev) => prev.includes(id) ? prev.filter(selectedId => selectedId !== id) : [...prev, id]);
@@ -15,6 +28,19 @@ export default function AdminClusterTable({ initialClusters }: { initialClusters
 
   const toggleSelectAll = () => {
     selectedIds.length === clusterList.length ? setSelectedIds([]) : setSelectedIds(clusterList.map(c => c.id));
+  };
+
+  const handleBulkDeleteClick = async () => {
+    const confirmed = await askConfirmation({
+      title: `${t("action.delete")} ${t("nav.clusters")}?`,
+      message: `You are about to permanently delete ${selectedIds.length} ${t("nav.clusters").toLowerCase()}(s).`,
+      confirmText: t("action.delete"),
+      type: "danger"
+    });
+
+    if (confirmed) {
+      executeBulkDelete();
+    }
   };
 
   const executeBulkDelete = async () => {
@@ -27,10 +53,10 @@ export default function AdminClusterTable({ initialClusters }: { initialClusters
       });
       if (!res.ok) throw new Error("Failed to delete clusters");
       setClusterList(prev => prev.filter(c => !selectedIds.includes(c.id)));
+      showToast(`${selectedIds.length} ${t("nav.clusters").toLowerCase()} deleted.`, "success");
       setSelectedIds([]);
-      setShowConfirmModal(false);
     } catch (error) {
-      alert("An error occurred while deleting.");
+      showToast("An error occurred while deleting.", "error");
     } finally {
       setIsDeleting(false);
     }
@@ -38,72 +64,65 @@ export default function AdminClusterTable({ initialClusters }: { initialClusters
 
   return (
     <div className="px-4 sm:px-6 relative">
-      <div className="flex items-center justify-between h-14 mb-4">
+      <div className="flex flex-col sm:flex-row items-center gap-3 mb-6">
+        <div className="relative flex-1 w-full">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <svg className="h-5 w-5 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            placeholder={t("admin.search_placeholder")}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-full border border-card-border bg-card pl-11 pr-4 py-3.5 text-[15px] font-medium text-primary shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none placeholder:text-secondary"
+          />
+        </div>
+
         {selectedIds.length > 0 ? (
-          <div className="flex w-full items-center justify-between rounded-[24px] bg-red-50 px-5 py-3 border border-red-100 shadow-sm animate-in fade-in slide-in-from-bottom-2">
-            <span className="text-[14px] font-bold text-red-800">{selectedIds.length} selected</span>
-            <button onClick={() => setShowConfirmModal(true)} disabled={isDeleting} className="flex items-center gap-2 rounded-full bg-red-600 px-4 py-2 text-[12px] font-bold text-white transition-all active:scale-95 disabled:opacity-50">
-              Bulk Delete
+          <div className="flex w-full sm:w-auto items-center justify-between gap-4 rounded-full bg-red-50 dark:bg-red-950/30 px-5 py-2.5 border border-red-100 dark:border-red-900 shadow-sm animate-in fade-in slide-in-from-bottom-2">
+            <span className="text-[13px] font-bold text-red-800 dark:text-red-300 whitespace-nowrap">{selectedIds.length} {t("nav.clusters")}</span>
+            <button onClick={handleBulkDeleteClick} disabled={isDeleting} className="btn-danger flex items-center gap-2 px-4 py-1.5 text-[12px] shadow-md shadow-red-600/20">
+              {isDeleting ? <span className="flex h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" /> : t("admin.bulk_delete")}
             </button>
           </div>
         ) : (
-          <div className="flex w-full items-center justify-end">
-            <span className="text-[13px] font-medium text-gray-400">Select records to manage</span>
+          <div className="hidden sm:flex items-center justify-end">
+            <span className="text-[12px] font-medium text-secondary">Select records to manage</span>
           </div>
         )}
       </div>
 
-      <div className="overflow-hidden rounded-[24px] bg-white shadow-sm border border-gray-200">
+      <div className="overflow-hidden rounded-[24px] bg-card shadow-sm border border-card-border dark:border-slate-800">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-[14px] select-none">
-            <thead className="bg-gray-50 border-b border-gray-100 text-[11px] uppercase tracking-wider font-black text-gray-500">
+            <thead className="bg-gray-50 dark:bg-slate-800/50 border-b border-card-border dark:border-slate-800 text-[11px] uppercase tracking-wider font-black text-secondary">
               <tr>
                 <th className="p-4 w-12 text-center cursor-pointer" onClick={toggleSelectAll}>
-                  <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600 pointer-events-none" checked={selectedIds.length === clusterList.length && clusterList.length > 0} readOnly />
+                  <input type="checkbox" className="h-4 w-4 rounded border-gray-300 dark:border-slate-700 bg-card dark:bg-slate-800 text-blue-600 focus:ring-blue-600 pointer-events-none" checked={selectedIds.length === clusterList.length && clusterList.length > 0} readOnly />
                 </th>
-                <th className="p-4">Cluster Name</th>
+                <th className="p-4">{t("nav.clusters")}</th>
                 <th className="p-4 hidden sm:table-cell">Notes</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
-              {clusterList.map((cluster) => (
-                <tr key={cluster.id} onClick={() => toggleSelection(cluster.id)} className={`cursor-pointer transition-all active:scale-[0.99] ${selectedIds.includes(cluster.id) ? 'bg-blue-50/80' : 'hover:bg-gray-50'}`}>
+            <tbody className="divide-y divide-card-border dark:divide-slate-800">
+              {filteredClusters.map((cluster) => (
+                <tr key={cluster.id} onClick={() => toggleSelection(cluster.id)} className={`cursor-pointer transition-all active:scale-[0.99] ${selectedIds.includes(cluster.id) ? 'bg-blue-50/80 dark:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-slate-800/30'}`}>
                   <td className="p-4 text-center">
-                    <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600 pointer-events-none" checked={selectedIds.includes(cluster.id)} readOnly />
+                    <input type="checkbox" className="h-4 w-4 rounded border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-blue-600 focus:ring-blue-600 pointer-events-none" checked={selectedIds.includes(cluster.id)} readOnly />
                   </td>
-                  <td className="p-4 font-bold text-gray-900">{cluster.name}</td>
-                  <td className="p-4 font-medium text-gray-500 truncate max-w-[250px] hidden sm:table-cell">{cluster.notes || "-"}</td>
+                  <td className="p-4 font-bold text-primary">{cluster.name}</td>
+                  <td className="p-4 font-medium text-secondary truncate max-w-[250px] hidden sm:table-cell">{cluster.notes || "-"}</td>
                 </tr>
               ))}
-              {clusterList.length === 0 && (
-                <tr><td colSpan={3} className="p-8 text-center text-gray-400 font-medium text-[14px]">No clusters found.</td></tr>
+              {filteredClusters.length === 0 && (
+                <tr><td colSpan={3} className="p-8 text-center text-secondary font-medium text-[14px]">{t("search.no_results")}</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
-
-      {/* MODAL */}
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => !isDeleting && setShowConfirmModal(false)} />
-          <div className="relative w-full max-w-sm rounded-[32px] bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-600">
-              <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-            </div>
-            <h3 className="mb-2 text-xl font-black text-gray-900">Delete Clusters?</h3>
-            <p className="mb-6 text-[14px] font-medium text-gray-500 leading-relaxed">
-              You are about to permanently delete <strong className="text-gray-900">{selectedIds.length}</strong> cluster(s).
-            </p>
-            <div className="flex gap-3">
-              <button onClick={() => setShowConfirmModal(false)} disabled={isDeleting} className="flex-1 rounded-full bg-gray-100 py-3.5 text-[14px] font-bold text-gray-700 transition-colors hover:bg-gray-200 active:scale-95 disabled:opacity-50">Cancel</button>
-              <button onClick={executeBulkDelete} disabled={isDeleting} className="flex-1 flex items-center justify-center gap-2 rounded-full bg-red-600 py-3.5 text-[14px] font-bold text-white shadow-md shadow-red-600/20 transition-all hover:bg-red-700 active:scale-95 disabled:opacity-50">
-                {isDeleting ? <span className="flex h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" /> : "Yes, Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

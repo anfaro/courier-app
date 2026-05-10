@@ -1,55 +1,263 @@
-// components/Header.tsx
+// components/header.tsx
 
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/components/LanguageProvider";
+
+// --- CUSTOM COURIER LOGO SVG ---
+const AppLogo = () => (
+  <svg width="34" height="34" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-sm">
+    {/* Motion Trails */}
+    <path d="M4 14H12" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="text-blue-400 opacity-40" />
+    <path d="M2 20H10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="text-blue-500 opacity-60" />
+    <path d="M5 26H13" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="text-blue-600 opacity-80" />
+    
+    {/* Stylized Box/Parcel */}
+    <path d="M18 12L28 8L38 12V28L28 32L18 28V12Z" fill="url(#logo-gradient)" />
+    <path d="M18 12L28 16L38 12" stroke="white" strokeWidth="1.5" strokeLinejoin="round" opacity="0.4" />
+    <path d="M28 16V32" stroke="white" strokeWidth="1.5" strokeLinejoin="round" opacity="0.4" />
+    
+    <defs>
+      <linearGradient id="logo-gradient" x1="18" y1="8" x2="38" y2="32" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#2563EB" />
+        <stop offset="100%" stopColor="#4F46E5" />
+      </linearGradient>
+    </defs>
+  </svg>
+);
 
 export default function Header() {
   const { data: session } = useSession();
+  const { t } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<{ customers: any[], deliveries: any[], users?: any[] }>({ customers: [], deliveries: [], users: [] });
+  const [isSearching, setIsSearching] = useState(false);
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchRef = useRef<HTMLDivElement>(null);
 
-  if (!session?.user) return null;
+  // Close search results/menu on path change
+  useEffect(() => {
+    setIsMenuOpen(false);
+    setIsDropdownVisible(false);
+    setSearchQuery("");
+  }, [pathname]);
+
+  // Click outside to close results dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setIsDropdownVisible(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Global Search Debounce
+  useEffect(() => {
+    if (!searchQuery.trim() || searchQuery.length < 2) {
+      setSearchResults({ customers: [], deliveries: [], users: [] });
+      setIsDropdownVisible(false);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      setIsSearching(true);
+      setIsDropdownVisible(true);
+      try {
+        const res = await fetch(`/api/search/global?q=${encodeURIComponent(searchQuery)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSearchResults(data);
+        }
+      } catch (err) {
+        console.error("Global search failed", err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  const authPaths = ["/login", "/signup", "/forgot-password", "/reset-password", "/not-mobile"];
+  if (authPaths.some(path => pathname.startsWith(path))) return null;
+
+  if (!session?.user) {
+    return (
+      <header className="sticky top-0 z-50 w-full border-b border-card-border/50 dark:border-slate-800 bg-background/80 dark:bg-slate-950/80 px-4 py-3 sm:px-6 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AppLogo />
+            <span className="text-lg font-black tracking-tighter text-primary dark:text-slate-100 hidden xs:block">
+              Courier
+            </span>
+          </div>
+          <div className="h-11 w-11 rounded-full bg-gray-200 dark:bg-slate-800 animate-pulse" />
+        </div>
+      </header>
+    );
+  }
 
   const initial = session.user.name
     ? session.user.name.charAt(0).toUpperCase()
     : session.user.email?.charAt(0).toUpperCase() || "U";
 
   return (
-    // M3 Expressive Glass-morphism: Translucent background with deep blur
-    <header className="sticky top-0 z-50 w-full border-b border-gray-200/50 bg-[#F8F9FA]/80 px-4 py-3 sm:px-6 backdrop-blur-xl transition-all">
-      <div className="mx-auto flex max-w-7xl items-center justify-between">
+    <header className="sticky top-0 z-50 w-full border-b border-card-border/50 dark:border-slate-800 bg-background/80 dark:bg-slate-950/80 px-4 py-3 sm:px-6 backdrop-blur-xl transition-all">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
 
-        {/* App Logo - Upgraded with a tight tracking and gradient text */}
-        <Link href="/" className="bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-2xl font-black tracking-tighter text-transparent active:opacity-80">
-          MyApp
+        {/* App Logo & Title */}
+        <Link href="/" className="flex items-center gap-2 shrink-0 active:scale-90 transition-transform">
+          <AppLogo />
+          <span className="text-xl font-black tracking-tighter text-primary dark:text-slate-100 hidden sm:block">
+            Courier
+          </span>
         </Link>
 
+        {/* --- ALWAYS VISIBLE GLOBAL SEARCH --- */}
+        <div ref={searchRef} className="relative flex-1 flex justify-center min-w-0">
+          <div className="flex items-center w-full max-w-[500px] transition-all duration-300 rounded-full bg-surface-hover/80 dark:bg-slate-900/80 px-3 sm:px-4 py-2 ring-1 ring-blue-500/10 dark:ring-blue-400/10 shadow-inner group focus-within:ring-blue-500/30 focus-within:bg-card">
+            <div className="flex items-center justify-center shrink-0 transition-colors text-secondary group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 mr-2">
+              <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            
+            <input 
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => searchQuery.length >= 2 && setIsDropdownVisible(true)}
+              placeholder="Search..."
+              className="w-full bg-transparent border-none outline-none text-[14px] sm:text-[15px] font-bold text-primary placeholder:text-secondary/50"
+            />
+
+            {searchQuery && (
+              <button onClick={() => setSearchQuery("")} className="ml-2 text-secondary hover:text-primary transition-colors">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            )}
+          </div>
+
+          {/* SEARCH RESULTS DROPDOWN */}
+          <AnimatePresence>
+            {isDropdownVisible && (searchQuery.length >= 2) && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                className="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-full sm:w-[450px] max-h-[70vh] overflow-y-auto rounded-[32px] bg-card/95 dark:bg-slate-900/95 p-2 shadow-2xl ring-1 ring-black/5 dark:ring-white/5 backdrop-blur-2xl z-[100] custom-scrollbar"
+              >
+                
+                {isSearching && (
+                  <div className="flex items-center justify-center p-8">
+                    <span className="h-6 w-6 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
+                  </div>
+                )}
+
+                {!isSearching && searchResults.customers.length === 0 && searchResults.deliveries.length === 0 && (!searchResults.users || searchResults.users.length === 0) && (
+                  <div className="p-8 text-center text-secondary font-bold text-[14px]">{t("search.no_results")}</div>
+                )}
+
+                {/* STAFF SECTION */}
+                {searchResults.users && searchResults.users.length > 0 && (
+                  <div className="mb-2">
+                    <p className="px-4 py-2 text-[11px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-400">{t("search.staff")}</p>
+                    {searchResults.users.map((u: any) => (
+                      <motion.div
+                        key={u.id}
+                        whileTap={{ scale: 0.92, rotate: -0.5 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                      >
+                        <Link href="/admin/users" className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-hover transition-colors group">
+                          <div className="h-10 w-10 rounded-xl bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center text-lg shadow-inner group-hover:scale-110 transition-transform">👤</div>
+                          <div className="min-w-0">
+                            <p className="font-black text-primary text-[14px] truncate">{u.name}</p>
+                            <p className="text-[12px] font-medium text-secondary truncate">{u.email} • <span className="uppercase text-[10px] opacity-70">{u.role}</span></p>
+                          </div>
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+
+                {/* CUSTOMER SECTION */}
+                {searchResults.customers.length > 0 && (
+                  <div className="mb-2">
+                    <p className="px-4 py-2 text-[11px] font-black uppercase tracking-widest text-secondary/60">{t("search.customers")}</p>
+                    {searchResults.customers.map((c: any) => (
+                      <motion.div
+                        key={c.id}
+                        whileTap={{ scale: 0.92, rotate: -0.5 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                      >
+                        <Link href={`/customers/${c.id}`} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-hover transition-colors group">
+                          <div className="h-10 w-10 rounded-xl bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-lg shadow-inner group-hover:scale-110 transition-transform">🏠</div>
+                          <div className="min-w-0">
+                            <p className="font-black text-primary text-[14px] truncate">{c.name}</p>
+                            <p className="text-[12px] font-medium text-secondary truncate">{c.phoneNumber || "No phone"}</p>
+                          </div>
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+
+                {/* DELIVERY SECTION */}
+                {searchResults.deliveries.length > 0 && (
+                  <div>
+                    <p className="px-4 py-2 text-[11px] font-black uppercase tracking-widest text-secondary/60">{t("search.waybills")}</p>
+                    {searchResults.deliveries.map((d: any) => (
+                      <motion.div
+                        key={d.id}
+                        whileTap={{ scale: 0.92, rotate: 0.5 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                      >
+                        <Link href={`/deliveries/${d.id}`} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-hover transition-colors group">
+                          <div className="h-10 w-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-lg shadow-inner group-hover:scale-110 transition-transform">📦</div>
+                          <div className="min-w-0">
+                            <p className="font-black text-primary text-[14px] truncate">{d.waybillNumber}</p>
+                            <p className="text-[12px] font-medium text-secondary truncate">{d.receiverName || d.customerName}</p>
+                          </div>
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
         {/* User Profile & Dropdown */}
-        <div className="relative">
-          {/* M3 Avatar Button */}
+        <div className="relative shrink-0">
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600/10 text-lg font-black text-blue-700 shadow-sm ring-1 ring-blue-600/20 transition-all hover:bg-blue-600/20 active:scale-95"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600/10 dark:bg-blue-400/10 text-lg font-black text-blue-700 dark:text-blue-400 shadow-sm ring-1 ring-blue-600/20 dark:ring-blue-400/20 transition-all hover:bg-blue-600/20 dark:hover:bg-blue-400/20 active:scale-90"
           >
             {initial}
           </button>
 
-          {/* M3 Dropdown Menu */}
           {isMenuOpen && (
             <>
-              {/* Invisible backdrop to catch clicks outside the menu */}
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setIsMenuOpen(false)}
-              />
-              <div className="absolute right-0 mt-3 w-64 rounded-[28px] bg-white/90 py-2 shadow-2xl ring-1 ring-black/5 backdrop-blur-2xl z-50 overflow-hidden transform origin-top-right transition-all animate-in fade-in zoom-in-95">
-                <div className="border-b border-gray-100/50 px-6 py-4 bg-gray-50/50">
-                  <p className="truncate text-[15px] font-black text-gray-900">
+              <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
+              <div className="absolute right-0 mt-3 w-64 rounded-[28px] bg-card/90 dark:bg-slate-900/90 py-2 shadow-2xl ring-1 ring-black/5 dark:ring-white/5 backdrop-blur-2xl z-50 overflow-hidden transform origin-top-right transition-all animate-in fade-in zoom-in-95">
+                <div className="border-b border-card-border/50 dark:border-slate-800 px-6 py-4 bg-surface-hover/50 dark:bg-slate-800/50">
+                  <p className="truncate text-[15px] font-black text-primary dark:text-slate-100">
                     {session.user.name || "User"}
                   </p>
-                  <p className="truncate text-[13px] font-medium text-gray-500">
+                  <p className="truncate text-[13px] font-medium text-secondary dark:text-slate-400">
                     {session.user.email}
                   </p>
                 </div>
@@ -57,14 +265,14 @@ export default function Header() {
                 <Link
                   href="/settings"
                   onClick={() => setIsMenuOpen(false)}
-                  className="block px-6 py-3.5 text-[14px] font-bold text-gray-700 transition-colors hover:bg-gray-100/50 active:bg-gray-200"
+                  className="block px-6 py-3.5 text-[14px] font-bold text-primary dark:text-slate-200 transition-colors hover:bg-surface-hover/50 dark:hover:bg-slate-800/50 active:bg-surface-hover dark:active:bg-slate-800"
                 >
-                  Profile Settings
+                  {t("nav.settings")}
                 </Link>
 
                 <button
                   onClick={() => signOut({ callbackUrl: "/login" })}
-                  className="block w-full px-6 py-3.5 text-left text-[14px] font-bold text-red-600 transition-colors hover:bg-red-50/50 active:bg-red-100"
+                  className="block w-full px-6 py-3.5 text-left text-[14px] font-bold text-red-600 dark:text-red-400 transition-colors hover:bg-red-50/50 dark:hover:bg-red-950/30 active:bg-red-100 dark:active:bg-red-950/50"
                 >
                   Log Out
                 </button>
@@ -76,4 +284,3 @@ export default function Header() {
     </header>
   );
 }
-

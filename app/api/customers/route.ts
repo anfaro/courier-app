@@ -1,10 +1,13 @@
+import { logServerAccess } from "@/lib/logger";
 // app/api/customers/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { customerClusters, customers } from "@/lib/schema";
+import { getToken } from "next-auth/jwt";
+import { logActivity } from "@/lib/logger";
 
 // app/api/customers/route.ts (Replace the GET function)
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
     // Using Drizzle's Relational Query to grab the customer AND their clusters
     const allCustomers = await db.query.customers.findMany({
@@ -26,8 +29,10 @@ export async function GET(req: Request) {
 }
 
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (token) await logServerAccess(req, token);
     const body = await req.json();
     // NEW: Extract notes
     const { name, phoneNumber, address, latitude, longitude, housePictureUrl, notes, clusterIds } = body;
@@ -54,6 +59,16 @@ export async function POST(req: Request) {
       }));
 
       await db.insert(customerClusters).values(clusterLinks)
+    }
+
+    if (token) {
+      await logActivity({
+        userId: token.id as number,
+        userName: token.name as string,
+        action: "CUSTOMER_CREATED",
+        details: `Created customer: ${name}`,
+        targetId: newCustomer.id.toString()
+      });
     }
 
     return NextResponse.json({ message: "Customer added successfully" }, { status: 201 });

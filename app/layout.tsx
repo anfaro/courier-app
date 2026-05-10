@@ -4,12 +4,13 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
-import BottomNav from "@/components/BottomNav"; // <-- IMPORTED HERE
+import Header from "@/components/header";
+import BottomNav from "@/components/BottomNav";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Courier Super App", // Updated title!
+  title: "Courier Super App",
   description: "Logistics and Delivery Management",
 };
 
@@ -19,16 +20,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        {/* Wrap children with the Providers */}
         <Providers>
+          <Header />
           {children}
-          {/* THE NEW BOTTOM NAVIGATION */}
           <BottomNav />
         </Providers>
       </body>
     </html>
   );
 }
-

@@ -104,7 +104,7 @@ export default function ScannerModal({ onScanSuccess, onClose }: ScannerModalPro
       <div className="absolute bottom-12 left-0 right-0 px-6 flex justify-center">
         <button
           onClick={onClose}
-          className="flex h-16 w-full max-w-sm items-center justify-center rounded-full bg-white/10 border border-white/20 text-[16px] font-black text-white backdrop-blur-md transition-all active:bg-white/20 active:scale-95 shadow-xl"
+          className="flex h-16 w-full max-w-sm items-center justify-center rounded-full bg-card/10 border border-white/20 text-[16px] font-black text-white backdrop-blur-md transition-all active:bg-card/20 active:scale-90 shadow-xl"
         >
           Cancel Scanning
         </button>

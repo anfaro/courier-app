@@ -20,24 +20,20 @@ A high-performance, mobile-first web application designed for couriers to manage
 * **"Resolve All" Engine:** Instantly generate new customer profiles for unknown names found during bulk pasting via a highly optimized bulk API endpoint.
 * **Searchable Customer Modal:** MD3 Expressive custom dropdown that filters customers instantly without breaking the mobile layout.
 * **Digital Receipt UI:** A stunning, physical-receipt-inspired waybill details page featuring dynamic status banners, absolute actions, and tear-off style COD summary blocks.
-* **Scroll-Optimized Dashboard:** Sticky headers, search bars, and filter pills with an independently scrolling card list to maximize mobile viewport space.
 
-### 🛠 Technical Core
-* **Next.js 15 (App Router):** Using Server Components for data fetching and Client Components for interactive forms.
-* **Drizzle ORM:** Type-safe SQL builder for Postgres, leveraging Relational Queries (`with: { customer: true }`) for effortless table joins and highly optimized bulk inserts.
-* **M3 Expressive UI:** Clean, spacious design with high corner radii (`rounded-[32px]`), tonal color palettes, and glass-morphism overlays.
+### 🌐 Intelligence & Monitoring
+* **Road-Aware Routing:** Intelligent "Best Route Possible" algorithm using OSRM to map actual driving paths between stops.
+* **ETC (Estimated Time of Completion):** Real-time journey metrics including total distance, duration, and projected finish time (id-ID localized).
+* **System Analytics:** Multi-tab admin dashboard for tracking global activity, application errors, and real-time user traffic.
+* **Mainframe Traffic Stream:** High-density, terminal-style access logs for real-time technical monitoring (GET/POST/PUT/DELETE).
 
----
-
-## 🛠 Tech Stack
-* **Framework:** Next.js 15
-* **Database:** PostgreSQL
-* **ORM:** Drizzle ORM
-* **Styling:** Tailwind CSS (Material 3 principles)
-* **Deployment:** Termux (Local Development) / Node.js
+### 🛡 Security & Administration
+* **Fleet Management:** Full-featured user administration UI (Create, Promote/Demote, Reset Password, Offboard).
+* **Global Confirmation Dialogs:** Standardized MD3 Expressive verification engine with bouncy animations and danger-state aware styling.
+* **High-Security Wipe:** Triple-layered verification flow (MD3 Dialogs + Code Input) for permanent system data resets.
+* **Activity Audit Trail:** 100% API coverage for logging every database modification with actor and timestamp details.
 
 ---
-
 
 ## 📅 Development Roadmap
 
@@ -47,30 +43,42 @@ A high-performance, mobile-first web application designed for couriers to manage
 - [x] **Barcode/QR Scanning Integration**
 - [x] **Live Heatmap Visualization**
 
-### Phase 3: Authorization & Admin Controls (Current)
+### Phase 3: Authorization & Admin Controls
 - [x] **Role-Based Access Control (RBAC):** `superadmin` vs `courier` roles implemented.
 - [x] **Middleware Protection:** All `/admin` routes secured via `proxy.ts`.
 - [x] **Bulk Trifecta:** Bulk delete UI/API for Customers, Waybills, and Clusters.
-- [ ] **Data Command Center:** (In Progress) Add Search, Filters, and CSV Export to Admin Tables.
-- [ ] **User Fleet Management:** UI to promote/demote and offboard users.
+- [x] **Global Confirmation System:** MD3 Expressive verification engine.
+- [x] **User Fleet Management:** UI to onboard, promote, or offboard users.
 
 ### Phase 4: Multi-Device & PWA
-- [ ] **Device Detection Guard:** Restrict mobile app view on desktops.
+- [x] **Device Detection Guard:** Restrict mobile app view on desktops.
+- [x] **Multi-Language (i18n):** Global support for English and Indonesia (localized dates/metrics).
+- [x] **Global Theme Engine:** Dark/Light mode support with persistence.
 - [ ] **Desktop Dispatcher View:** Dedicated multi-column HQ layout.
-- [ ] **PWA Support:** Offline mode and push notifications for couriers.---
+- [ ] **PWA Support:** Offline mode and push notifications for couriers.
 
-## 🏗 Recent Architectural Updates (May 7, 2026)
+---
 
-### Unified Delivery Hub & Relational Queries
-We fully deprecated the nested `/customers/[id]/new-waybill` route. Waybill creation is now exclusively handled by the **Global Delivery Hub (`/deliveries/new`)**.
-* **URL Parameter Locking:** We pass `?customerId=[id]` to lock the hub to a specific customer when adding from their profile.
-* **Drizzle Relations:** Implemented robust schema relations allowing us to query deliveries and their associated customer data in a single, lightweight server call.
-* **Bulk Resolving:** Replaced multiple sequential `POST` requests with a single `/api/customers/bulk` endpoint to handle massive Excel pastes without hitting rate limits.
+## 🏗 Recent Architectural Updates (May 10, 2026)
 
-## 🏗 Recent Architectural Updates (May 8, 2026)
-* Floating Dock Navigation: Migrated to a glass-morphic, scroll-aware floating bottom dock to maximize screen real estate.
-* Foreign Key Cascading: Updated database schema to support ON DELETE CASCADE for clean data wipes when removing customers.
-* Edge Auth Checks: Implemented getToken in API routes for server-side role verification.
+### Monitoring, UI Standardization & i18n
+* **Global Command Search:** Header-integrated engine for Customers, Waybills, and Staff (RBAC-aware) with bouncy animations.
+* **Road-Aware TSP Routing:** Integrated OSRM API for realistic driving paths and Estimated Time of Completion (ETC).
+* **Terminal UI Access Logs:** Added a high-density midnight terminal view for real-time technical traffic monitoring.
+* **Global i18n Engine:** Implemented `LanguageProvider` with 100% UI coverage for English and Indonesian.
+* **MD3 Bouncy Buttons:** Standardized all interactions to use `active:scale-90` animations and pill-shaped bordered aesthetics.
+* **Unified Layout:** Moved Header to root layout with immediate Skeleton rendering for instant brand presence.
+* **Error Boundary:** Global crash tracking system that automatically logs stack traces to the database.
+
+---
+
+## 🛠 Tech Stack
+* **Framework:** Next.js 15
+* **Database:** PostgreSQL
+* **ORM:** Drizzle ORM
+* **Styling:** Tailwind CSS (Material 3 principles)
+* **Animation:** Framer Motion (Bouncy/Spring physics)
+* **Routing Engine:** OSRM (Open Source Routing Machine)
 
 ---
 
@@ -85,24 +93,12 @@ We fully deprecated the nested `/customers/[id]/new-waybill` route. Waybill crea
    npm Install
 
 3. Setup Environment
-   Create a .env or .env.local file in the root directory
+   Create a .env.local file
    ```env
-   NEXTAUTH_HOST="http://localhost:3000"
-   NEXTAUTH_SECRET="write-your-secret-key-here"
-   DATABASE_URL="postgres://user:password@localhost:5432/cms_db"
+   NEXTAUTH_URL="http://localhost:3000"
+   NEXTAUTH_SECRET="your-secret-key"
+   DATABASE_URL="postgres://..."
 
 4. Database Migration
    ```bash
    npx drizzle-kit push
-
-5. Run Development Server
-   ```bash
-   npm run dev
-   # or
-   pnpm run dev
-
-## 📱 Mobile Workflow
-- This app is optimized for use in Termux on Android.
-- GPS: Requires "High Accuracy" mode and browser location permissions. Ensure localhost:3000 is used for a secure context.
-- Search: Debounced to prevent unnecessary server load on mobile data.
-- Bulk: Designed for one-handed thumb interaction with a "Draft-to-Card" logic.

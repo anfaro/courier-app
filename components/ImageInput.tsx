@@ -57,7 +57,7 @@ export default function ImageInput({
           <img
             src={preview}
             alt="Preview"
-            className="h-32 w-32 rounded-[1.5rem] object-cover border border-gray-200 shadow-sm"
+            className="h-32 w-32 rounded-[1.5rem] object-cover border border-card-border shadow-sm"
           />
         </div>
       )}
@@ -67,7 +67,7 @@ export default function ImageInput({
         type="file"
         accept="image/*"
         onChange={handleFileChange}
-        className="w-full rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-4 py-4 text-sm text-gray-600 transition-all hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-blue-500/20 file:mr-4 file:cursor-pointer file:rounded-full file:border-0 file:bg-blue-100 file:px-5 file:py-2.5 file:text-[14px] file:font-bold file:text-blue-700 hover:file:bg-blue-200 active:file:scale-95"
+        className="w-full rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-4 py-4 text-sm text-secondary transition-all hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-blue-500/20 file:mr-4 file:cursor-pointer file:rounded-full file:border-0 file:bg-blue-100 file:px-5 file:py-2.5 file:text-[14px] file:font-bold file:text-blue-700 hover:file:bg-blue-200 active:file:scale-95"
       />
     </div>
   );

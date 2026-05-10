@@ -3,7 +3,6 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import Header from "@/components/header";
 import Breadcrumbs from "@/components/Breadcrumbs";
 
 export default function EditClusterPage({ params }: { params: Promise<{ id: string }> }) {
@@ -122,10 +121,9 @@ export default function EditClusterPage({ params }: { params: Promise<{ id: stri
 
   if (isFetching) {
     return (
-      <div className="min-h-screen bg-[#F8F9FA] pb-20">
-        <Header />
+      <div className="min-h-screen bg-background pb-20">
         <main className="mx-auto max-w-2xl p-4 sm:p-6">
-          <div className="mt-4 flex min-h-[40vh] flex-col items-center justify-center rounded-[2.5rem] bg-white p-6 shadow-sm border border-gray-50">
+          <div className="mt-4 flex min-h-[40vh] flex-col items-center justify-center rounded-[2.5rem] bg-card p-6 shadow-sm border border-gray-50">
             <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-[1.5rem] bg-purple-50 text-3xl mb-4 border border-purple-100">
               ⏳
             </div>
@@ -137,12 +135,11 @@ export default function EditClusterPage({ params }: { params: Promise<{ id: stri
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] pb-20">
-      <Header />
+    <div className="min-h-screen bg-background pb-20">
       <Breadcrumbs />
 
       <main className="mx-auto max-w-2xl p-4 sm:p-6">
-        <div className="mt-4 rounded-[2.5rem] bg-white p-6 sm:p-10 shadow-sm border border-gray-50">
+        <div className="mt-4 rounded-[2.5rem] bg-card p-6 sm:p-10 shadow-sm border border-gray-50">
           <div className="mb-8">
             <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Edit Cluster</h1>
             <p className="mt-2 text-base text-gray-500">Update details and manage customer list.</p>

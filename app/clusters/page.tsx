@@ -2,7 +2,6 @@
 import { db } from "@/lib/db";
 import { clusters, customerClusters } from "@/lib/schema"; // FIXED: Import customerClusters
 import { eq, sql } from "drizzle-orm";
-import Header from "@/components/header"; // Note: ensure this matches your actual casing, e.g., "@/components/Header"
 import Breadcrumbs from "@/components/Breadcrumbs";
 import Link from "next/link";
 
@@ -22,7 +21,7 @@ export default async function ClustersListPage() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-24">
-      <Header />
+      
       <Breadcrumbs />
 
       <main className="mx-auto max-w-3xl p-4 sm:p-6">
@@ -30,7 +29,7 @@ export default async function ClustersListPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Clusters</h1>
           <Link
             href="/clusters/new"
-            className="inline-flex items-center justify-center rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 active:scale-95"
+            className="inline-flex items-center justify-center rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 active:scale-90"
           >
             <span className="mr-2 text-lg leading-none">+</span> Add
           </Link>

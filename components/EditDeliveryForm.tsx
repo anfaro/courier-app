@@ -44,7 +44,7 @@ export default function EditDeliveryForm({ delivery }: { delivery: any }) {
     }
   };
 
-  const inputClass = "w-full rounded-2xl border border-gray-200 bg-gray-50 px-5 py-4 text-[15px] font-medium text-gray-800 transition-all focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 placeholder:text-gray-400 shadow-sm";
+  const inputClass = "w-full rounded-2xl border border-card-border bg-gray-50 px-5 py-4 text-[15px] font-medium text-gray-800 transition-all focus:border-blue-500 focus:bg-card focus:outline-none focus:ring-4 focus:ring-blue-500/10 placeholder:text-gray-400 shadow-sm";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -56,7 +56,7 @@ export default function EditDeliveryForm({ delivery }: { delivery: any }) {
 
       {/* Status Selector */}
       <div>
-        <label className="mb-3 block text-[12px] font-black uppercase tracking-widest text-gray-500">
+        <label className="mb-3 block text-[12px] font-black uppercase tracking-widest text-secondary">
           Delivery Status
         </label>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -65,11 +65,11 @@ export default function EditDeliveryForm({ delivery }: { delivery: any }) {
               key={status}
               type="button"
               onClick={() => setFormData({ ...formData, status })}
-              className={`rounded-2xl py-3 text-[13px] font-bold transition-all active:scale-95 border-2 ${formData.status === status
+              className={`rounded-2xl py-3 text-[13px] font-bold transition-all active:scale-90 border-2 ${formData.status === status
                   ? status === "Delivered" ? "border-green-600 bg-green-50 text-green-700"
                     : status === "Failed" ? "border-red-600 bg-red-50 text-red-700"
                       : "border-blue-600 bg-blue-50 text-blue-700"
-                  : "border-transparent bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  : "border-transparent bg-gray-100 text-secondary hover:bg-gray-200"
                 }`}
             >
               {status}
@@ -79,7 +79,7 @@ export default function EditDeliveryForm({ delivery }: { delivery: any }) {
       </div>
 
       <div>
-        <label className="mb-2 block text-[13px] font-black uppercase tracking-widest text-gray-500">
+        <label className="mb-2 block text-[13px] font-black uppercase tracking-widest text-secondary">
           Waybill Number
         </label>
         <input
@@ -93,7 +93,7 @@ export default function EditDeliveryForm({ delivery }: { delivery: any }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div>
-          <label className="mb-2 block text-[13px] font-black uppercase tracking-widest text-gray-500">
+          <label className="mb-2 block text-[13px] font-black uppercase tracking-widest text-secondary">
             Receiver Name
           </label>
           <input
@@ -107,12 +107,12 @@ export default function EditDeliveryForm({ delivery }: { delivery: any }) {
 
         {/* --- UPDATED: Beautiful Auto-Formatting IDR Input --- */}
         <div>
-          <label className="mb-2 block text-[13px] font-black uppercase tracking-widest text-gray-500">
+          <label className="mb-2 block text-[13px] font-black uppercase tracking-widest text-secondary">
             COD Amount
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-              <span className="text-[15px] font-bold text-gray-500">Rp</span>
+              <span className="text-[15px] font-bold text-secondary">Rp</span>
             </div>
             <input
               type="text"
@@ -132,7 +132,7 @@ export default function EditDeliveryForm({ delivery }: { delivery: any }) {
         </div>
       </div>
 
-      <div className="bg-gray-50 rounded-3xl p-4 border border-gray-100">
+      <div className="bg-gray-50 rounded-3xl p-4 border border-card-border">
         <ImageInput
           label="Proof of Delivery / Signature"
           existingImageUrl={formData.proofOfDeliveryUrl}
@@ -140,18 +140,18 @@ export default function EditDeliveryForm({ delivery }: { delivery: any }) {
         />
       </div>
 
-      <div className="pt-4 flex gap-3 sticky bottom-4 z-10 bg-white py-2 -mx-2 px-2 rounded-full shadow-lg border border-gray-50">
+      <div className="pt-4 flex gap-3 sticky bottom-4 z-10 bg-card py-2 -mx-2 px-2 rounded-full shadow-lg border border-card-border">
         <button
           type="button"
           onClick={() => router.back()}
-          className="flex-1 rounded-full bg-gray-100 py-4 text-[14px] font-bold text-gray-700 active:scale-95 transition-all"
+          className="flex-1 rounded-full bg-gray-100 py-4 text-[14px] font-bold text-gray-700 active:scale-90 transition-all"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isLoading}
-          className="flex-[2] rounded-full bg-blue-600 py-4 text-[14px] font-black text-white hover:bg-blue-700 active:scale-95 transition-all disabled:bg-blue-300 disabled:shadow-none"
+          className="flex-[2] rounded-full bg-blue-600 py-4 text-[14px] font-black text-white hover:bg-blue-700 active:scale-90 transition-all disabled:bg-blue-300 disabled:shadow-none"
         >
           {isLoading ? "Saving..." : "Save Changes"}
         </button>

@@ -1,16 +1,15 @@
 // app/api/clusters/[id]/route.ts
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
-import { clusters, customerClusters } from "@/lib/schema"; // Added customerClusters
+import { clusters, customerClusters } from "@/lib/schema";
 import { eq } from "drizzle-orm";
+import { logActivity, logServerAccess } from "@/lib/logger";
 
-// 1. GET: Fetch cluster data with its current customers
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
-
-    // Using relational query to get the cluster AND its linked customers
     const data = await db.query.clusters.findFirst({
       where: eq(clusters.id, id),
       with: {
@@ -21,9 +20,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         },
       },
     });
-
     if (!data) return NextResponse.json({ message: "Cluster not found" }, { status: 404 });
-
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
     console.error("GET Cluster Error:", error);
@@ -31,36 +28,39 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   }
 }
 
-// 2. PUT: Update cluster details and membership
-export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (token) await logServerAccess(req, token);
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
     const { name, notes, customerIds } = await req.json();
 
     if (!name) return NextResponse.json({ message: "Cluster name is required" }, { status: 400 });
 
-    // Step A: Update the basic cluster info
-    await db.update(clusters)
-      .set({
-        name,
-        notes,
-        // Remove updatedAt if not in your schema, or ensure it exists in lib/schema.ts
-        // updatedAt: new Date() 
-      })
-      .where(eq(clusters.id, id));
-
-    // Step B: Many-to-Many Sync
-    // 1. Wipe current links for this cluster
+    await db.update(clusters).set({ 
+      name, 
+      notes,
+      updatedAt: new Date() 
+    }).where(eq(clusters.id, id));
     await db.delete(customerClusters).where(eq(customerClusters.clusterId, id));
 
-    // 2. Re-insert the new selection
     if (customerIds && Array.isArray(customerIds) && customerIds.length > 0) {
       const newLinks = customerIds.map((custId: number) => ({
         clusterId: id,
         customerId: custId,
       }));
       await db.insert(customerClusters).values(newLinks);
+    }
+
+    if (token) {
+      await logActivity({
+        userId: token.id as number,
+        userName: token.name as string,
+        action: "CLUSTER_UPDATED",
+        details: `Updated cluster ${name} (ID: ${id})`,
+        targetId: id.toString()
+      });
     }
 
     return NextResponse.json({ message: "Cluster updated successfully" }, { status: 200 });
@@ -70,16 +70,24 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   }
 }
 
-// Add this at the bottom of app/api/clusters/[id]/route.ts
-
-export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (token) await logServerAccess(req, token);
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
 
-    // Because of the 'CASCADE' delete rule in our schema, deleting a cluster 
-    // will automatically delete all the join table records in 'customer_clusters' too!
     await db.delete(clusters).where(eq(clusters.id, id));
+
+    if (token) {
+      await logActivity({
+        userId: token.id as number,
+        userName: token.name as string,
+        action: "CLUSTER_DELETED",
+        details: `Deleted cluster ID: ${id}`,
+        targetId: id.toString()
+      });
+    }
 
     return NextResponse.json({ message: "Cluster deleted successfully" }, { status: 200 });
   } catch (error) {
@@ -87,4 +95,3 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     return NextResponse.json({ message: "Failed to delete cluster" }, { status: 500 });
   }
 }
-

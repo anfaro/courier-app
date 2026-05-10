@@ -1,7 +1,6 @@
 // app/admin/clusters/page.tsx
 import { db } from "@/lib/db";
 import { clusters } from "@/lib/schema";
-import Header from "@/components/header";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import AdminClusterTable from "@/components/AdminClusterTable";
 
@@ -9,9 +8,8 @@ export default async function AdminClustersPage() {
   const allClusters = await db.select().from(clusters);
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-[#F8F9FA] overflow-hidden">
-      <div className="shrink-0 z-30 bg-[#F8F9FA]">
-        <Header />
+    <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
+      <div className="shrink-0 z-30 bg-background">
         <Breadcrumbs />
       </div>
 

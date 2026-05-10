@@ -3,7 +3,6 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import Header from "@/components/header";
 import Breadcrumbs from "@/components/Breadcrumbs";
 
 export default function EditCustomerPage({ params }: { params: Promise<{ id: string }> }) {
@@ -201,24 +200,24 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
     }
   };
 
-  const inputClass = "w-full rounded-2xl border border-gray-200 bg-gray-50 px-5 py-3.5 text-[15px] font-medium text-gray-800 transition-all focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 placeholder:text-gray-400";
+  const inputClass = "w-full rounded-2xl border border-gray-200 bg-gray-50 px-5 py-3.5 text-[15px] font-medium text-gray-800 transition-all focus:border-blue-500 focus:bg-card focus:outline-none focus:ring-4 focus:ring-blue-500/10 placeholder:text-gray-400";
 
   if (isFetching) {
     return (
-      <div className="min-h-screen bg-[#F8F9FA] pb-20">
-        <Header /><main className="mx-auto max-w-2xl p-4 sm:p-6"><div className="mt-4 flex min-h-[50vh] flex-col items-center justify-center rounded-[2.5rem] bg-white p-6 shadow-sm border border-gray-100 text-gray-500 font-medium">Loading customer...</div></main>
+      <div className="min-h-screen bg-background pb-20">
+        <main className="mx-auto max-w-2xl p-4 sm:p-6"><div className="mt-4 flex min-h-[50vh] flex-col items-center justify-center rounded-[2.5rem] bg-card p-6 shadow-sm border border-gray-100 text-gray-500 font-medium">Loading customer...</div></main>
       </div>
     );
   }
 
   return (
     <>
-      <div className="min-h-screen bg-[#F8F9FA] pb-20">
-        <Header />
+      <div className="min-h-screen bg-background pb-20">
+        
         <Breadcrumbs />
 
         <main className="mx-auto max-w-2xl p-4 sm:p-6">
-          <div className="mt-4 rounded-[2.5rem] bg-white p-6 sm:p-10 shadow-sm border border-gray-100">
+          <div className="mt-4 rounded-[2.5rem] bg-card p-6 sm:p-10 shadow-sm border border-gray-100">
             <h1 className="text-3xl font-bold text-gray-800 mb-8">Edit Customer</h1>
 
             {error && <p className="mb-6 rounded-2xl bg-red-50 p-4 text-[15px] font-medium text-red-600">{error}</p>}
@@ -231,7 +230,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
 
               <div>
                 <label className="mb-2 block text-[15px] font-semibold text-gray-700">Phone Number</label>
-                <div className="flex items-center rounded-2xl border border-gray-200 bg-gray-50 focus-within:border-blue-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-500/10 transition-all overflow-hidden">
+                <div className="flex items-center rounded-2xl border border-gray-200 bg-gray-50 focus-within:border-blue-500 focus-within:bg-card focus-within:ring-4 focus-within:ring-blue-500/10 transition-all overflow-hidden">
                   <span className="pl-5 pr-2 font-medium text-gray-500">+62</span>
                   <input type="tel" value={phoneNumber} onChange={handlePhoneChange} className="w-full bg-transparent py-3.5 pr-5 text-[15px] font-medium text-gray-800 focus:outline-none" />
                 </div>
@@ -263,7 +262,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
               <div className="rounded-[2rem] bg-blue-50/50 p-6 border border-blue-100/50 space-y-4">
                 <div className="flex items-center justify-between">
                   <label className="block text-[15px] font-semibold text-blue-900">Location Data</label>
-                  <button type="button" onClick={getLocation} className="rounded-full bg-white px-4 py-2 text-[13px] font-semibold text-blue-700 shadow-sm border border-blue-100 active:scale-95 transition-all">
+                  <button type="button" onClick={getLocation} className="rounded-full bg-card px-4 py-2 text-[13px] font-semibold text-blue-700 shadow-sm border border-blue-100 active:scale-95 transition-all">
                     📍 Update GPS
                   </button>
                 </div>
@@ -289,11 +288,11 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <span className="text-[12px] font-medium text-blue-700 ml-2">Latitude</span>
-                    <input type="text" value={latitude} onChange={(e) => setLatitude(e.target.value)} className="w-full rounded-xl border border-blue-100 bg-white/60 px-4 py-3 text-[14px] font-medium text-blue-900 focus:bg-white focus:outline-none" />
+                    <input type="text" value={latitude} onChange={(e) => setLatitude(e.target.value)} className="w-full rounded-xl border border-blue-100 bg-card/60 px-4 py-3 text-[14px] font-medium text-blue-900 focus:bg-card focus:outline-none" />
                   </div>
                   <div className="space-y-1">
                     <span className="text-[12px] font-medium text-blue-700 ml-2">Longitude</span>
-                    <input type="text" value={longitude} onChange={(e) => setLongitude(e.target.value)} className="w-full rounded-xl border border-blue-100 bg-white/60 px-4 py-3 text-[14px] font-medium text-blue-900 focus:bg-white focus:outline-none" />
+                    <input type="text" value={longitude} onChange={(e) => setLongitude(e.target.value)} className="w-full rounded-xl border border-blue-100 bg-card/60 px-4 py-3 text-[14px] font-medium text-blue-900 focus:bg-card focus:outline-none" />
                   </div>
                 </div>
               </div>
@@ -334,7 +333,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
           ></div>
 
           {/* Modal Container */}
-          <div className="relative w-full max-w-sm rounded-[28px] bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 flex flex-col gap-4">
+          <div className="relative w-full max-w-sm rounded-[28px] bg-card p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 flex flex-col gap-4">
 
             {/* MD3 Warning Icon Container */}
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 mb-1">

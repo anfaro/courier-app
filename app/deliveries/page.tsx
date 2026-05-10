@@ -5,7 +5,6 @@
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import Header from "@/components/header";
 import Breadcrumbs from "@/components/Breadcrumbs";
 
 // 1. We extract the main logic into a Content component
@@ -63,8 +62,8 @@ function DeliveriesDashboardContent() {
       {/* --- TOP SECTION --- */}
       <div className="pt-4 mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Deliveries</h1>
-          <p className="text-[14px] font-medium text-gray-500 mt-1">Manage your active waybills.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-primary">Deliveries</h1>
+          <p className="text-[14px] font-medium text-secondary mt-1">Manage your active waybills.</p>
         </div>
       </div>
 
@@ -86,16 +85,16 @@ function DeliveriesDashboardContent() {
       </Link>
 
       <div className="flex gap-3 mb-6">
-        <div className="flex-1 rounded-[24px] bg-white p-4 shadow-sm border border-gray-100 flex flex-col justify-center">
-          <p className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-1">Waybills</p>
-          <p className="text-[22px] leading-none font-black text-gray-900">{pendingCount}</p>
+        <div className="flex-1 rounded-[24px] bg-card p-4 shadow-sm border border-card-border flex flex-col justify-center">
+          <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">Waybills</p>
+          <p className="text-[22px] leading-none font-black text-primary">{pendingCount}</p>
         </div>
 
-        <div className="flex-[1.2] rounded-[24px] bg-orange-50 p-4 shadow-sm border border-orange-100 flex flex-col justify-center overflow-hidden">
-          <p className="text-[11px] font-black uppercase tracking-widest text-orange-400 mb-1">Pending COD</p>
+        <div className="flex-[1.2] rounded-[24px] bg-orange-50 dark:bg-orange-950/20 p-4 shadow-sm border border-orange-100 dark:border-orange-900/50 flex flex-col justify-center overflow-hidden">
+          <p className="text-[11px] font-black uppercase tracking-widest text-orange-400 dark:text-orange-500 mb-1">Pending COD</p>
           <div className="flex items-baseline gap-1 whitespace-nowrap overflow-hidden text-ellipsis">
-            <span className="text-[14px] font-bold text-orange-600">Rp</span>
-            <span className="text-[20px] leading-none font-black text-orange-700 tracking-tight">
+            <span className="text-[14px] font-bold text-orange-600 dark:text-orange-400">Rp</span>
+            <span className="text-[20px] leading-none font-black text-orange-700 dark:text-orange-300 tracking-tight">
               {totalCodPending.toLocaleString('id-ID')}
             </span>
           </div>
@@ -103,12 +102,12 @@ function DeliveriesDashboardContent() {
       </div>
 
       {/* --- STICKY SEARCH & FILTERS --- */}
-      <div className="sticky top-0 z-20 bg-[#F8F9FA] pt-2 pb-2 -mx-4 px-4 sm:-mx-6 sm:px-6">
+      <div className="sticky top-0 z-20 bg-background pt-2 pb-2 -mx-4 px-4 sm:-mx-6 sm:px-6">
 
         {/* SEARCH BAR */}
         <div className="relative mb-4">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-5 w-5 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
@@ -117,12 +116,12 @@ function DeliveriesDashboardContent() {
             placeholder="Search waybill or receiver name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-[24px] border border-gray-100 bg-white pl-11 pr-10 py-3.5 text-[15px] font-medium text-gray-900 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none placeholder:text-gray-400"
+            className="w-full rounded-[24px] border border-card-border bg-card pl-11 pr-10 py-3.5 text-[15px] font-medium text-primary shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none placeholder:text-secondary"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-secondary hover:text-primary"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -137,9 +136,9 @@ function DeliveriesDashboardContent() {
             <button
               key={f}
               onClick={() => setFilter(f as any)}
-              className={`whitespace-nowrap rounded-full px-6 py-2.5 text-[14px] font-bold transition-all active:scale-95 ${filter === f
-                ? "bg-gray-900 text-white shadow-md"
-                : "bg-white text-gray-500 border border-gray-200 hover:bg-gray-50"
+              className={`whitespace-nowrap px-6 py-2.5 text-[14px] font-bold transition-all active:scale-90 rounded-full ${filter === f
+                ? "bg-gray-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-md"
+                : "bg-card text-secondary border border-card-border hover:bg-surface-hover active:bg-gray-200/50 dark:active:bg-slate-700/50 shadow-sm"
                 }`}
             >
               {f}
@@ -151,25 +150,25 @@ function DeliveriesDashboardContent() {
       {/* --- CONTENT LIST --- */}
       <div className="pt-2">
         {error && (
-          <div className="mb-4 rounded-[24px] bg-red-50 p-4 text-[14px] font-bold text-red-600 border border-red-100">
+          <div className="mb-4 rounded-[24px] bg-red-50 dark:bg-red-950/20 p-4 text-[14px] font-bold text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/50">
             {error}
           </div>
         )}
 
         {isLoading ? (
-          <div className="flex h-40 flex-col items-center justify-center rounded-[32px] bg-white border border-gray-100 mt-2">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-2xl animate-spin">⏳</span>
-            <p className="mt-4 text-[14px] font-bold text-gray-400">Loading deliveries...</p>
+          <div className="flex h-40 flex-col items-center justify-center rounded-[32px] bg-card border border-card-border mt-2">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30 text-2xl animate-spin">⏳</span>
+            <p className="mt-4 text-[14px] font-bold text-secondary">Loading deliveries...</p>
           </div>
         ) : filteredDeliveries.length === 0 ? (
-          <div className="flex h-48 flex-col items-center justify-center rounded-[32px] bg-white border border-gray-100 text-center px-6 shadow-sm mt-2">
-            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-gray-50 text-2xl">
+          <div className="flex h-48 flex-col items-center justify-center rounded-[32px] bg-card border border-card-border text-center px-6 shadow-sm mt-2">
+            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-2xl">
               {searchQuery ? "🔍" : "📦"}
             </div>
-            <h3 className="text-lg font-black text-gray-900">
+            <h3 className="text-lg font-black text-primary">
               {searchQuery ? "No Results Found" : `No ${filter !== "All" ? filter : ""} Deliveries`}
             </h3>
-            <p className="mt-1 text-[13px] font-medium text-gray-500">
+            <p className="mt-1 text-[13px] font-medium text-secondary">
               {searchQuery
                 ? "Try searching for a different waybill number."
                 : filter === "All"
@@ -183,35 +182,38 @@ function DeliveriesDashboardContent() {
               <Link
                 href={`/deliveries/${delivery.id}`}
                 key={delivery.id}
-                className="block rounded-[28px] bg-white p-5 shadow-sm border border-gray-100 hover:border-blue-200 transition-all active:scale-[0.98]"
+                className="block rounded-[28px] bg-card p-5 shadow-sm border border-card-border hover:border-blue-200 dark:hover:border-blue-800 transition-all active:scale-[0.98]"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <p className="text-[18px] font-black text-gray-900">{delivery.waybillNumber}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-700">
+                    <p className="text-[18px] font-black text-primary">{delivery.waybillNumber}</p>
+                    <div className="flex flex-col gap-1 mt-1">
+                      <span className="inline-flex items-center w-fit gap-1 rounded-md bg-blue-50 dark:bg-blue-900/30 px-2 py-1 text-[11px] font-bold text-blue-700 dark:text-blue-300">
                         👤 {delivery.customer?.name || delivery.customerName || "Unknown Customer"}
                       </span>
+                      <p className="text-[10px] font-medium text-secondary opacity-60 ml-1">
+                        📅 {new Date(delivery.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
                     </div>
                   </div>
 
-                  <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-wider ${delivery.status === 'Pending' ? 'bg-orange-100 text-orange-700' :
-                    delivery.status === 'Delivered' ? 'bg-green-100 text-green-700' :
-                      'bg-red-100 text-red-700'
+                  <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-wider ${delivery.status === 'Pending' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300' :
+                    delivery.status === 'Delivered' ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' :
+                      'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
                     }`}>
                     {delivery.status}
                   </span>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between border-t border-gray-50 pt-4">
+                <div className="mt-4 flex items-center justify-between border-t border-card-border pt-4">
                   <div className="overflow-hidden pr-2">
-                    <p className="text-[11px] font-black uppercase tracking-widest text-gray-400">Receiver</p>
-                    <p className="text-[14px] font-bold text-gray-800 truncate">{delivery.receiverName || "-"}</p>
+                    <p className="text-[11px] font-black uppercase tracking-widest text-secondary">Receiver</p>
+                    <p className="text-[14px] font-bold text-primary truncate">{delivery.receiverName || "-"}</p>
                   </div>
 
                   <div className="text-right shrink-0">
-                    <p className="text-[11px] font-black uppercase tracking-widest text-gray-400">COD Amount</p>
-                    <p className={`text-[16px] font-black flex items-baseline justify-end gap-1 ${parseInt(delivery.codAmount) > 0 ? 'text-orange-600' : 'text-gray-900'}`}>
+                    <p className="text-[11px] font-black uppercase tracking-widest text-secondary">COD Amount</p>
+                    <p className={`text-[16px] font-black flex items-baseline justify-end gap-1 ${parseInt(delivery.codAmount) > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-primary'}`}>
                       <span className="text-[11px]">Rp</span>
                       {parseInt(delivery.codAmount || 0).toLocaleString('id-ID')}
                     </p>
@@ -229,16 +231,16 @@ function DeliveriesDashboardContent() {
 // 2. The main page component wraps the content in Suspense
 export default function DeliveriesPage() {
   return (
-    <div className="flex flex-col h-[100dvh] bg-[#F8F9FA] overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
       {/* --- FIXED HEADER --- */}
-      <div className="shrink-0 z-30 bg-[#F8F9FA]">
-        <Header />
+      <div className="shrink-0 z-30 bg-background">
+        
         <Breadcrumbs />
       </div>
 
       <Suspense fallback={
         <div className="flex-1 flex items-center justify-center">
-          <span className="text-gray-400 font-bold animate-pulse">Loading dashboard...</span>
+          <span className="text-secondary font-bold animate-pulse">Loading dashboard...</span>
         </div>
       }>
         <DeliveriesDashboardContent />

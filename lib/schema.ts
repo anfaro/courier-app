@@ -19,6 +19,7 @@ export const users = pgTable("users", {
   // NEW: Role column with a strict default
   role: varchar("role", { length: 50 }).default("courier").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // NEW: Table to hold temporary password reset tokens
@@ -102,9 +103,65 @@ export const customerClustersRelations = relations(customerClusters, ({ one }) =
 }));
 
 export const deliveriesRelations = relations(deliveries, ({ one }) => ({
-  // This tells Drizzle: "One delivery belongs to exactly one customer"
   customer: one(customers, {
     fields: [deliveries.customerId],
     references: [customers.id],
+  }),
+}));
+
+// ACTIVITY LOGS: Global system log to track changes and actions
+export const logs = pgTable("logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  userName: varchar("user_name", { length: 256 }), // Denormalized for fast reading
+  action: varchar("action", { length: 100 }).notNull(), // e.g. "USER_CREATED", "DELIVERY_SAVE", "CUSTOMER_DELETE"
+  details: text("details"), // JSON or descriptive string
+  targetId: varchar("target_id", { length: 100 }), // e.g. The ID of the modified customer
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ERROR LOGS: Capturing runtime exceptions and system failures
+export const errorLogs = pgTable("error_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  userName: varchar("user_name", { length: 256 }),
+  errorName: varchar("error_name", { length: 256 }),
+  errorMessage: text("error_message"),
+  stackTrace: text("stack_trace"),
+  pathname: varchar("pathname", { length: 2048 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ACCESS LOGS: Tracking every hit to the application
+export const accessLogs = pgTable("access_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  userName: varchar("user_name", { length: 256 }),
+  pathname: varchar("pathname", { length: 2048 }).notNull(),
+  method: varchar("method", { length: 10 }).notNull(),
+  ipAddress: varchar("ip_address", { length: 100 }),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Relations for logs
+export const logsRelations = relations(logs, ({ one }) => ({
+  user: one(users, {
+    fields: [logs.userId],
+    references: [users.id],
+  }),
+}));
+
+export const errorLogsRelations = relations(errorLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [errorLogs.userId],
+    references: [users.id],
+  }),
+}));
+
+export const accessLogsRelations = relations(accessLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [accessLogs.userId],
+    references: [users.id],
   }),
 }));

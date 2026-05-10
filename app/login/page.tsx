@@ -5,8 +5,11 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
+import { useLanguage } from "@/components/LanguageProvider";
+import AuthLanguageSelector from "@/components/AuthLanguageSelector";
 
 export default function LoginPage() {
+  const { t } = useLanguage();
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -24,7 +27,7 @@ export default function LoginPage() {
     });
 
     if (res?.error) {
-      setError("Invalid credentials. Please check your info and try again.");
+      setError(t("auth.invalid_creds"));
     } else {
       router.push("/");
       router.refresh();
@@ -32,26 +35,27 @@ export default function LoginPage() {
   };
 
   // M3 Expressive Input Style: Soft resting state, bright white active state with soft glow
-  const inputClass = "w-full rounded-2xl border border-transparent bg-gray-100 px-5 py-4 text-[15px] text-gray-900 transition-all focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-600/15";
+  const inputClass = "w-full rounded-2xl border border-transparent bg-gray-100 px-5 py-4 text-[15px] text-gray-900 transition-all focus:border-blue-600 focus:bg-card focus:outline-none focus:ring-4 focus:ring-blue-600/15";
 
   return (
-    <div className="flex min-h-screen flex-col justify-center bg-[#F8F9FA] py-12 px-4 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen flex-col justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
+      <AuthLanguageSelector />
       {/* M3 Header Section */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-blue-600 text-3xl shadow-md border border-blue-700">
           📦
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold tracking-tight text-gray-900">
-          Welcome Back
+          {t("auth.welcome")}
         </h2>
         <p className="mt-2 text-center text-[15px] text-gray-600">
-          Sign in to your Courier SuperApp
+          {t("auth.login_subtitle")}
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         {/* M3 Expressive Card */}
-        <div className="rounded-[2.5rem] bg-white px-6 py-10 shadow-sm border border-gray-50 sm:px-10">
+        <div className="rounded-[2.5rem] bg-card px-6 py-10 shadow-sm border border-gray-50 sm:px-10">
 
           {error && (
             <div className="mb-6 rounded-2xl bg-red-50 p-4 text-center text-[15px] font-medium text-red-700 border border-red-100 animate-[fadeIn_0.3s_ease-out]">
@@ -62,7 +66,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="mb-2 block text-[15px] font-bold text-gray-700">
-                Email or Name
+                {t("auth.email_or_name")}
               </label>
               <input
                 type="text"
@@ -70,13 +74,13 @@ export default function LoginPage() {
                 onChange={(e) => setUsernameOrEmail(e.target.value)}
                 required
                 className={inputClass}
-                placeholder="jsmith@example.com or John Doe"
+                placeholder={t("auth.email_or_name_placeholder")}
               />
             </div>
 
             <div>
               <label className="mb-2 block text-[15px] font-bold text-gray-700">
-                Password
+                {t("auth.password")}
               </label>
               <div className="relative flex items-center">
                 <input
@@ -92,9 +96,9 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 rounded-xl bg-gray-200/50 px-3 py-1.5 text-sm font-bold text-gray-600 transition hover:bg-gray-200 hover:text-gray-900 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="absolute right-3 rounded-xl bg-gray-200/50 px-3 py-1.5 text-sm font-bold text-gray-600 transition hover:bg-gray-200 hover:text-gray-900 active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {showPassword ? "Hide" : "Show"}
+                  {showPassword ? t("auth.hide") : t("auth.show")}
                 </button>
               </div>
 
@@ -104,7 +108,7 @@ export default function LoginPage() {
                   href="/forgot-password"
                   className="text-[14px] font-bold text-blue-600 transition hover:text-blue-500 hover:underline"
                 >
-                  Forgot password?
+                  {t("auth.forgot_pw_link")}
                 </Link>
               </div>
             </div>
@@ -112,17 +116,17 @@ export default function LoginPage() {
             <div className="pt-2">
               <button
                 type="submit"
-                className="flex w-full justify-center rounded-full bg-blue-600 px-8 py-4 text-[16px] font-bold text-white shadow-sm transition hover:bg-blue-700 active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-500/30"
+                className="flex w-full justify-center rounded-full bg-blue-600 px-8 py-4 text-[16px] font-bold text-white shadow-sm transition hover:bg-blue-700 active:scale-90 focus:outline-none focus:ring-4 focus:ring-blue-500/30"
               >
-                Log In
+                {t("auth.login")}
               </button>
             </div>
           </form>
 
           <div className="mt-8 text-center text-[15px] text-gray-600">
-            Don't have an account?{" "}
+            {t("auth.dont_have_account")}{" "}
             <Link href="/signup" className="font-bold text-blue-600 transition hover:text-blue-500">
-              Register here
+              {t("auth.register_here")}
             </Link>
           </div>
         </div>

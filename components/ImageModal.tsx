@@ -33,7 +33,7 @@ export default function ImageModal({
         src={src}
         alt={alt}
         onClick={() => setIsOpen(true)}
-        className={`cursor-pointer transition-transform duration-300 hover:scale-[1.03] active:scale-95 ${thumbnailClassName}`}
+        className={`cursor-pointer transition-transform duration-300 hover:scale-[1.03] active:scale-90 ${thumbnailClassName}`}
         title="Tap to enlarge"
       />
 

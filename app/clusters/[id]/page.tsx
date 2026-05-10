@@ -2,7 +2,6 @@
 import { db } from "@/lib/db";
 import { clusters } from "@/lib/schema";
 import { eq } from "drizzle-orm";
-import Header from "@/components/header";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -33,8 +32,7 @@ export default async function ClusterDetailsPage({
   const customersList = clusterWithCustomers.customers.map((c) => c.customer);
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] pb-24">
-      <Header />
+    <div className="min-h-screen bg-background pb-24">
       <Breadcrumbs />
 
       <main className="mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
@@ -69,11 +67,11 @@ export default async function ClusterDetailsPage({
         </h2>
 
         {customersList.length === 0 ? (
-          <div className="rounded-[2rem] border border-gray-50 bg-white p-8 text-center shadow-sm">
+          <div className="rounded-[2rem] border border-gray-50 bg-card p-8 text-center shadow-sm">
             <p className="font-medium text-gray-500">No customers assigned to this cluster.</p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-[2rem] border border-gray-50 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-[2rem] border border-gray-50 bg-card shadow-sm">
             <ul className="divide-y divide-gray-100">
               {customersList.map((customer) => (
                 <li key={customer.id} className="group relative flex items-center justify-between p-4 transition-all hover:bg-blue-50/50 active:bg-blue-100 sm:p-5">

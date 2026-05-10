@@ -1,19 +1,17 @@
-
+import { logServerAccess } from "@/lib/logger";
 // app/api/deliveries/route.ts
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
 import { deliveries } from "@/lib/schema";
+import { logActivity } from "@/lib/logger";
 
-// NEW: GET function to fetch all deliveries for the dashboard
 export async function GET(req: Request) {
   try {
     const allDeliveries = await db.query.deliveries.findMany({
-      with: {
-        customer: true, // Pulls the linked customer data automatically
-      },
+      with: { customer: true },
       orderBy: (deliveries, { desc }) => [desc(deliveries.createdAt)],
     });
-
     return NextResponse.json({ deliveries: allDeliveries }, { status: 200 });
   } catch (error) {
     console.error("Failed to fetch deliveries:", error);
@@ -21,9 +19,10 @@ export async function GET(req: Request) {
   }
 }
 
-// YOUR EXISTING POST FUNCTION STAYS EXACTLY THE SAME
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (token) await logServerAccess(req, token);
     const body = await req.json();
     const { waybillNumber, customerId, codAmount, receiverName, proofOfDeliveryUrl, status } = body;
 
@@ -31,16 +30,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Waybill number and customer ID are required" }, { status: 400 });
     }
 
-    const finalStatus = status || "Pending";
-
-    await db.insert(deliveries).values({
+    const [newDelivery] = await db.insert(deliveries).values({
       waybillNumber,
       customerId,
       codAmount: Number(codAmount) || 0,
       receiverName,
       proofOfDeliveryUrl,
-      status: finalStatus,
-    });
+      status: status || "Pending",
+    }).returning();
+
+    if (token) {
+      await logActivity({
+        userId: token.id as number,
+        userName: token.name as string,
+        action: "DELIVERY_CREATED",
+        details: `Added new waybill: ${waybillNumber}`,
+        targetId: newDelivery.id.toString()
+      });
+    }
 
     return NextResponse.json({ message: "Delivery added successfully" }, { status: 201 });
   } catch (error) {
@@ -48,4 +55,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Failed to add delivery" }, { status: 500 });
   }
 }
-

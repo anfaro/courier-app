@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { deliveries } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
-import Header from "@/components/header";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import EditDeliveryForm from "@/components/EditDeliveryForm";
 
@@ -24,8 +23,8 @@ export default async function EditDeliveryPage({
   if (!deliveryData) return notFound();
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] pb-24">
-      <Header />
+    <div className="min-h-screen bg-background pb-24">
+      
       <Breadcrumbs />
 
       <main className="mx-auto max-w-xl p-4 sm:p-6 mt-2">
@@ -36,7 +35,7 @@ export default async function EditDeliveryPage({
           </p>
         </div>
 
-        <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 sm:p-8">
+        <div className="bg-card rounded-[32px] shadow-sm border border-gray-100 p-6 sm:p-8">
           <EditDeliveryForm delivery={deliveryData} />
         </div>
       </main>

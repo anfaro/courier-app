@@ -1,20 +1,24 @@
+import { logServerAccess } from "@/lib/logger";
+// app/api/customers/bulk/route.ts
 import { db } from "@/lib/db";
 import { customers } from "@/lib/schema";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
+import { logActivity } from "@/lib/logger";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (token) await logServerAccess(req, token);
     const body = await req.json();
 
     if (!Array.isArray(body)) {
       return NextResponse.json({ message: "Invalid format" }, { status: 400 });
     }
 
-    // MAP the frontend keys to the schema keys explicitly 
-    // to avoid the "Failed Query" mismatch
     const formattedData = body.map((item: any) => ({
       name: item.name,
-      phoneNumber: item.phoneNumber, // Drizzle will map this to phone_number
+      phoneNumber: item.phoneNumber,
       address: item.address,
       latitude: item.latitude || null,
       longitude: item.longitude || null,
@@ -23,6 +27,15 @@ export async function POST(req: Request) {
     }));
 
     const result = await db.insert(customers).values(formattedData);
+
+    if (token) {
+      await logActivity({
+        userId: token.id as number,
+        userName: token.name as string,
+        action: "CUSTOMER_CREATED",
+        details: `Bulk added ${body.length} customers`,
+      });
+    }
 
     return NextResponse.json({
       message: `Successfully added ${body.length} customers`,
@@ -37,4 +50,3 @@ export async function POST(req: Request) {
     );
   }
 }
-
