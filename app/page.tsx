@@ -7,12 +7,17 @@ import Link from "next/link";
 import { useLanguage } from "@/components/LanguageProvider";
 
 export default function HomePage() {
-  const { data: session } = useSession() as any;
+  const { data: session } = useSession();
   const { t, locale } = useLanguage();
   const userName = session?.user?.name || "User";
 
   const [stats, setRouteStats] = useState({ pendingCount: 0, totalCod: 0 });
-  const [today, setToday] = useState("");
+
+  // Format date based on locale - derived state to avoid extra re-renders
+  const dateLocale = locale === "id" ? "id-ID" : "en-GB";
+  const today = new Date().toLocaleDateString(dateLocale, {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
 
   useEffect(() => {
     // Fetch stats client-side since we are now a Client Component
@@ -21,8 +26,8 @@ export default function HomePage() {
         const res = await fetch("/api/deliveries");
         if (res.ok) {
           const data = await res.json();
-          const pending = data.deliveries.filter((d: any) => d.status === "Pending");
-          const totalCod = pending.reduce((sum: number, d: any) => sum + (d.codAmount || 0), 0);
+          const pending = data.deliveries.filter((d: { status: string }) => d.status === "Pending");
+          const totalCod = pending.reduce((sum: number, d: { codAmount?: number }) => sum + (d.codAmount || 0), 0);
           setRouteStats({ pendingCount: pending.length, totalCod });
         }
       } catch (err) {
@@ -30,13 +35,7 @@ export default function HomePage() {
       }
     }
     fetchStats();
-
-    // Format date based on locale
-    const dateLocale = locale === "id" ? "id-ID" : "en-GB";
-    setToday(new Date().toLocaleDateString(dateLocale, {
-      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-    }));
-  }, [locale]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background pb-24">

@@ -15,16 +15,17 @@ export default function ImageInput({
   label,
   existingImageUrl,
   onImageChange,
-  inputType,
 }: ImageInputProps) {
   // 1. Hold the current image to display (either the existing URL or a new local file preview)
   const [preview, setPreview] = useState<string | null>(existingImageUrl || null);
+  const [lastExistingImageUrl, setLastExistingImageUrl] = useState(existingImageUrl);
 
   // 2. CRITICAL FIX: If the parent changes the existing image (e.g., clicking a new waybill), 
   // this forces the preview to instantly update!
-  useEffect(() => {
+  if (existingImageUrl !== lastExistingImageUrl) {
     setPreview(existingImageUrl || null);
-  }, [existingImageUrl]);
+    setLastExistingImageUrl(existingImageUrl);
+  }
 
   // 3. Handle file selection and convert to Base64 so it can be sent via JSON
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -31,18 +31,51 @@ const AppLogo = () => (
   </svg>
 );
 
+interface SearchResultUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+interface SearchResultCustomer {
+  id: string;
+  name: string;
+  phoneNumber?: string;
+}
+
+interface SearchResultDelivery {
+  id: string;
+  waybillNumber: string;
+  receiverName?: string;
+  customerName?: string;
+}
+
+interface SearchResults {
+  customers: SearchResultCustomer[];
+  deliveries: SearchResultDelivery[];
+  users: SearchResultUser[];
+}
+
+import { createPortal } from "react-dom";
+
 export default function Header() {
   const { data: session } = useSession();
   const { t } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<{ customers: any[], deliveries: any[], users?: any[] }>({ customers: [], deliveries: [], users: [] });
+  const [searchResults, setSearchResults] = useState<SearchResults>({ customers: [], deliveries: [], users: [] });
   const [isSearching, setIsSearching] = useState(false);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const [mounted, setMounted] = useState(false);
   
   const pathname = usePathname();
-  const router = useRouter();
   const searchRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close search results/menu on path change
   useEffect(() => {
@@ -174,7 +207,7 @@ export default function Header() {
                 {searchResults.users && searchResults.users.length > 0 && (
                   <div className="mb-2">
                     <p className="px-4 py-2 text-[11px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-400">{t("search.staff")}</p>
-                    {searchResults.users.map((u: any) => (
+                    {searchResults.users.map((u: SearchResultUser) => (
                       <motion.div
                         key={u.id}
                         whileTap={{ scale: 0.92, rotate: -0.5 }}
@@ -196,7 +229,7 @@ export default function Header() {
                 {searchResults.customers.length > 0 && (
                   <div className="mb-2">
                     <p className="px-4 py-2 text-[11px] font-black uppercase tracking-widest text-secondary/60">{t("search.customers")}</p>
-                    {searchResults.customers.map((c: any) => (
+                    {searchResults.customers.map((c: SearchResultCustomer) => (
                       <motion.div
                         key={c.id}
                         whileTap={{ scale: 0.92, rotate: -0.5 }}
@@ -218,7 +251,7 @@ export default function Header() {
                 {searchResults.deliveries.length > 0 && (
                   <div>
                     <p className="px-4 py-2 text-[11px] font-black uppercase tracking-widest text-secondary/60">{t("search.waybills")}</p>
-                    {searchResults.deliveries.map((d: any) => (
+                    {searchResults.deliveries.map((d: SearchResultDelivery) => (
                       <motion.div
                         key={d.id}
                         whileTap={{ scale: 0.92, rotate: 0.5 }}
@@ -243,41 +276,64 @@ export default function Header() {
         {/* User Profile & Dropdown */}
         <div className="relative shrink-0">
           <button
+            ref={profileRef}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600/10 dark:bg-blue-400/10 text-lg font-black text-blue-700 dark:text-blue-400 shadow-sm ring-1 ring-blue-600/20 dark:ring-blue-400/20 transition-all hover:bg-blue-600/20 dark:hover:bg-blue-400/20 active:scale-90"
           >
             {initial}
           </button>
 
-          {isMenuOpen && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
-              <div className="absolute right-0 mt-3 w-64 rounded-[28px] bg-card/90 dark:bg-slate-900/90 py-2 shadow-2xl ring-1 ring-black/5 dark:ring-white/5 backdrop-blur-2xl z-50 overflow-hidden transform origin-top-right transition-all animate-in fade-in zoom-in-95">
-                <div className="border-b border-card-border/50 dark:border-slate-800 px-6 py-4 bg-surface-hover/50 dark:bg-slate-800/50">
-                  <p className="truncate text-[15px] font-black text-primary dark:text-slate-100">
-                    {session.user.name || "User"}
-                  </p>
-                  <p className="truncate text-[13px] font-medium text-secondary dark:text-slate-400">
-                    {session.user.email}
-                  </p>
+          {mounted && typeof document !== 'undefined' && createPortal(
+            <AnimatePresence>
+              {isMenuOpen && (
+                <div className="fixed inset-0 z-[100] flex items-start justify-end p-4 sm:p-6 pt-16">
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 -z-10 bg-black/5 dark:bg-black/20 backdrop-blur-md" 
+                    onClick={() => setIsMenuOpen(false)} 
+                  />
+                  
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9, y: -20, x: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: -20, x: 20 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    className="w-72 rounded-[32px] bg-card/98 dark:bg-slate-900/98 p-2 shadow-2xl ring-1 ring-black/10 dark:ring-white/10 backdrop-blur-3xl overflow-hidden"
+                  >
+                    <div className="px-6 py-5 mb-1 bg-surface-hover/50 dark:bg-slate-800/50 rounded-[24px] border border-card-border/50">
+                      <p className="truncate text-[16px] font-black text-primary dark:text-slate-100 tracking-tight">
+                        {session.user.name || "User"}
+                      </p>
+                      <p className="truncate text-[13px] font-medium text-secondary dark:text-slate-400 opacity-80 mt-0.5">
+                        {session.user.email}
+                      </p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Link
+                        href="/settings"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center gap-3 px-5 py-3.5 text-[14px] font-bold text-primary dark:text-slate-200 transition-all hover:bg-surface-hover/50 dark:hover:bg-slate-800/50 active:scale-[0.97] rounded-2xl group"
+                      >
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">⚙️</span>
+                        {t("nav.settings")}
+                      </Link>
+
+                      <button
+                        onClick={() => signOut({ callbackUrl: "/login" })}
+                        className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-[14px] font-bold text-red-600 dark:text-red-400 transition-all hover:bg-red-50/50 dark:hover:bg-red-950/30 active:scale-[0.97] rounded-2xl group"
+                      >
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 group-hover:scale-110 transition-transform">🚪</span>
+                        Log Out
+                      </button>
+                    </div>
+                  </motion.div>
                 </div>
-
-                <Link
-                  href="/settings"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-6 py-3.5 text-[14px] font-bold text-primary dark:text-slate-200 transition-colors hover:bg-surface-hover/50 dark:hover:bg-slate-800/50 active:bg-surface-hover dark:active:bg-slate-800"
-                >
-                  {t("nav.settings")}
-                </Link>
-
-                <button
-                  onClick={() => signOut({ callbackUrl: "/login" })}
-                  className="block w-full px-6 py-3.5 text-left text-[14px] font-bold text-red-600 dark:text-red-400 transition-colors hover:bg-red-50/50 dark:hover:bg-red-950/30 active:bg-red-100 dark:active:bg-red-950/50"
-                >
-                  Log Out
-                </button>
-              </div>
-            </>
+              )}
+            </AnimatePresence>,
+            document.body
           )}
         </div>
       </div>

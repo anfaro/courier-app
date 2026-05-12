@@ -11,9 +11,9 @@ export default defineConfig({
   dialect: "postgresql",
   dbCredentials: {
     // We use the ! to tell TypeScript we are sure this variable exists
-    database: process.env.DATABASE,
-    port: process.env.PORT,
-    host: process.env.HOST,
+    database: process.env.DATABASE as string,
+    port: process.env.PORT ? parseInt(process.env.PORT, 10) : undefined,
+    host: process.env.HOST as string,
     user: process.env.USER,
     password: process.env.PASSWORD,
   },

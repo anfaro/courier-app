@@ -66,7 +66,7 @@ const handler = NextAuth({
       if (user) {
         token.id = user.id;
         token.name = user.name;
-        // @ts-ignore
+        // @ts-expect-error: role is not in the default user type
         token.role = user.role; // <-- NEW: Attach role to token
       }
 
@@ -79,10 +79,10 @@ const handler = NextAuth({
 
     async session({ session, token }) {
       if (token && session.user) {
-        // @ts-ignore
+        // @ts-expect-error: id is not in the default session user type
         session.user.id = token.id;
         session.user.name = token.name;
-        // @ts-ignore
+        // @ts-expect-error: role is not in the default session user type
         session.user.role = token.role; // <-- NEW: Attach token role to session
       }
 

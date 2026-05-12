@@ -7,31 +7,74 @@ type Theme = "light" | "dark";
 
 interface ThemeContextType {
   theme: Theme;
-  toggleTheme: () => void;
-  setTheme: (theme: Theme) => void;
+  toggleTheme: (e?: React.MouseEvent) => void;
+  setTheme: (theme: Theme, options?: { x?: number, y?: number }) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("light");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as Theme | null;
-    const initialTheme = savedTheme || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-    setThemeState(initialTheme);
-    document.documentElement.classList.toggle("dark", initialTheme === "dark");
+    setMounted(true);
+    const savedTheme = localStorage.getItem("theme");
+    const initialTheme = (savedTheme === "light" || savedTheme === "dark") 
+      ? savedTheme 
+      : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    
+    if (initialTheme === "dark") {
+      setThemeState("dark");
+      document.documentElement.classList.add("dark");
+    }
   }, []);
 
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
-    localStorage.setItem("theme", newTheme);
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
+  const setTheme = (newTheme: Theme, options?: { x?: number, y?: number }) => {
+    const updateDOM = () => {
+      setThemeState(newTheme);
+      localStorage.setItem("theme", newTheme);
+      document.documentElement.classList.toggle("dark", newTheme === "dark");
+    };
+
+    if (typeof document === "undefined" || !document.startViewTransition) {
+      updateDOM();
+      return;
+    }
+
+    const transition = document.startViewTransition(updateDOM);
+
+    if (options?.x !== undefined && options?.y !== undefined) {
+      const { x, y } = options;
+      const right = window.innerWidth - x;
+      const bottom = window.innerHeight - y;
+      const maxRadius = Math.hypot(Math.max(x, right), Math.max(y, bottom));
+
+      transition.ready.then(() => {
+        document.documentElement.animate(
+          {
+            clipPath: [
+              `circle(0px at ${x}px ${y}px)`,
+              `circle(${maxRadius}px at ${x}px ${y}px)`,
+            ],
+          },
+          {
+            duration: 500,
+            easing: "ease-in-out",
+            pseudoElement: "::view-transition-new(root)",
+          }
+        );
+      });
+    }
   };
 
-  const toggleTheme = () => {
+  const toggleTheme = (e?: React.MouseEvent) => {
     const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
+    if (e) {
+      setTheme(newTheme, { x: e.clientX, y: e.clientY });
+    } else {
+      setTheme(newTheme);
+    }
   };
 
   return (

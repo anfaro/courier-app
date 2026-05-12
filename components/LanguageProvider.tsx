@@ -139,14 +139,28 @@ export const translations: Translations = {
 
   // Auth Pages
   "auth.welcome": { en: "Welcome Back", id: "Selamat Datang Kembali" },
+  "auth.login_subtitle": { en: "Please enter your credentials to access the fleet.", id: "Silakan masukkan kredensial Anda untuk mengakses armada." },
   "auth.join": { en: "Join the Fleet", id: "Bergabung dengan Armada" },
+  "auth.create_account": { en: "Create an Account", id: "Buat Akun Baru" },
+  "auth.signup_subtitle": { en: "Register to start managing your field deliveries.", id: "Daftar untuk mulai mengelola pengiriman lapangan Anda." },
   "auth.login": { en: "Log In", id: "Masuk" },
   "auth.signup": { en: "Sign Up", id: "Daftar" },
+  "auth.signing_up": { en: "Signing Up...", id: "Mendaftar..." },
   "auth.email": { en: "Email Address", id: "Alamat Email" },
+  "auth.email_placeholder": { en: "name@example.com", id: "nama@contoh.com" },
+  "auth.email_or_name": { en: "Email or Name", id: "Email atau Nama" },
+  "auth.email_or_name_placeholder": { en: "name@example.com or username", id: "nama@contoh.com atau username" },
   "auth.username": { en: "Username", id: "Nama Pengguna" },
+  "auth.full_name": { en: "Full Name", id: "Nama Lengkap" },
+  "auth.full_name_placeholder": { en: "Enter your full name", id: "Masukkan nama lengkap Anda" },
   "auth.password": { en: "Password", id: "Kata Sandi" },
+  "auth.password_placeholder": { en: "At least 6 characters", id: "Minimal 6 karakter" },
   "auth.confirm_password": { en: "Confirm Password", id: "Konfirmasi Kata Sandi" },
+  "auth.confirm_password_placeholder": { en: "Repeat your password", id: "Ulangi kata sandi Anda" },
+  "auth.passwords_not_match": { en: "Passwords do not match.", id: "Kata sandi tidak cocok." },
+  "auth.password_min_length": { en: "Password must be at least 6 characters long.", id: "Kata sandi minimal harus 6 karakter." },
   "auth.forgot_pw": { en: "Forgot password?", id: "Lupa kata sandi?" },
+  "auth.forgot_pw_link": { en: "Forgot password?", id: "Lupa kata sandi?" },
   "auth.forgot_pw_title": { en: "Reset Password", id: "Atur Ulang Sandi" },
   "auth.forgot_pw_subtitle": { en: "Enter your email to receive a recovery link.", id: "Masukkan email untuk menerima tautan pemulihan." },
   "auth.reset_pw": { en: "Set New Password", id: "Setel Sandi Baru" },
@@ -165,6 +179,9 @@ export const translations: Translations = {
   "auth.hide": { en: "Hide", id: "Sembunyikan" },
   "auth.no_token": { en: "No reset token found.", id: "Token atur ulang tidak ditemukan." },
   "auth.invalid_creds": { en: "Invalid credentials. Please check your info.", id: "Kredensial salah. Silakan periksa kembali." },
+  "auth.registration_failed": { en: "Registration failed. Please try again.", id: "Pendaftaran gagal. Silakan coba lagi." },
+  "auth.unexpected_error": { en: "An unexpected error occurred.", id: "Terjadi kesalahan yang tidak terduga." },
+  "auth.something_wrong": { en: "Something went wrong.", id: "Terjadi kesalahan." },
 };
 
 interface LanguageContextType {
@@ -179,8 +196,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>("en");
 
   useEffect(() => {
-    const savedLocale = localStorage.getItem("locale") as Locale | null;
-    if (savedLocale) {
+    const savedLocale = localStorage.getItem("locale");
+    if (savedLocale === "en" || savedLocale === "id") {
       setLocaleState(savedLocale);
     }
   }, []);

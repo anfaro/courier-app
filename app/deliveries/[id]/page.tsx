@@ -36,7 +36,7 @@ export default async function DeliveryDetailsPage({
 
   if (!deliveryData) return notFound();
 
-  const isCOD = deliveryData.codAmount > 0;
+  const isCOD = (deliveryData.codAmount || 0) > 0;
   const theme = getStatusTheme(deliveryData.status);
 
   return (
@@ -55,9 +55,9 @@ export default async function DeliveryDetailsPage({
               • {deliveryData.status}
             </span>
             <span className={`text-[12px] font-bold opacity-80 ${theme.text}`}>
-              {new Date(deliveryData.createdAt).toLocaleDateString('id-ID', {
+              {deliveryData.createdAt ? new Date(deliveryData.createdAt).toLocaleDateString('id-ID', {
                 day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
-              })}
+              }) : '-'}
             </span>
           </div>
 
@@ -88,7 +88,7 @@ export default async function DeliveryDetailsPage({
               <div className="bg-background rounded-[20px] p-4 border border-card-border">
                 <p className="text-[10px] font-black uppercase tracking-widest text-secondary mb-1">Customer</p>
                 <p className="text-[14px] font-bold text-primary truncate">
-                  {deliveryData.customer?.name || deliveryData.customerName || "Unknown"}
+                  {deliveryData.customer?.name || "Unknown"}
                 </p>
               </div>
               <div className="bg-background rounded-[20px] p-4 border border-card-border">
@@ -130,9 +130,9 @@ export default async function DeliveryDetailsPage({
                     <div>
                       <p className="text-[13px] font-black text-primary">Waybill Created</p>
                       <p className="text-[11px] font-medium text-secondary">
-                        {new Date(deliveryData.createdAt).toLocaleString('id-ID', {
+                        {deliveryData.createdAt ? new Date(deliveryData.createdAt).toLocaleString('id-ID', {
                            day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
-                        })}
+                        }) : '-'}
                       </p>
                     </div>
                   </div>
@@ -142,9 +142,9 @@ export default async function DeliveryDetailsPage({
                     <div>
                       <p className="text-[13px] font-black text-primary">Last Activity / Status Update</p>
                       <p className="text-[11px] font-medium text-secondary">
-                        {new Date(deliveryData.updatedAt).toLocaleString('id-ID', {
+                        {deliveryData.updatedAt ? new Date(deliveryData.updatedAt).toLocaleString('id-ID', {
                            day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
-                        })}
+                        }) : '-'}
                       </p>
                     </div>
                   </div>
@@ -161,7 +161,7 @@ export default async function DeliveryDetailsPage({
                   {isCOD ? "Cash to Collect" : "Payment Status"}
                 </p>
                 <p className={`text-[36px] sm:text-[42px] leading-none font-black tracking-tighter ${isCOD ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
-                  {isCOD ? `Rp ${deliveryData.codAmount.toLocaleString('id-ID')}` : "NON-COD"}
+                  {isCOD ? `Rp ${(deliveryData.codAmount || 0).toLocaleString('id-ID')}` : "NON-COD"}
                 </p>
               </div>
               <div className={`shrink-0 flex h-14 w-14 items-center justify-center rounded-full text-2xl shadow-sm ${isCOD ? 'bg-card text-red-500' : 'bg-card text-blue-500'}`}>

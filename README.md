@@ -35,42 +35,49 @@ A high-performance, mobile-first web application designed for couriers to manage
 
 ---
 
-## 📅 Development Roadmap
+## 📅 Roadmap & Versions
 
-### Phase 1 & 2: Core & Intelligence
+### Current Version (v1.0.0-stable)
 - [x] **Global Entry Hub & Bulk Paste**
 - [x] **M3 Navigation & Glass-morphism Redesign**
-- [x] **Barcode/QR Scanning Integration**
-- [x] **Live Heatmap Visualization**
+- [x] **Road-Aware Routing & ETC Implementation**
+- [x] **Role-Based Access Control (RBAC)**
+- [x] **Bulk Management Trifecta** (Decentralized to list pages)
+- [x] **Global Theme Engine** (Dark/Light mode support)
+- [x] **Multi-Language (i18n)** (EN/ID localization)
 
-### Phase 3: Authorization & Admin Controls
-- [x] **Role-Based Access Control (RBAC):** `superadmin` vs `courier` roles implemented.
-- [x] **Middleware Protection:** All `/admin` routes secured via `proxy.ts`.
-- [x] **Bulk Trifecta:** Bulk delete UI/API for Customers, Waybills, and Clusters.
-- [x] **Global Confirmation System:** MD3 Expressive verification engine.
-- [x] **User Fleet Management:** UI to onboard, promote, or offboard users.
-
-### Phase 4: Multi-Device & PWA
-- [x] **Device Detection Guard:** Restrict mobile app view on desktops.
-- [x] **Multi-Language (i18n):** Global support for English and Indonesia (localized dates/metrics).
-- [x] **Global Theme Engine:** Dark/Light mode support with persistence.
-- [ ] **Desktop Dispatcher View:** Dedicated multi-column HQ layout.
-- [ ] **PWA Support:** Offline mode and push notifications for couriers.
+### Next Major Update (v2.0.0 - "The Dispatcher Update")
+- [ ] **Desktop Dispatcher View:** Dedicated multi-column HQ layout for large screens.
+- [ ] **PWA Support:** Offline mode, manifest generation, and service worker integration.
+- [ ] **Push Notifications:** Real-time alerts for couriers on new assignments.
+- [ ] **Fleet Telemetry:** Real-time GPS tracking of active couriers on the admin map.
+- [ ] **AI Route Optimization:** Machine learning to predict best delivery windows based on traffic history.
+- [ ] **Inventory Integration:** Track warehouse stock levels directly synced with waybills.
+- [ ] **Electronic Signature (e-POD):** In-app customer signature capture on delivery.
 
 ---
 
-## 🏗 Recent Architectural Updates (May 10, 2026)
+## 🏗 Recent Architectural Updates (May 12, 2026)
+
+### UI/UX & Motion Design
+* **Telegram-Style Theme Transition**: Implemented a high-performance circular clip-path expansion for dark/light mode switching using the View Transitions API and Web Animations API.
+* **Animated Bottom Navigation**: Redesigned the navigation bar with Framer Motion, featuring a sliding indicator dot and spring-loaded tactile feedback.
+* **Portal-Based Header Dropdown**: Re-engineered the user profile menu using React Portals to enable a global "Glass-morphism" blur effect that covers the entire viewport.
+* **System-Wide Polish**: Resolved all underlying TypeScript and ESLint errors, ensuring 100% type safety and stability across the core logistics modules.
 
 ### Monitoring, UI Standardization & i18n
-* **Global Command Search:** Header-integrated engine for Customers, Waybills, and Staff (RBAC-aware) with bouncy animations.
-* **Road-Aware TSP Routing:** Integrated OSRM API for realistic driving paths and Estimated Time of Completion (ETC).
-* **Terminal UI Access Logs:** Added a high-density midnight terminal view for real-time technical traffic monitoring.
-* **Global i18n Engine:** Implemented `LanguageProvider` with 100% UI coverage for English and Indonesian.
-* **MD3 Bouncy Buttons:** Standardized all interactions to use `active:scale-90` animations and pill-shaped bordered aesthetics.
+* **Global Command Search**: Header-integrated engine for Customers, Waybills, and Staff (RBAC-aware) with bouncy animations.
+* **Road-Aware TSP Routing**: Integrated OSRM API for realistic driving paths and Estimated Time of Completion (ETC).
+* **Terminal UI Access Logs**: Added a high-density midnight terminal view for real-time technical traffic monitoring.
+* **Global i18n Engine**: Implemented `LanguageProvider` with 100% UI coverage for English and Indonesian.
+* **MD3 Bouncy Buttons**: Standardized all interactions to use `active:scale-90` animations and pill-shaped bordered aesthetics.
 * **Unified Layout:** Moved Header to root layout with immediate Skeleton rendering for instant brand presence.
 * **Error Boundary:** Global crash tracking system that automatically logs stack traces to the database.
 
 ---
+
+## 🗺️ Project Roadmap
+For a detailed look at upcoming features (Logistics Intelligence, POD Auditing, System Health) and the major **v2.0 Desktop Version** plans, see [ROADMAP.md](./ROADMAP.md).
 
 ## 🛠 Tech Stack
 * **Framework:** Next.js 15

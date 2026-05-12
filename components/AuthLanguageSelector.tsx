@@ -7,7 +7,7 @@ export default function AuthLanguageSelector() {
   const { locale, setLocale } = useLanguage();
 
   return (
-    <div className="absolute top-6 right-6 z-50">
+    <div className="absolute top-6 left-6 z-50">
       <div className="flex rounded-2xl bg-white/50 dark:bg-slate-900/50 p-1 shadow-sm border border-card-border backdrop-blur-sm">
         <button 
           onClick={() => setLocale("en")}

@@ -6,9 +6,21 @@ import { db } from "@/lib/db";
 import { clusters, customerClusters } from "@/lib/schema";
 import { logActivity } from "@/lib/logger";
 
+import { eq, sql } from "drizzle-orm";
+
 export async function GET() {
   try {
-    const allClusters = await db.select().from(clusters);
+    const allClusters = await db
+      .select({
+        id: clusters.id,
+        name: clusters.name,
+        customerCount: sql<number>`count(${customerClusters.customerId})`.mapWith(Number),
+      })
+      .from(clusters)
+      .leftJoin(customerClusters, eq(clusters.id, customerClusters.clusterId))
+      .groupBy(clusters.id)
+      .orderBy(clusters.name);
+
     return NextResponse.json({ clusters: allClusters }, { status: 200 });
   } catch (error) {
     console.error("Failed to fetch clusters:", error);

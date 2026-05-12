@@ -45,7 +45,50 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.3s ease-out, color 0.3s ease-out;
+}
+
+/* Smooth transition for theme-aware elements */
+.bg-card, 
+.bg-surface-hover, 
+.border-card, 
+.text-primary, 
+.text-secondary,
+.btn-outline,
+.btn-secondary,
+.btn-danger,
+header,
+main,
+section,
+article,
+svg,
+path {
+  transition: background-color 0.3s ease-out, 
+              color 0.3s ease-out, 
+              border-color 0.3s ease-out, 
+              fill 0.3s ease-out,
+              stroke 0.3s ease-out;
+}
+
+/* Disable transitions for specific elements that shouldn't have them (like logo paths) */
+.no-transition, .no-transition * {
+  transition: none !important;
+}
+
+/* View Transitions API Animations */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+  display: block;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 2;
 }
 
 /* --- BOUNCY BUTTON STANDARDIZATION --- */

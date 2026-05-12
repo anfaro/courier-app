@@ -5,6 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/components/LanguageProvider";
 import AuthLanguageSelector from "@/components/AuthLanguageSelector";
+import AuthThemeSelector from "@/components/AuthThemeSelector";
 
 export default function ForgotPasswordPage() {
   const { t } = useLanguage();
@@ -42,43 +43,44 @@ export default function ForgotPasswordPage() {
     }
   };
 
-  const inputClass = "w-full rounded-2xl border border-transparent bg-gray-100 px-5 py-4 text-[15px] text-gray-900 transition-all focus:border-blue-600 focus:bg-card focus:outline-none focus:ring-4 focus:ring-blue-600/15";
+  const inputClass = "w-full rounded-2xl border border-transparent bg-gray-100 dark:bg-slate-800 px-5 py-4 text-[15px] text-primary transition-all focus:border-blue-600 focus:bg-card focus:outline-none focus:ring-4 focus:ring-blue-600/15";
 
   return (
     <div className="flex min-h-screen flex-col justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <AuthLanguageSelector />
+      <AuthThemeSelector />
       {/* M3 Header Section */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-orange-100 text-3xl shadow-sm border border-orange-200">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-orange-100 dark:bg-orange-900/30 text-3xl shadow-sm border border-orange-200 dark:border-orange-800">
           🔐
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold tracking-tight text-gray-900">
+        <h2 className="mt-6 text-center text-3xl font-extrabold tracking-tight text-primary">
           {t("auth.forgot_pw_title")}
         </h2>
-        <p className="mt-2 text-center text-[15px] text-gray-600 px-4">
+        <p className="mt-2 text-center text-[15px] text-secondary px-4">
           {t("auth.forgot_pw_subtitle")}
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         {/* M3 Expressive Card */}
-        <div className="rounded-[2.5rem] bg-card px-6 py-10 shadow-sm border border-gray-50 sm:px-10">
+        <div className="rounded-[2.5rem] bg-card px-6 py-10 shadow-sm border border-card-border sm:px-10">
 
           {error && (
-            <div className="mb-6 rounded-2xl bg-red-50 p-4 text-center text-[15px] font-medium text-red-700 border border-red-100 animate-[fadeIn_0.3s_ease-out]">
+            <div className="mb-6 rounded-2xl bg-red-50 dark:bg-red-950/30 p-4 text-center text-[15px] font-medium text-red-700 dark:text-red-400 border border-red-100 dark:border-red-900/50 animate-[fadeIn_0.3s_ease-out]">
               {error}
             </div>
           )}
 
           {message && (
-            <div className="mb-6 rounded-2xl bg-green-50 p-4 text-center text-[15px] font-medium text-green-800 border border-green-100 animate-[fadeIn_0.3s_ease-out]">
+            <div className="mb-6 rounded-2xl bg-green-50 dark:bg-green-950/30 p-4 text-center text-[15px] font-medium text-green-800 dark:text-green-400 border border-green-100 dark:border-green-900/50 animate-[fadeIn_0.3s_ease-out]">
               {message}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="mb-2 block text-[15px] font-bold text-gray-700">
+              <label className="mb-2 block text-[15px] font-bold text-secondary">
                 {t("auth.email")}
               </label>
               <input
@@ -102,9 +104,9 @@ export default function ForgotPasswordPage() {
             </div>
           </form>
 
-          <div className="mt-8 text-center text-[15px] text-gray-600">
+          <div className="mt-8 text-center text-[15px] text-secondary">
             {t("auth.remembered_pw")}{" "}
-            <Link href="/login" className="font-bold text-blue-600 transition hover:text-blue-500">
+            <Link href="/login" className="font-bold text-blue-600 dark:text-blue-400 transition hover:text-blue-500">
               {t("auth.back_to_login")}
             </Link>
           </div>

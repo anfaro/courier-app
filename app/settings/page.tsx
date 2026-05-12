@@ -2,7 +2,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { useTheme } from "@/components/ThemeProvider";
 import { useLanguage } from "@/components/LanguageProvider";
@@ -14,15 +14,15 @@ export default function SettingsPage() {
   const { locale, setLocale, t } = useLanguage();
   const { showToast } = useToast();
 
-  const [name, setName] = useState("");
+  const [name, setName] = useState(session?.user?.name || "");
+  const [lastSessionName, setLastSessionName] = useState(session?.user?.name);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (session?.user?.name) {
-      setName(session.user.name);
-    }
-  }, [session]);
+  if (session?.user?.name !== lastSessionName) {
+    setName(session?.user?.name || "");
+    setLastSessionName(session?.user?.name);
+  }
 
   const inputClass = "w-full rounded-2xl border border-transparent bg-gray-100 dark:bg-slate-800 px-5 py-4 text-[16px] text-gray-900 dark:text-slate-100 transition-all focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-600/10";
 
@@ -109,13 +109,13 @@ export default function SettingsPage() {
                 </h2>
                 <div className="flex rounded-2xl bg-gray-200 dark:bg-slate-900 p-1.5">
                     <button 
-                        onClick={() => setTheme("light")}
+                        onClick={(e) => setTheme("light", { x: e.clientX, y: e.clientY })}
                         className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[14px] font-black transition-all ${theme === 'light' ? 'bg-white text-blue-600 shadow-md' : 'text-secondary hover:text-primary'}`}
                     >
                         <span>☀️</span> {t("settings.light")}
                     </button>
                     <button 
-                        onClick={() => setTheme("dark")}
+                        onClick={(e) => setTheme("dark", { x: e.clientX, y: e.clientY })}
                         className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[14px] font-black transition-all ${theme === 'dark' ? 'bg-slate-800 text-blue-400 shadow-md border border-slate-700' : 'text-secondary hover:text-primary'}`}
                     >
                         <span>🌙</span> {t("settings.dark")}
@@ -188,6 +188,22 @@ export default function SettingsPage() {
               </button>
             </div>
           </form>
+
+          {/* --- SETTINGS FOOTER --- */}
+          <div className="mt-12 pt-8 border-t border-card-border flex flex-col items-center gap-2">
+            <div className="flex items-center gap-3">
+              <span className="px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-[10px] font-black text-blue-600 dark:text-blue-400 tracking-wider uppercase border border-blue-100/50 dark:border-blue-800/50">
+                v0.1.0
+              </span>
+              <span className="px-2.5 py-1 rounded-full bg-gray-100 dark:bg-slate-800 text-[10px] font-black text-secondary tracking-wider uppercase border border-card-border">
+                e2d6ba1
+              </span>
+            </div>
+            <p className="text-[11px] font-bold text-secondary opacity-40 uppercase tracking-[0.2em]">
+              Courier Management System • 2026
+            </p>
+          </div>
+
         </div>
       </main>
     </div>

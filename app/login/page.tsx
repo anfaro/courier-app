@@ -7,6 +7,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/components/LanguageProvider";
 import AuthLanguageSelector from "@/components/AuthLanguageSelector";
+import AuthThemeSelector from "@/components/AuthThemeSelector";
 
 export default function LoginPage() {
   const { t } = useLanguage();
@@ -35,37 +36,38 @@ export default function LoginPage() {
   };
 
   // M3 Expressive Input Style: Soft resting state, bright white active state with soft glow
-  const inputClass = "w-full rounded-2xl border border-transparent bg-gray-100 px-5 py-4 text-[15px] text-gray-900 transition-all focus:border-blue-600 focus:bg-card focus:outline-none focus:ring-4 focus:ring-blue-600/15";
+  const inputClass = "w-full rounded-2xl border border-transparent bg-gray-100 dark:bg-slate-800 px-5 py-4 text-[15px] text-primary transition-all focus:border-blue-600 focus:bg-card focus:outline-none focus:ring-4 focus:ring-blue-600/15";
 
   return (
     <div className="flex min-h-screen flex-col justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <AuthLanguageSelector />
+      <AuthThemeSelector />
       {/* M3 Header Section */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-blue-600 text-3xl shadow-md border border-blue-700">
           📦
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold tracking-tight text-gray-900">
+        <h2 className="mt-6 text-center text-3xl font-extrabold tracking-tight text-primary">
           {t("auth.welcome")}
         </h2>
-        <p className="mt-2 text-center text-[15px] text-gray-600">
+        <p className="mt-2 text-center text-[15px] text-secondary">
           {t("auth.login_subtitle")}
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         {/* M3 Expressive Card */}
-        <div className="rounded-[2.5rem] bg-card px-6 py-10 shadow-sm border border-gray-50 sm:px-10">
+        <div className="rounded-[2.5rem] bg-card px-6 py-10 shadow-sm border border-card-border sm:px-10">
 
           {error && (
-            <div className="mb-6 rounded-2xl bg-red-50 p-4 text-center text-[15px] font-medium text-red-700 border border-red-100 animate-[fadeIn_0.3s_ease-out]">
+            <div className="mb-6 rounded-2xl bg-red-50 dark:bg-red-950/30 p-4 text-center text-[15px] font-medium text-red-700 dark:text-red-400 border border-red-100 dark:border-red-900/50 animate-[fadeIn_0.3s_ease-out]">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="mb-2 block text-[15px] font-bold text-gray-700">
+              <label className="mb-2 block text-[15px] font-bold text-secondary">
                 {t("auth.email_or_name")}
               </label>
               <input
@@ -79,7 +81,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-[15px] font-bold text-gray-700">
+              <label className="mb-2 block text-[15px] font-bold text-secondary">
                 {t("auth.password")}
               </label>
               <div className="relative flex items-center">
@@ -96,7 +98,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 rounded-xl bg-gray-200/50 px-3 py-1.5 text-sm font-bold text-gray-600 transition hover:bg-gray-200 hover:text-gray-900 active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="absolute right-3 rounded-xl bg-gray-200/50 dark:bg-slate-700/50 px-3 py-1.5 text-sm font-bold text-secondary transition hover:bg-gray-200 dark:hover:bg-slate-700 hover:text-primary active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {showPassword ? t("auth.hide") : t("auth.show")}
                 </button>
@@ -106,7 +108,7 @@ export default function LoginPage() {
               <div className="mt-3 flex justify-end">
                 <Link
                   href="/forgot-password"
-                  className="text-[14px] font-bold text-blue-600 transition hover:text-blue-500 hover:underline"
+                  className="text-[14px] font-bold text-blue-600 dark:text-blue-400 transition hover:text-blue-500 hover:underline"
                 >
                   {t("auth.forgot_pw_link")}
                 </Link>
@@ -123,9 +125,9 @@ export default function LoginPage() {
             </div>
           </form>
 
-          <div className="mt-8 text-center text-[15px] text-gray-600">
+          <div className="mt-8 text-center text-[15px] text-secondary">
             {t("auth.dont_have_account")}{" "}
-            <Link href="/signup" className="font-bold text-blue-600 transition hover:text-blue-500">
+            <Link href="/signup" className="font-bold text-blue-600 dark:text-blue-400 transition hover:text-blue-500">
               {t("auth.register_here")}
             </Link>
           </div>

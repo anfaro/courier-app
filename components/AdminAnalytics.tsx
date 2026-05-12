@@ -118,7 +118,7 @@ export default function AdminAnalytics() {
                             <div className="flex items-center justify-between gap-2">
                                 <p className="text-[14px] font-black text-primary truncate">
                                 {log.userName || log.ipAddress || "System"}
-                                {activeTab !== 'errors' && <span className="font-medium text-secondary mx-1">•</span>}
+                                <span className="font-medium text-secondary mx-2">•</span>
                                 {activeTab === 'activity' && <span className="text-blue-600 dark:text-blue-400">{log.action}</span>}
                                 {activeTab === 'errors' && <span className="text-red-600">{log.errorName}</span>}
                                 </p>

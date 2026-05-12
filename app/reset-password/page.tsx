@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useLanguage } from "@/components/LanguageProvider";
 import AuthLanguageSelector from "@/components/AuthLanguageSelector";
+import AuthThemeSelector from "@/components/AuthThemeSelector";
 
 function ResetPasswordForm() {
   const { t } = useLanguage();
@@ -31,12 +32,12 @@ function ResetPasswordForm() {
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(t("auth.passwords_not_match"));
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long.");
+      setError(t("auth.password_min_length"));
       return;
     }
 
@@ -54,25 +55,25 @@ function ResetPasswordForm() {
       if (res.ok) {
         setSuccess(true);
       } else {
-        setError(data.message || "Something went wrong.");
+        setError(data.message || t("auth.something_wrong"));
       }
     } catch (err) {
-      setError("An unexpected error occurred.");
+      setError(t("auth.unexpected_error"));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const inputClass = "w-full rounded-2xl border border-transparent bg-gray-100 px-5 py-4 text-[15px] text-gray-900 transition-all focus:border-blue-600 focus:bg-card focus:outline-none focus:ring-4 focus:ring-blue-600/15";
+  const inputClass = "w-full rounded-2xl border border-transparent bg-gray-100 dark:bg-slate-800 px-5 py-4 text-[15px] text-primary transition-all focus:border-blue-600 focus:bg-card focus:outline-none focus:ring-4 focus:ring-blue-600/15";
 
   if (success) {
     return (
       <div className="text-center animate-[fadeIn_0.3s_ease-out]">
-        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-green-50 text-4xl shadow-sm border border-green-100">
+        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-green-50 dark:bg-green-900/30 text-4xl shadow-sm border border-green-100 dark:border-green-800">
           ✅
         </div>
-        <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900">{t("auth.pw_reset_success")}</h2>
-        <p className="mb-8 text-[15px] text-gray-600 leading-relaxed">
+        <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-primary">{t("auth.pw_reset_success")}</h2>
+        <p className="mb-8 text-[15px] text-secondary leading-relaxed">
           {t("auth.pw_updated")}
         </p>
         <Link
@@ -88,26 +89,26 @@ function ResetPasswordForm() {
   return (
     <>
       <div className="mb-8">
-        <h2 className="text-center text-3xl font-extrabold tracking-tight text-gray-900">{t("auth.reset_pw")}</h2>
-        <p className="mt-2 text-center text-[15px] text-gray-600">
+        <h2 className="text-center text-3xl font-extrabold tracking-tight text-primary">{t("auth.reset_pw")}</h2>
+        <p className="mt-2 text-center text-[15px] text-secondary">
           {t("auth.reset_pw_subtitle")}
         </p>
       </div>
 
       {error && (
-        <div className="mb-6 rounded-2xl bg-red-50 p-4 text-center text-[15px] font-medium text-red-700 border border-red-100 animate-[fadeIn_0.3s_ease-out]">
+        <div className="mb-6 rounded-2xl bg-red-50 dark:bg-red-950/30 p-4 text-center text-[15px] font-medium text-red-700 dark:text-red-400 border border-red-100 dark:border-red-900/50 animate-[fadeIn_0.3s_ease-out]">
           {error}
         </div>
       )}
 
       {!token ? (
-        <div className="rounded-2xl bg-red-50 p-6 text-center text-[15px] font-medium text-red-700 border border-red-100">
+        <div className="rounded-2xl bg-red-50 dark:bg-red-950/30 p-6 text-center text-[15px] font-medium text-red-700 dark:text-red-400 border border-red-100 dark:border-red-900/50">
           {t("auth.no_token")}
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="mb-2 block text-[15px] font-bold text-gray-700">
+            <label className="mb-2 block text-[15px] font-bold text-secondary">
               {t("auth.password")}
             </label>
             <div className="relative flex items-center">
@@ -122,7 +123,7 @@ function ResetPasswordForm() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 rounded-xl bg-gray-200/50 px-3 py-1.5 text-sm font-bold text-gray-600 transition hover:bg-gray-200 hover:text-gray-900 active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="absolute right-3 rounded-xl bg-gray-200/50 dark:bg-slate-700/50 px-3 py-1.5 text-sm font-bold text-secondary transition hover:bg-gray-200 dark:hover:bg-slate-700 hover:text-primary active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {showPassword ? t("auth.hide") : t("auth.show")}
               </button>
@@ -130,7 +131,7 @@ function ResetPasswordForm() {
           </div>
 
           <div>
-            <label className="mb-2 block text-[15px] font-bold text-gray-700">
+            <label className="mb-2 block text-[15px] font-bold text-secondary">
               {t("auth.confirm_password")}
             </label>
             <input
@@ -163,8 +164,9 @@ export default function ResetPasswordPage() {
   return (
     <div className="flex min-h-screen flex-col justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <AuthLanguageSelector />
+      <AuthThemeSelector />
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-blue-100 text-3xl shadow-sm border border-blue-200">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-blue-100 dark:bg-blue-900/30 text-3xl shadow-sm border border-blue-200 dark:border-blue-800">
           🔑
         </div>
       </div>

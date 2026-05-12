@@ -8,6 +8,8 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useLanguage } from "@/components/LanguageProvider";
 
+import { motion, AnimatePresence } from "framer-motion";
+
 export default function BottomNav() {
   const pathname = usePathname();
   const { data: session } = useSession();
@@ -15,27 +17,32 @@ export default function BottomNav() {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
-  // Improved Hide/Show logic to support internal scroll containers (like Admin page)
+  // Improved Hide/Show logic with a small threshold to prevent "flickering" during scroll
   useEffect(() => {
-    const handleScroll = (e: any) => {
-      // Get scroll position from either window or the specific target element
-      const target = e.target === document ? (document.scrollingElement || document.documentElement) : e.target;
-      if (!target || typeof target.scrollTop === 'undefined') return;
-      
-      const currentScrollY = target.scrollTop || window.scrollY;
-      
-      // Determine direction
-      if (currentScrollY > lastScrollY && currentScrollY > 60) {
-        setIsVisible(false);
-      } else {
-        setIsVisible(true);
+    let ticking = false;
+    
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          
+          // Only change visibility if we've scrolled more than a small threshold
+          if (Math.abs(currentScrollY - lastScrollY) > 10) {
+            if (currentScrollY > lastScrollY && currentScrollY > 100) {
+              setIsVisible(false);
+            } else {
+              setIsVisible(true);
+            }
+            setLastScrollY(currentScrollY);
+          }
+          ticking = false;
+        });
+        ticking = true;
       }
-      setLastScrollY(currentScrollY);
     };
 
-    // Use capturing phase (true) to catch scroll events from sub-containers like <main>
-    window.addEventListener("scroll", handleScroll, true);
-    return () => window.removeEventListener("scroll", handleScroll, true);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
   // Hide BottomNav on auth pages
@@ -82,44 +89,72 @@ export default function BottomNav() {
   const navItems = [...baseNavItems, roleSpecificItem, mapItem];
 
   return (
-    <div
-      className={`fixed bottom-6 left-0 right-0 z-[100] flex justify-center px-6 pb-safe transition-transform duration-500 ease-[cubic-bezier(0.2,1,0.2,1)] ${isVisible ? "translate-y-0" : "translate-y-[150%]"
-        }`}
-    >
-      <nav className="flex h-[76px] w-full max-w-[440px] items-center justify-between rounded-[32px] bg-card/70 dark:bg-slate-900/70 px-2 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.15)] ring-1 ring-black/5 dark:ring-white/10 border border-white/20 dark:border-white/5 transition-all">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+    <div className="fixed bottom-6 left-0 right-0 z-[100] flex justify-center px-6 pb-safe pointer-events-none">
+      <AnimatePresence>
+        {isVisible && (
+          <motion.nav 
+            initial={{ y: 100, opacity: 0, scale: 0.9 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 100, opacity: 0, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="pointer-events-auto flex h-[76px] w-full max-w-[440px] items-center justify-between rounded-[32px] bg-card/70 dark:bg-slate-900/70 px-2 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.15)] ring-1 ring-black/5 dark:ring-white/10 border border-white/20 dark:border-white/5 transition-colors"
+          >
+            {navItems.map((item) => {
+              const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
 
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className="group relative flex flex-1 flex-col items-center justify-center h-full active:scale-90 transition-transform duration-200"
-            >
-              <div
-                className={`flex h-[32px] w-[56px] items-center justify-center rounded-full transition-all duration-300 ease-out ${isActive ? "bg-blue-600 scale-100 shadow-md shadow-blue-600/30" : "bg-transparent scale-95 group-hover:bg-secondary dark:group-hover:bg-slate-800"
-                  }`}
-              >
-                <svg
-                  className={`h-[22px] w-[22px] transition-colors duration-300 ${isActive ? "text-white" : "text-secondary group-hover:text-primary dark:group-hover:text-slate-300"
-                    }`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="group relative flex flex-1 flex-col items-center justify-center h-full no-transition"
                 >
-                  {item.icon}
-                </svg>
-              </div>
-              <span
-                className={`mt-1 text-[10px] font-extrabold tracking-tight transition-all duration-300 ${isActive ? "text-blue-700 dark:text-blue-400" : "text-secondary"
-                  }`}
-              >
-                {item.name}
-              </span>
-            </Link>
-          );
-        })}
-      </nav>
+                  <div className="relative flex flex-col items-center justify-center w-full h-full">
+                    <motion.svg
+                      animate={{ 
+                        scale: isActive ? 1.2 : 1,
+                        y: isActive ? -2 : 0,
+                        color: isActive ? "var(--color-primary)" : "var(--text-secondary)"
+                      }}
+                      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                      className="relative h-[24px] w-[24px] z-10"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      {item.icon}
+                    </motion.svg>
+                    
+                    <motion.span
+                      animate={{ 
+                        scale: isActive ? 1 : 0.9,
+                        y: isActive ? 1 : 0,
+                        color: isActive ? "var(--color-primary)" : "var(--text-secondary)",
+                        opacity: isActive ? 1 : 0.6
+                      }}
+                      className="mt-1 text-[10px] font-black tracking-tight z-10"
+                    >
+                      {item.name}
+                    </motion.span>
+
+                    {isActive && (
+                      <motion.div
+                        layoutId="nav-indicator"
+                        className="absolute bottom-1 h-1 w-1 rounded-full bg-blue-600 dark:bg-blue-400"
+                        transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                      />
+                    )}
+                  </div>
+                  
+                  {/* Hover Highlight */}
+                  {!isActive && (
+                    <div className="absolute inset-0 rounded-2xl bg-surface-hover/0 group-hover:bg-surface-hover/30 -z-10 transition-colors duration-200" />
+                  )}
+                </Link>
+              );
+            })}
+          </motion.nav>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
