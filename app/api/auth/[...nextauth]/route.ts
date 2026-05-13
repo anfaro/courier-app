@@ -43,6 +43,8 @@ const handler = NextAuth({
         );
 
         if (passwordsMatch) {
+          await db.update(users).set({ isActive: true, lastActiveAt: new Date() }).where(eq(users.id, user.id));
+
           return {
             id: user.id.toString(),
             name: user.name,

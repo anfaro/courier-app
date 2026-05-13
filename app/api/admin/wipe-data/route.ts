@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
 import { customers, deliveries, clusters, logs, passwordResetTokens } from "@/lib/schema";
-import { logActivity, logServerAccess } from "@/lib/logger";
+import { logActivity, logServerAccess, logError } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,8 +20,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid confirmation code" }, { status: 400 });
     }
 
-    console.log(`[WIPE] Data wipe initiated by ${token.email}`);
-
     // Sequential deletion to respect potential (though cascading) constraints
     await db.delete(deliveries);
     await db.delete(customers);
@@ -30,7 +28,7 @@ export async function POST(req: NextRequest) {
     
     // Log the wipe BEFORE wiping the logs table itself
     await logActivity({
-      userId: token.id as number,
+      userId: token.id as string,
       userName: token.name as string,
       action: "USER_DELETED", // Reusing an existing action type for the wipe record
       details: "SYSTEM DATA WIPE EXECUTED. All deliveries, customers, and clusters removed.",
@@ -45,7 +43,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "System data wiped successfully." });
 
   } catch (error: any) {
-    console.error("Wipe Data Error:", error);
+    await logError({
+      errorName: "WipeDataError",
+      errorMessage: error.message,
+      stackTrace: error.stack,
+    });
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

@@ -23,7 +23,7 @@ function CustomersListContent() {
   
   // Management State
   const [isManagementMode, setIsManagementMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const isSuperAdmin = (session?.user as any)?.role === "superadmin";
@@ -39,7 +39,7 @@ function CustomersListContent() {
         const data = await res.json();
         setAllCustomers(data.customers || data || []);
       } catch (error) {
-        console.error("Failed to fetch customers:", error);
+        console.warn("Failed to fetch customers:", error);
       } finally {
         setIsLoading(false);
       }
@@ -47,7 +47,7 @@ function CustomersListContent() {
     fetchCustomers();
   }, [query]);
 
-  const toggleSelection = (id: number) => {
+  const toggleSelection = (id: string) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter(selectedId => selectedId !== id) : [...prev, id]
     );
@@ -106,7 +106,7 @@ function CustomersListContent() {
                   setIsManagementMode(!isManagementMode);
                   setSelectedIds([]);
                 }}
-                className={`btn-secondary !py-2.5 !px-5 ${isManagementMode ? 'bg-blue-600 !text-white' : ''}`}
+                className={`!py-2.5 !px-5 rounded-full text-[14px] font-bold transition-all duration-200 active:scale-90 flex items-center justify-center gap-2 ${isManagementMode ? 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/50 hover:bg-red-100 dark:hover:bg-red-900/50 shadow-sm' : 'btn-secondary'}`}
               >
                 {isManagementMode ? "Cancel" : "Manage"}
               </button>
@@ -136,9 +136,11 @@ function CustomersListContent() {
         <SearchBar />
 
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
-            <p className="mt-4 font-bold text-secondary">{t("action.loading")}</p>
+          <div className="flex flex-col items-center justify-center py-20 rounded-[2rem] bg-card border border-card-border shadow-sm px-6">
+            <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-[1.5rem] bg-surface-hover text-3xl mb-4 border border-card-border">
+              ⏳
+            </div>
+            <p className="text-[14px] font-bold text-secondary">{t("action.loading")}</p>
           </div>
         ) : allCustomers.length === 0 ? (
           <div className="rounded-[2rem] bg-card p-10 text-center shadow-sm border border-card-border">
@@ -184,13 +186,15 @@ function CustomersListContent() {
 
                   <div className="z-10 flex min-w-0 flex-1 items-center gap-4 pointer-events-none">
                     {isManagementMode && (
-                      <div className="mr-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.includes(customer.id)}
-                          readOnly
-                          className="h-5 w-5 rounded-lg border-card-border text-blue-600 focus:ring-blue-500"
-                        />
+                      <div className="mr-3">
+                        <div className={`flex h-6 w-6 items-center justify-center rounded-full transition-all duration-200 ${selectedIds.includes(customer.id) ? "bg-blue-600 text-white scale-110" : "border-2 border-card-border bg-transparent"
+                          }`}>
+                          {selectedIds.includes(customer.id) && (
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
                       </div>
                     )}
                     
@@ -264,8 +268,13 @@ function CustomersListContent() {
 export default function CustomersListPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="flex flex-col items-center justify-center rounded-[2rem] bg-card border border-card-border shadow-sm px-8 py-12">
+          <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-[1.5rem] bg-surface-hover text-3xl mb-4 border border-card-border">
+            ⏳
+          </div>
+          <p className="text-[14px] font-bold text-secondary animate-pulse">Loading...</p>
+        </div>
       </div>
     }>
       <CustomersListContent />

@@ -316,7 +316,7 @@ function DeliveryHubContent() {
     (c.address && c.address.toLowerCase().includes(customerSearchQuery.toLowerCase()))
   );
 
-  const inputClass = "w-full rounded-2xl border border-card-border bg-background px-5 py-4 text-[15px] font-medium text-primary transition-all focus:border-blue-500 focus:bg-card focus:outline-none focus:ring-4 focus:ring-blue-600/10 placeholder:text-secondary shadow-inner";
+  const inputClass = "w-full rounded-2xl border border-card-border dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-5 py-3.5 text-[15px] font-medium text-primary dark:text-slate-100 transition-all focus:border-blue-500 focus:bg-card dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 placeholder:text-secondary shadow-inner";
 
   const unlinkedCount = pendingList.filter(i => i.isUnlinked).length;
 
@@ -326,7 +326,7 @@ function DeliveryHubContent() {
         <div className="mb-6">
           <h1 className="text-3xl font-extrabold text-primary tracking-tight">{t("delivery.hub_title")}</h1>
           {isLocked && (
-            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-purple-100 dark:bg-purple-900/30 px-3 py-1 text-[12px] font-bold text-purple-700 dark:text-purple-300">
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 text-[12px] font-bold text-blue-700 dark:text-blue-300">
               🔒 Locked to Customer ID: {urlCustomerId}
             </div>
           )}
@@ -353,7 +353,7 @@ function DeliveryHubContent() {
           <div className="px-4 pb-4 space-y-5">
             <div>
               <label className="mb-2 block text-[13px] font-black text-secondary uppercase tracking-wide ml-1">{t("delivery.assign_to")}</label>
-              <button type="button" onClick={() => { if (!isLocked) { setCustomerSearchQuery(""); setIsCustomerModalOpen(true); } }} className={`flex w-full items-center justify-between rounded-2xl border px-5 py-4 text-[15px] font-bold transition-all shadow-sm ${isLocked ? "border-transparent bg-background text-secondary cursor-not-allowed opacity-80" : "border-card-border bg-background text-primary hover:border-blue-400 focus:border-blue-500 focus:bg-card active:scale-[0.98]"}`}>
+              <button type="button" onClick={() => { if (!isLocked) { setCustomerSearchQuery(""); setIsCustomerModalOpen(true); } }} className={`flex w-full items-center justify-between rounded-2xl border px-5 py-4 text-[15px] font-bold transition-all shadow-sm ${isLocked ? "border-transparent bg-surface-hover text-secondary cursor-not-allowed opacity-80" : "border-card-border bg-gray-50 dark:bg-slate-800 text-primary hover:border-blue-400 focus:border-blue-500 focus:bg-card dark:focus:bg-slate-900 active:scale-[0.98]"}`}>
                 <span className="truncate">{getSelectedCustomerName()}</span>
                 {isLocked ? (
                   <svg className="h-5 w-5 text-secondary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
@@ -616,29 +616,19 @@ function DeliveryHubContent() {
 }
 
 // -------------------------------------------------------------
-// MAIN PAGE EXPORT: Fixed to use the 100dvh sticky layout
+// MAIN PAGE EXPORT
 // -------------------------------------------------------------
 export default function GlobalDeliveryPage() {
   return (
-    <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
-
-      {/* Fixed Header & Breadcrumbs */}
-      <div className="shrink-0 z-30 bg-background">
-        
-        <Breadcrumbs />
-      </div>
-
-      {/* Scrollable Main Content Area */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar relative">
-        <Suspense fallback={
-          <div className="flex h-full items-center justify-center">
-            <span className="animate-pulse font-bold text-secondary">Loading Hub...</span>
-          </div>
-        }>
-          <DeliveryHubContent />
-        </Suspense>
-      </div>
-
+    <div className="min-h-screen bg-background">
+      <Breadcrumbs />
+      <Suspense fallback={
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <span className="animate-pulse font-bold text-secondary">Loading Hub...</span>
+        </div>
+      }>
+        <DeliveryHubContent />
+      </Suspense>
     </div>
   );
 }

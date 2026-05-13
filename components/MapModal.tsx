@@ -26,15 +26,17 @@ export default function MapModal({ latitude, longitude, address }: MapModalProps
   const lat = Number(latitude);
   const lng = Number(longitude);
 
-  // Lock background scrolling when the modal is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      window.dispatchEvent(new CustomEvent("modal:change", { detail: { isOpen: true } }));
     } else {
       document.body.style.overflow = "";
+      window.dispatchEvent(new CustomEvent("modal:change", { detail: { isOpen: false } }));
     }
     return () => {
       document.body.style.overflow = "";
+      window.dispatchEvent(new CustomEvent("modal:change", { detail: { isOpen: false } }));
     };
   }, [isOpen]);
 

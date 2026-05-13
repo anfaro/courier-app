@@ -122,7 +122,7 @@ function DeliveriesDashboardContent() {
     .reduce((sum, d) => sum + (parseInt(d.codAmount) || 0), 0);
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 sm:px-6 flex-1 overflow-y-auto custom-scrollbar relative pb-32">
+    <main className="mx-auto w-full max-w-2xl px-4 sm:px-6 relative pb-32">
 
       {/* --- TOP SECTION --- */}
       <div className="pt-4 mb-6 flex items-center justify-between">
@@ -138,7 +138,7 @@ function DeliveriesDashboardContent() {
                 setIsManagementMode(!isManagementMode);
                 setSelectedIds([]);
               }}
-              className={`btn-secondary !py-2.5 !px-5 ${isManagementMode ? 'bg-blue-600 !text-white' : ''}`}
+              className={`!py-2.5 !px-5 rounded-full text-[14px] font-bold transition-all duration-200 active:scale-90 flex items-center justify-center gap-2 ${isManagementMode ? 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/50 hover:bg-red-100 dark:hover:bg-red-900/50 shadow-sm' : 'btn-secondary'}`}
             >
               {isManagementMode ? "Cancel" : "Manage"}
             </button>
@@ -210,7 +210,7 @@ function DeliveriesDashboardContent() {
             placeholder="Search waybill or receiver name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-[24px] border border-card-border bg-card pl-11 pr-10 py-3.5 text-[15px] font-medium text-primary shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none placeholder:text-secondary"
+            className="w-full rounded-[32px] border border-card-border bg-card pl-11 pr-10 py-3.5 text-[15px] font-medium text-primary shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none placeholder:text-secondary"
           />
           {searchQuery && (
             <button
@@ -276,7 +276,7 @@ function DeliveriesDashboardContent() {
               <div
                 key={delivery.id}
                 onClick={() => isManagementMode && toggleSelection(delivery.id)}
-                className={`block rounded-[28px] bg-card p-5 shadow-sm border transition-all ${
+                className={`block relative rounded-[28px] bg-card p-5 shadow-sm border transition-all ${
                   isManagementMode && selectedIds.includes(delivery.id)
                     ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-900/20'
                     : 'border-card-border hover:border-blue-200 dark:hover:border-blue-800'
@@ -293,12 +293,14 @@ function DeliveriesDashboardContent() {
                   <div className="flex items-start gap-3">
                     {isManagementMode && (
                       <div className="mt-1">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.includes(delivery.id)}
-                          readOnly
-                          className="h-5 w-5 rounded-lg border-card-border text-blue-600 focus:ring-blue-500"
-                        />
+                        <div className={`flex h-6 w-6 items-center justify-center rounded-full transition-all duration-200 ${selectedIds.includes(delivery.id) ? "bg-blue-600 text-white scale-110" : "border-2 border-card-border bg-transparent"
+                          }`}>
+                          {selectedIds.includes(delivery.id) && (
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
                       </div>
                     )}
                     <div>
@@ -348,15 +350,10 @@ function DeliveriesDashboardContent() {
 // 2. The main page component wraps the content in Suspense
 export default function DeliveriesPage() {
   return (
-    <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
-      {/* --- FIXED HEADER --- */}
-      <div className="shrink-0 z-30 bg-background">
-        
-        <Breadcrumbs />
-      </div>
-
+    <div className="min-h-screen bg-background">
+      <Breadcrumbs />
       <Suspense fallback={
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex min-h-[50vh] items-center justify-center">
           <span className="text-secondary font-bold animate-pulse">Loading dashboard...</span>
         </div>
       }>

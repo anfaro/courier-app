@@ -40,7 +40,7 @@ export default function ScannerModal({ onScanSuccess, onClose }: ScannerModalPro
             if (html5QrCode.isScanning) {
               html5QrCode.stop().then(() => {
                 onScanSuccess(decodedText);
-              }).catch(err => console.error("Error stopping scanner", err));
+              }).catch(err => console.warn("Error stopping scanner", err));
             }
           },
           (errorMessage) => {
@@ -48,7 +48,7 @@ export default function ScannerModal({ onScanSuccess, onClose }: ScannerModalPro
           }
         );
       } catch (err: any) {
-        console.error("Camera access error:", err);
+        console.warn("Camera access error:", err);
         setError("Could not access camera. Please check your browser permissions.");
       }
     };
@@ -58,7 +58,7 @@ export default function ScannerModal({ onScanSuccess, onClose }: ScannerModalPro
     // CLEANUP
     return () => {
       if (scannerRef.current?.isScanning) {
-        scannerRef.current.stop().catch(err => console.error("Failed to stop", err));
+        scannerRef.current.stop().catch(err => console.warn("Failed to stop scanner", err));
       }
     };
   }, [onScanSuccess]);

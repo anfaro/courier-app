@@ -13,7 +13,7 @@ export default async function EditDeliveryPage({
   params: Promise<{ id: string }>
 }) {
   const resolvedParams = await params;
-  const deliveryId = parseInt(resolvedParams.id);
+  const deliveryId = resolvedParams.id;
 
   const deliveryData = await db.query.deliveries.findFirst({
     where: eq(deliveries.id, deliveryId),

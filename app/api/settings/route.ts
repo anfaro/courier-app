@@ -1,11 +1,10 @@
-import { logServerAccess } from "@/lib/logger";
 // app/api/settings/route.ts
 import { NextResponse, NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
 import { users } from "@/lib/schema";
 import { eq } from "drizzle-orm";
-import { logActivity } from "@/lib/logger";
+import { logServerAccess, logActivity, logError } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,17 +25,20 @@ export async function POST(req: NextRequest) {
 
     if (token) {
       await logActivity({
-        userId: token.id as number,
+        userId: token.id as string,
         userName: token.name as string,
         action: "USER_UPDATED",
         details: `User updated display name to: ${newName}`,
-        targetId: token.id?.toString()
+        targetId: token.id as string
       });
     }
 
     return NextResponse.json({ message: "Profile updated successfully" }, { status: 200 });
   } catch (error) {
-    console.error("Settings update error:", error);
+    await logError({
+      errorName: "SettingsUpdateError",
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ message: "An error occurred updating the profile" }, { status: 500 });
   }
 }

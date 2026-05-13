@@ -23,7 +23,7 @@ export default function AdminAnalytics() {
           setLogs(data.logs);
         }
       } catch (err) {
-        console.error("Failed to fetch analytics", err);
+        console.warn("Failed to fetch analytics", err);
       } finally {
         setIsLoading(false);
       }
@@ -39,7 +39,7 @@ export default function AdminAnalytics() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 rounded-full py-2.5 text-[12px] font-black uppercase tracking-wider transition-all active:scale-95 ${
+            className={`flex-1 rounded-full py-2.5 text-[12px] font-black uppercase tracking-wider transition-all active:scale-90 ${
               activeTab === tab ? "bg-card text-blue-600 dark:text-blue-400 shadow-sm" : "text-secondary hover:text-primary"
             }`}
           >
@@ -68,7 +68,7 @@ export default function AdminAnalytics() {
           {activeTab === 'access' && !isLoading && <span className="text-[10px] font-mono text-emerald-500 animate-pulse uppercase">● Live_Connect</span>}
         </div>
         
-        <div className={`divide-y max-h-[500px] overflow-y-auto custom-scrollbar ${activeTab === 'access' ? 'divide-slate-800/50 p-2 font-mono' : 'divide-card-border'}`}>
+        <div className={`divide-y max-h-[500px] overflow-y-auto custom-scrollbar ${activeTab === 'access' ? 'divide-slate-800/50 p-2 font-mono overflow-x-auto' : 'divide-card-border'}`}>
           <AnimatePresence mode="wait">
             {isLoading ? (
               <motion.div
@@ -92,7 +92,7 @@ export default function AdminAnalytics() {
                   <div
                     key={log.id}
                     className={activeTab === 'access' 
-                        ? "py-1.5 px-2 flex flex-row items-center gap-3 text-[11px] whitespace-nowrap hover:bg-slate-800/40 transition-colors overflow-x-auto no-scrollbar"
+                        ? "px-3 py-1.5 hover:bg-slate-800/40 transition-colors"
                         : "px-6 py-4 flex items-start gap-4 hover:bg-surface-hover transition-colors border-b border-card-border last:border-0"
                     }
                   >
@@ -106,13 +106,13 @@ export default function AdminAnalytics() {
 
                     {/* TERMINAL STYLE FOR ACCESS LOGS */}
                     {activeTab === 'access' ? (
-                        <>
-                            <span className="text-slate-500 shrink-0">[{new Date(log.createdAt).toLocaleTimeString('id-ID', { hour12: false })}]</span>
-                            <span className="text-emerald-400 font-black shrink-0 w-8">{log.method}</span>
-                            <span className="text-slate-100 shrink-0 font-bold">{log.pathname}</span>
-                            <span className="text-blue-400 shrink-0 opacity-80">@{log.userName || "Guest"}</span>
-                            <span className="text-slate-600 shrink-0 text-[10px] italic">({log.ipAddress})</span>
-                        </>
+                        <div className="flex items-center gap-2 py-1.5 w-full text-[11px] font-mono">
+                            <span className="text-slate-500 w-[90px] shrink-0">[{new Date(log.createdAt).toLocaleTimeString('id-ID', { hour12: false })}]</span>
+                            <span className="text-slate-400 w-[130px] shrink-0 truncate">{log.ipAddress || "N/A"}</span>
+                            <span className="text-emerald-400 font-black w-[50px] shrink-0">{log.method}</span>
+                            <span className="text-slate-100 font-bold flex-1 shrink-0">{log.pathname}</span>
+                            <span className="text-blue-400 opacity-80 w-[100px] shrink-0 text-right truncate">@{log.userName || "Guest"}</span>
+                        </div>
                     ) : (
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-2">

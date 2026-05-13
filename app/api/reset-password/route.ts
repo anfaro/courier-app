@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { users, passwordResetTokens } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { logActivity } from "@/lib/logger";
+import { logActivity, logError } from "@/lib/logger";
 
 export async function POST(req: Request) {
   try {
@@ -32,7 +32,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ message: "Password updated successfully" }, { status: 200 });
   } catch (error) {
-    console.error("Reset password error:", error);
+    await logError({
+      errorName: "ResetPasswordError",
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ message: "An error occurred" }, { status: 500 });
   }
 }

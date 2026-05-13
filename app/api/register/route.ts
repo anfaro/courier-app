@@ -4,7 +4,8 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { logActivity } from "@/lib/logger";
+import { logActivity, logError } from "@/lib/logger";
+import { generateId } from "@/lib/utils";
 
 export async function POST(req: Request) {
   try {
@@ -22,6 +23,7 @@ export async function POST(req: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const [newUser] = await db.insert(users).values({
+      id: generateId(),
       name,
       email,
       password: hashedPassword,
@@ -32,12 +34,15 @@ export async function POST(req: Request) {
       userName: newUser.name || "New User",
       action: "USER_CREATED",
       details: `New user registration: ${email}`,
-      targetId: newUser.id.toString()
+      targetId: newUser.id
     });
 
     return NextResponse.json({ message: "User registered successfully" }, { status: 201 });
   } catch (error) {
-    console.error("Registration error:", error);
+    await logError({
+      errorName: "RegistrationError",
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ message: "An error occurred during registration" }, { status: 500 });
   }
 }

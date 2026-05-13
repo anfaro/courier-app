@@ -20,7 +20,7 @@ export default function WaybillsManager({
   customerName,
   initialDeliveries
 }: {
-  customerId: number,
+  customerId: string,
   customerName: string,
   initialDeliveries: any[]
 }) {

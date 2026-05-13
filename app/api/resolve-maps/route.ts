@@ -1,5 +1,6 @@
 
 import { NextResponse } from "next/server";
+import { logError } from "@/lib/logger";
 
 export async function POST(req: Request) {
   try {
@@ -49,7 +50,10 @@ export async function POST(req: Request) {
     }, { status: 422 });
 
   } catch (error) {
-    console.error("Resolver Error:", error);
+    await logError({
+      errorName: "ResolveMapsError",
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ error: "Failed to connect to Google" }, { status: 500 });
   }
 }

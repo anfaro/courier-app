@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { logActivity, logServerAccess } from "@/lib/logger";
+import { logActivity, logServerAccess, logError } from "@/lib/logger";
 
 export async function PATCH(
   req: NextRequest,
@@ -23,14 +23,12 @@ export async function PATCH(
     const body = await req.json();
     const { role, password } = body;
 
-    const userId = parseInt(id);
-    if (isNaN(userId)) {
-      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
-    }
+    const userId = id;
 
     const updateData: any = {};
     if (role) {
-      if (!["courier", "superadmin"].includes(role)) {
+      const validRoles = ["courier", "dispatcher", "hubmanager", "superadmin"];
+      if (!validRoles.includes(role)) {
         return NextResponse.json({ error: "Invalid role" }, { status: 400 });
       }
       updateData.role = role;
@@ -54,16 +52,19 @@ export async function PATCH(
 
     // Log activity
     await logActivity({
-      userId: token.id as number,
+      userId: token.id as string,
       userName: token.name as string,
       action: "USER_UPDATED",
       details: `Updated user (ID: ${userId}) with fields: ${Object.keys(updateData).join(", ")}`,
-      targetId: userId.toString()
+      targetId: userId
     });
 
     return NextResponse.json({ message: "User updated successfully" });
   } catch (error: any) {
-    console.error("User update error:", error);
+    await logError({
+      errorName: "UserUpdateError",
+      errorMessage: error.message,
+    });
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -81,13 +82,10 @@ export async function DELETE(
     await logServerAccess(req, token);
 
     const { id } = await params;
-    const userId = parseInt(id);
-    if (isNaN(userId)) {
-      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
-    }
+    const userId = id;
 
     // Prevent deleting yourself
-    if (token.sub && parseInt(token.sub) === userId) {
+    if (token.sub && token.sub === userId) {
         return NextResponse.json({ error: "You cannot delete yourself." }, { status: 400 });
     }
 
@@ -95,16 +93,19 @@ export async function DELETE(
 
     // Log activity
     await logActivity({
-      userId: token.id as number,
+      userId: token.id as string,
       userName: token.name as string,
       action: "USER_DELETED",
       details: `Deleted user (ID: ${userId})`,
-      targetId: userId.toString()
+      targetId: userId
     });
 
     return NextResponse.json({ message: "User deleted successfully" });
   } catch (error: any) {
-    console.error("User delete error:", error);
+    await logError({
+      errorName: "UserDeleteError",
+      errorMessage: error.message,
+    });
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

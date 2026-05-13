@@ -4,6 +4,7 @@ import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
 import { logs } from "@/lib/schema";
 import { desc } from "drizzle-orm";
+import { logError } from "@/lib/logger";
 
 export async function GET(req: NextRequest) {
   try {
@@ -23,7 +24,10 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ logs: recentLogs });
   } catch (error: any) {
-    console.error("Logs Fetch Error:", error);
+    await logError({
+      errorName: "LogsFetchError",
+      errorMessage: error.message,
+    });
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

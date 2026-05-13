@@ -4,12 +4,12 @@ import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
 import { clusters, customerClusters } from "@/lib/schema";
 import { eq } from "drizzle-orm";
-import { logActivity, logServerAccess } from "@/lib/logger";
+import { logActivity, logServerAccess, logError } from "@/lib/logger";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const resolvedParams = await params;
-    const id = parseInt(resolvedParams.id);
+    const id = resolvedParams.id;
     const data = await db.query.clusters.findFirst({
       where: eq(clusters.id, id),
       with: {
@@ -23,7 +23,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     if (!data) return NextResponse.json({ message: "Cluster not found" }, { status: 404 });
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
-    console.error("GET Cluster Error:", error);
+    await logError({
+      errorName: "FetchClusterError",
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ message: "Failed to fetch cluster" }, { status: 500 });
   }
 }
@@ -33,7 +36,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (token) await logServerAccess(req, token);
     const resolvedParams = await params;
-    const id = parseInt(resolvedParams.id);
+    const id = resolvedParams.id;
     const { name, notes, customerIds } = await req.json();
 
     if (!name) return NextResponse.json({ message: "Cluster name is required" }, { status: 400 });
@@ -46,7 +49,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     await db.delete(customerClusters).where(eq(customerClusters.clusterId, id));
 
     if (customerIds && Array.isArray(customerIds) && customerIds.length > 0) {
-      const newLinks = customerIds.map((custId: number) => ({
+      const newLinks = customerIds.map((custId: string) => ({
         clusterId: id,
         customerId: custId,
       }));
@@ -55,17 +58,20 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     if (token) {
       await logActivity({
-        userId: token.id as number,
+        userId: token.id as string,
         userName: token.name as string,
         action: "CLUSTER_UPDATED",
         details: `Updated cluster ${name} (ID: ${id})`,
-        targetId: id.toString()
+        targetId: id
       });
     }
 
     return NextResponse.json({ message: "Cluster updated successfully" }, { status: 200 });
   } catch (error) {
-    console.error("PUT Cluster Error:", error);
+    await logError({
+      errorName: "UpdateClusterError",
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ message: "Failed to update cluster" }, { status: 500 });
   }
 }
@@ -75,23 +81,26 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (token) await logServerAccess(req, token);
     const resolvedParams = await params;
-    const id = parseInt(resolvedParams.id);
+    const id = resolvedParams.id;
 
     await db.delete(clusters).where(eq(clusters.id, id));
 
     if (token) {
       await logActivity({
-        userId: token.id as number,
+        userId: token.id as string,
         userName: token.name as string,
         action: "CLUSTER_DELETED",
         details: `Deleted cluster ID: ${id}`,
-        targetId: id.toString()
+        targetId: id
       });
     }
 
     return NextResponse.json({ message: "Cluster deleted successfully" }, { status: 200 });
   } catch (error) {
-    console.error("DELETE Cluster Error:", error);
+    await logError({
+      errorName: "DeleteClusterError",
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ message: "Failed to delete cluster" }, { status: 500 });
   }
 }

@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     const { name, message, stack, pathname } = await req.json();
 
     await logError({
-      userId: token?.id ? parseInt(token.id as string) : undefined,
+      userId: token?.id as string | undefined,
       userName: token?.name as string,
       errorName: name,
       errorMessage: message,

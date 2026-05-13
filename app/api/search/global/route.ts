@@ -2,8 +2,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
-import { customers, deliveries, users } from "@/lib/schema";
+import { customers, deliveries, users, clusters } from "@/lib/schema";
 import { ilike, or, eq } from "drizzle-orm";
+import { logActivity, logError } from "@/lib/logger";
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,10 +17,15 @@ export async function GET(req: NextRequest) {
     const q = searchParams.get("q") || "";
 
     if (!q || q.length < 2) {
-      return NextResponse.json({ customers: [], deliveries: [], users: [] });
+      return NextResponse.json({ customers: [], deliveries: [], users: [], clusters: [] });
     }
 
-    console.log(`[Global Search] Query: "${q}" (Role: ${token.role})`);
+    await logActivity({
+      userId: token.id as string,
+      userName: token.name as string,
+      action: "USER_LOGIN",
+      details: `Global search query: "${q}"`,
+    });
 
     // 1. Search in Customers table
     const foundCustomers = await db.select().from(customers).where(
@@ -47,7 +53,12 @@ export async function GET(req: NextRequest) {
         )
     ).limit(5);
 
-    // 3. Search in Users table - ONLY if superadmin
+    // 3. Search in Clusters table
+    const foundClusters = await db.select().from(clusters).where(
+        ilike(clusters.name, `%${q}%`)
+    ).limit(5);
+
+    // 4. Search in Users table - ONLY if superadmin
     let foundUsers: any[] = [];
     if (token.role === "superadmin") {
       foundUsers = await db.select({
@@ -66,16 +77,18 @@ export async function GET(req: NextRequest) {
       .limit(5);
     }
 
-    console.log(`[Global Search] Results: ${foundCustomers.length} customers, ${foundDeliveries.length} deliveries, ${foundUsers.length} users.`);
-
     return NextResponse.json({
       customers: foundCustomers,
       deliveries: foundDeliveries,
+      clusters: foundClusters,
       users: foundUsers
     });
 
   } catch (error: any) {
-    console.error("[Global Search] Error:", error);
+    await logError({
+      errorName: "GlobalSearchError",
+      errorMessage: error.message,
+    });
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

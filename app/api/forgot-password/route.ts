@@ -4,7 +4,8 @@ import { db } from "@/lib/db";
 import { users, passwordResetTokens } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
-import { logActivity } from "@/lib/logger";
+import { logActivity, logError } from "@/lib/logger";
+import { generateId } from "@/lib/utils";
 
 export async function POST(req: Request) {
   try {
@@ -20,12 +21,20 @@ export async function POST(req: Request) {
     const token = crypto.randomBytes(32).toString("hex");
     const expires = new Date(Date.now() + 3600 * 1000);
 
-    await db.insert(passwordResetTokens).values({ email, token, expires });
+    // CLEANUP: Delete any existing tokens for this email before creating a new one
+    await db.delete(passwordResetTokens).where(eq(passwordResetTokens.email, email));
+
+    await db.insert(passwordResetTokens).values({ 
+      id: generateId(),
+      email, 
+      token, 
+      expires 
+    });
     const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`;
 
-    console.log("=========================================");
-    console.log(`PASSWORD RESET LINK FOR ${email}: ${resetUrl}`);
-    console.log("=========================================");
+    console.warn("=========================================");
+    console.warn(`PASSWORD RESET LINK FOR ${email}: ${resetUrl}`);
+    console.warn("=========================================");
 
     // Log the request (anonymized/targeted by email)
     await logActivity({
@@ -33,9 +42,15 @@ export async function POST(req: Request) {
       details: `Password reset requested for ${email}`,
     });
 
-    return NextResponse.json({ message: "If that email exists, a reset link was sent." }, { status: 200 });
+    return NextResponse.json({ 
+      message: "If that email exists, a reset link was sent.",
+      token: token // Return token for dev auto-redirect
+    }, { status: 200 });
   } catch (error) {
-    console.error("Forgot password error:", error);
+    await logError({
+      errorName: "ForgotPasswordError",
+      errorMessage: error.message,
+    });
     return NextResponse.json({ message: "An error occurred" }, { status: 500 });
   }
 }

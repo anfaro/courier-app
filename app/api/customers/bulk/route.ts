@@ -1,10 +1,10 @@
-import { logServerAccess } from "@/lib/logger";
 // app/api/customers/bulk/route.ts
 import { db } from "@/lib/db";
 import { customers } from "@/lib/schema";
 import { NextResponse, NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { logActivity } from "@/lib/logger";
+import { logActivity, logServerAccess, logError } from "@/lib/logger";
+import { generateId } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     const formattedData = body.map((item: any) => ({
+      id: generateId(),
       name: item.name,
       phoneNumber: item.phoneNumber,
       address: item.address,
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
 
     if (token) {
       await logActivity({
-        userId: token.id as number,
+        userId: token.id as string,
         userName: token.name as string,
         action: "CUSTOMER_CREATED",
         details: `Bulk added ${body.length} customers`,
@@ -43,7 +44,10 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error("Bulk Insert Error:", error);
+    await logError({
+      errorName: "BulkInsertError",
+      errorMessage: error.message,
+    });
     return NextResponse.json(
       { message: error.message || "Failed to process bulk upload." },
       { status: 500 }

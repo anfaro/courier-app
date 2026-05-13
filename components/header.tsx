@@ -44,6 +44,11 @@ interface SearchResultCustomer {
   phoneNumber?: string;
 }
 
+interface SearchResultCluster {
+  id: string;
+  name: string;
+}
+
 interface SearchResultDelivery {
   id: string;
   waybillNumber: string;
@@ -54,6 +59,7 @@ interface SearchResultDelivery {
 interface SearchResults {
   customers: SearchResultCustomer[];
   deliveries: SearchResultDelivery[];
+  clusters: SearchResultCluster[];
   users: SearchResultUser[];
 }
 
@@ -64,7 +70,7 @@ export default function Header() {
   const { t } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<SearchResults>({ customers: [], deliveries: [], users: [] });
+  const [searchResults, setSearchResults] = useState<SearchResults>({ customers: [], deliveries: [], clusters: [], users: [] });
   const [isSearching, setIsSearching] = useState(false);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -98,7 +104,7 @@ export default function Header() {
   // Global Search Debounce
   useEffect(() => {
     if (!searchQuery.trim() || searchQuery.length < 2) {
-      setSearchResults({ customers: [], deliveries: [], users: [] });
+      setSearchResults({ customers: [], deliveries: [], clusters: [], users: [] });
       setIsDropdownVisible(false);
       return;
     }
@@ -113,7 +119,7 @@ export default function Header() {
           setSearchResults(data);
         }
       } catch (err) {
-        console.error("Global search failed", err);
+        console.warn("Global search failed", err);
       } finally {
         setIsSearching(false);
       }
@@ -122,7 +128,7 @@ export default function Header() {
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery]);
 
-  const authPaths = ["/login", "/signup", "/forgot-password", "/reset-password", "/not-mobile"];
+  const authPaths = ["/login", "/register", "/forgot-password", "/reset-password", "/not-mobile"];
   if (authPaths.some(path => pathname.startsWith(path))) return null;
 
   if (!session?.user) {
@@ -199,7 +205,7 @@ export default function Header() {
                   </div>
                 )}
 
-                {!isSearching && searchResults.customers.length === 0 && searchResults.deliveries.length === 0 && (!searchResults.users || searchResults.users.length === 0) && (
+                {!isSearching && searchResults.customers.length === 0 && searchResults.deliveries.length === 0 && searchResults.clusters.length === 0 && (!searchResults.users || searchResults.users.length === 0) && (
                   <div className="p-8 text-center text-secondary font-bold text-[14px]">{t("search.no_results")}</div>
                 )}
 
@@ -240,6 +246,27 @@ export default function Header() {
                           <div className="min-w-0">
                             <p className="font-black text-primary text-[14px] truncate">{c.name}</p>
                             <p className="text-[12px] font-medium text-secondary truncate">{c.phoneNumber || "No phone"}</p>
+                          </div>
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+
+                {/* CLUSTER SECTION */}
+                {searchResults.clusters.length > 0 && (
+                  <div className="mb-2">
+                    <p className="px-4 py-2 text-[11px] font-black uppercase tracking-widest text-orange-600 dark:text-orange-400">{t("search.clusters")}</p>
+                    {searchResults.clusters.map((c: SearchResultCluster) => (
+                      <motion.div
+                        key={c.id}
+                        whileTap={{ scale: 0.92, rotate: -0.5 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                      >
+                        <Link href={`/clusters/${c.id}`} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-hover transition-colors group">
+                          <div className="h-10 w-10 rounded-xl bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center text-lg shadow-inner group-hover:scale-110 transition-transform">📍</div>
+                          <div className="min-w-0">
+                            <p className="font-black text-primary text-[14px] truncate">{c.name}</p>
                           </div>
                         </Link>
                       </motion.div>
@@ -322,7 +349,7 @@ export default function Header() {
                       </Link>
 
                       <button
-                        onClick={() => signOut({ callbackUrl: "/login" })}
+                        onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); signOut({ redirect: false }).then(() => { window.location.href = "/login"; }); }}
                         className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-[14px] font-bold text-red-600 dark:text-red-400 transition-all hover:bg-red-50/50 dark:hover:bg-red-950/30 active:scale-[0.97] rounded-2xl group"
                       >
                         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 group-hover:scale-110 transition-transform">🚪</span>

@@ -19,7 +19,7 @@ export async function DELETE(req: NextRequest) {
     await db.delete(clusters).where(inArray(clusters.id, ids));
 
     await logActivity({
-      userId: token.id as number,
+      userId: token.id as string,
       userName: token.name as string,
       action: "CLUSTER_DELETED",
       details: `Bulk deleted ${ids.length} clusters.`,

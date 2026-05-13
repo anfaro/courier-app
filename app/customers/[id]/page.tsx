@@ -15,7 +15,7 @@ export default async function CustomerDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   const resolvedParams = await params;
-  const customerId = parseInt(resolvedParams.id);
+  const customerId = resolvedParams.id;
 
   const customerData = await db.query.customers.findFirst({
     where: eq(customers.id, customerId),

@@ -2,6 +2,7 @@
 import { db } from "./db";
 import { logs, errorLogs, accessLogs } from "./schema";
 import { NextRequest } from "next/server";
+import { generateId } from "./utils";
 
 export type LogAction = 
   | "USER_LOGIN"
@@ -26,7 +27,7 @@ export async function logActivity({
   details,
   targetId
 }: {
-  userId?: number;
+  userId?: string;
   userName?: string;
   action: LogAction;
   details?: string;
@@ -34,6 +35,7 @@ export async function logActivity({
 }) {
   try {
     await db.insert(logs).values({
+      id: generateId(),
       userId,
       userName,
       action,
@@ -53,7 +55,7 @@ export async function logError({
   stackTrace,
   pathname
 }: {
-  userId?: number;
+  userId?: string;
   userName?: string;
   errorName: string;
   errorMessage: string;
@@ -62,6 +64,7 @@ export async function logError({
 }) {
   try {
     await db.insert(errorLogs).values({
+      id: generateId(),
       userId,
       userName,
       errorName,
@@ -82,7 +85,7 @@ export async function logAccess({
   ipAddress,
   userAgent
 }: {
-  userId?: number;
+  userId?: string;
   userName?: string;
   pathname: string;
   method: string;
@@ -91,6 +94,7 @@ export async function logAccess({
 }) {
   try {
     await db.insert(accessLogs).values({
+      id: generateId(),
       userId,
       userName,
       pathname,
@@ -111,7 +115,7 @@ export async function logServerAccess(req: NextRequest, token: any) {
   const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
 
   await logAccess({
-    userId: token?.id ? parseInt(token.id as string) : undefined,
+    userId: token?.id ? (token.id as string) : undefined,
     userName: token?.name as string,
     pathname,
     method,

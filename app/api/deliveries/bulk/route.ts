@@ -1,10 +1,10 @@
-import { logServerAccess } from "@/lib/logger";
-
-import { db } from "@/lib/db"; // Adjusted to your path
+// app/api/deliveries/bulk/route.ts
+import { db } from "@/lib/db";
 import { deliveries } from "@/lib/schema";
 import { NextResponse, NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { logActivity } from "@/lib/logger";
+import { logServerAccess, logActivity, logError } from "@/lib/logger";
+import { generateId } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,11 +14,17 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     // Body: Array of { waybillNumber, customerId, codAmount, status }
 
-    const result = await db.insert(deliveries).values(body).returning();
+    const formattedData = body.map((item: any) => ({
+      ...item,
+      id: generateId(),
+      codAmount: item.codAmount?.toString() || "0"
+    }));
+
+    const result = await db.insert(deliveries).values(formattedData).returning();
 
     if (token) {
         await logActivity({
-          userId: token.id as number,
+          userId: token.id as string,
           userName: token.name as string,
           action: "BULK_DELIVERY_SAVE",
           details: `Saved ${result.length} deliveries in bulk`,
@@ -30,7 +36,10 @@ export async function POST(req: NextRequest) {
       message: `${result.length} deliveries created.`
     });
   } catch (error: any) {
-    console.error("Bulk Delivery Error:", error);
+    await logError({
+      errorName: "BulkDeliveryError",
+      errorMessage: error.message,
+    });
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

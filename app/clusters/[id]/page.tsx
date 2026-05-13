@@ -12,7 +12,7 @@ export default async function ClusterDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   const resolvedParams = await params;
-  const clusterId = parseInt(resolvedParams.id);
+  const clusterId = resolvedParams.id;
 
   // 1. Fetch the Cluster details along with its associated customers via the join table
   const clusterWithCustomers = await db.query.clusters.findFirst({

@@ -153,7 +153,7 @@ export default function NewCustomerPage() {
     }
   };
 
-  const inputClass = "w-full rounded-2xl border border-card-border bg-background px-5 py-4 text-[15px] font-medium text-primary transition-all focus:border-blue-500 focus:bg-card focus:outline-none focus:ring-4 focus:ring-blue-600/10 placeholder:text-secondary shadow-inner";
+  const inputClass = "w-full rounded-2xl border border-card-border dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-5 py-3.5 text-[15px] font-medium text-primary dark:text-slate-100 transition-all focus:border-blue-500 focus:bg-card dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 placeholder:text-secondary shadow-inner";
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -194,9 +194,9 @@ export default function NewCustomerPage() {
 
               <div>
                 <label className="mb-2 block text-[13px] font-black text-secondary uppercase tracking-widest ml-1">{t("settings.email_label")} / Phone</label>
-                <div className="flex items-center overflow-hidden rounded-2xl border border-card-border bg-background transition-all focus-within:border-blue-600 focus-within:bg-card focus-within:ring-4 focus-within:ring-blue-600/10 shadow-inner">
+                <div className="flex items-center overflow-hidden rounded-2xl border border-card-border dark:border-slate-700 bg-gray-50 dark:bg-slate-800 transition-all focus-within:border-blue-600 focus-within:bg-card dark:focus-within:bg-slate-900 focus-within:ring-4 focus-within:ring-blue-600/10 shadow-inner">
                   <span className="flex select-none items-center pl-5 pr-2 font-black text-secondary">+62</span>
-                  <input type="tel" value={phoneNumber} onChange={handlePhoneChange} className="w-full bg-transparent py-4 pr-5 text-[15px] font-medium text-primary focus:outline-none" placeholder="812 3456 7890" />
+                  <input type="tel" value={phoneNumber} onChange={handlePhoneChange} className="w-full bg-transparent py-4 pr-5 text-[15px] font-medium text-primary dark:text-slate-100 focus:outline-none" placeholder="812 3456 7890" />
                 </div>
               </div>
 
@@ -205,14 +205,14 @@ export default function NewCustomerPage() {
                 <textarea value={address} onChange={(e) => setAddress(e.target.value)} required rows={3} className={inputClass} placeholder="123 Main St..." />
               </div>
 
-              <div className="rounded-[2.5rem] bg-blue-50/50 dark:bg-blue-900/10 p-6 border border-blue-100 dark:border-blue-900/50">
+              <div className="rounded-[2.5rem] bg-surface-hover p-6 border border-card-border">
                 <div className="mb-4 flex items-center justify-between">
-                  <label className="block text-[15px] font-black text-blue-900 dark:text-blue-200">GPS Coordinates</label>
+                  <label className="block text-[15px] font-black text-primary">GPS Coordinates</label>
                   <button type="button" onClick={getLocation} className="btn-secondary px-4 py-2 text-[12px] shadow-sm">📍 {t("customer.pin")}</button>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <input type="text" value={latitude} onChange={(e) => setLatitude(e.target.value)} className="w-full rounded-2xl border-none bg-card px-4 py-3 text-sm text-primary shadow-sm font-mono" placeholder="Latitude" />
-                  <input type="text" value={longitude} onChange={(e) => setLongitude(e.target.value)} className="w-full rounded-2xl border-none bg-card px-4 py-3 text-sm text-primary shadow-sm font-mono" placeholder="Longitude" />
+                  <input type="text" value={latitude} onChange={(e) => setLatitude(e.target.value)} className="w-full rounded-2xl border border-card-border dark:border-slate-700 bg-card dark:bg-slate-900 px-4 py-3 text-sm text-primary dark:text-slate-100 shadow-sm font-mono focus:border-blue-500 focus:outline-none" placeholder="Latitude" />
+                  <input type="text" value={longitude} onChange={(e) => setLongitude(e.target.value)} className="w-full rounded-2xl border border-card-border dark:border-slate-700 bg-card dark:bg-slate-900 px-4 py-3 text-sm text-primary dark:text-slate-100 shadow-sm font-mono focus:border-blue-500 focus:outline-none" placeholder="Longitude" />
                 </div>
               </div>
 
@@ -250,7 +250,7 @@ export default function NewCustomerPage() {
                 className={`overflow-hidden transition-all duration-500 ease-in-out ${isFormVisible ? "max-h-[1500px] opacity-100 mt-4" : "max-h-0 opacity-0 mt-0 pointer-events-none"
                   }`}
               >
-                <div className="rounded-[2.5rem] border border-card-border bg-background/50 p-6 shadow-inner space-y-5">
+                <div className="rounded-[2.5rem] border border-card-border bg-surface-hover/50 p-6 shadow-inner space-y-5">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-secondary uppercase ml-2 italic opacity-60">Paste Excel/Tabular Data</label>
                     <textarea
@@ -264,16 +264,16 @@ export default function NewCustomerPage() {
 
                   <div className="relative py-1 flex items-center justify-center">
                     <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-card-border"></div></div>
-                    <span className="relative bg-background px-4 text-[10px] font-black text-secondary/30 uppercase tracking-widest">OR</span>
+                    <span className="relative bg-surface-hover px-4 text-[10px] font-black text-secondary/30 uppercase tracking-widest">OR</span>
                   </div>
 
                   <div className="space-y-4">
                     <label className="text-[10px] font-black text-secondary uppercase ml-2">Manual Entry</label>
                     <input type="text" value={bulkDraft.name} onChange={(e) => setBulkDraft({ ...bulkDraft, name: e.target.value })} placeholder="Customer Name" className={inputClass} />
 
-                    <div className="flex items-center rounded-2xl bg-background border border-card-border focus-within:border-blue-600 focus-within:bg-card transition-all shadow-inner">
+                    <div className="flex items-center rounded-2xl bg-gray-50 dark:bg-slate-800 border border-card-border dark:border-slate-700 focus-within:border-blue-600 focus-within:bg-card dark:focus-within:bg-slate-900 transition-all shadow-inner">
                       <span className="pl-5 pr-2 text-[15px] font-black text-secondary">+62</span>
-                      <input type="tel" value={bulkDraft.phoneNumber} onChange={(e) => setBulkDraft({ ...bulkDraft, phoneNumber: e.target.value.replace(/\D/g, "") })} placeholder="812 3456 7890" className="w-full bg-transparent py-4 text-[15px] font-medium text-primary focus:outline-none" />
+                      <input type="tel" value={bulkDraft.phoneNumber} onChange={(e) => setBulkDraft({ ...bulkDraft, phoneNumber: e.target.value.replace(/\D/g, "") })} placeholder="812 3456 7890" className="w-full bg-transparent py-4 text-[15px] font-medium text-primary dark:text-slate-100 focus:outline-none" />
                     </div>
 
                     <textarea value={bulkDraft.address} onChange={(e) => setBulkDraft({ ...bulkDraft, address: e.target.value })} placeholder="Full Address" rows={2} className={inputClass} />
@@ -320,8 +320,8 @@ export default function NewCustomerPage() {
 
                   <div className="max-h-[60vh] overflow-y-auto space-y-3 pb-20 pr-1 custom-scrollbar">
                     {bulkList.map((c, i) => (
-                      <div key={i} className="flex items-center gap-4 rounded-[2rem] bg-background border border-card-border p-3 shadow-sm">
-                        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-card border border-card-border flex items-center justify-center">
+                      <div key={i} className="flex items-center gap-4 rounded-[2rem] bg-card border border-card-border p-3 shadow-sm">
+                        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-surface-hover border border-card-border flex items-center justify-center">
                           {c.housePictureUrl ? <img src={c.housePictureUrl} className="h-full w-full object-cover" /> : <span className="text-xl">🏠</span>}
                         </div>
                         <div className="flex-1 min-w-0">

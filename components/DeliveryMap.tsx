@@ -84,7 +84,7 @@ export default function DeliveryMap({ deliveries }: { deliveries: any[] }) {
           }
         }
       } catch (err) {
-        console.error("Failed to resolve location", err);
+        console.warn("Failed to resolve location", err);
       } finally {
         setIsResolving(null);
       }
@@ -172,7 +172,7 @@ export default function DeliveryMap({ deliveries }: { deliveries: any[] }) {
         setOptimizedRoute(sequence);
       }
     } catch (err) {
-      console.error("OSRM Error:", err);
+      console.warn("OSRM Error:", err);
       setOptimizedRoute(sequence);
     } finally {
       setIsOptimizing(false);

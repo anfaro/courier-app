@@ -1,4 +1,4 @@
-// app/signup/page.tsx
+// app/register/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -57,8 +57,8 @@ export default function SignUpPage() {
     }
   };
 
-  // M3 Expressive Input Style: Soft resting state, bright white active state with soft glow
-  const inputClass = "w-full rounded-2xl border border-transparent bg-gray-100 dark:bg-slate-800 px-5 py-4 text-[15px] text-primary transition-all focus:border-blue-600 focus:bg-card focus:outline-none focus:ring-4 focus:ring-blue-600/15";
+  // M3 Expressive Input Style: Soft resting state, dynamic themed background
+  const inputClass = "w-full rounded-2xl border border-card-border dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-5 py-4 text-[15px] font-medium text-primary dark:text-slate-100 transition-all focus:border-blue-500 focus:bg-card dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 placeholder:text-secondary shadow-inner";
 
   return (
     <div className="flex min-h-screen flex-col justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
@@ -90,14 +90,14 @@ export default function SignUpPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="mb-2 block text-[15px] font-bold text-secondary">
-                {t("auth.full_name")}
+                {t("auth.username")}
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className={inputClass}
-                placeholder={t("auth.full_name_placeholder")}
+                placeholder={t("auth.username_placeholder")}
               />
             </div>
 
@@ -129,13 +129,13 @@ export default function SignUpPage() {
                   className={`${inputClass} pr-20`}
                   placeholder={t("auth.password_placeholder")}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 rounded-xl bg-gray-200/50 dark:bg-slate-700/50 px-3 py-1.5 text-sm font-bold text-secondary transition hover:bg-gray-200 dark:hover:bg-slate-700 hover:text-primary active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {showPassword ? t("auth.hide") : t("auth.show")}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 rounded-xl bg-surface-hover/80 dark:bg-slate-700/50 px-3 py-1.5 text-sm font-bold text-secondary transition hover:bg-surface-hover dark:hover:bg-slate-700 hover:text-primary active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {showPassword ? t("auth.hide") : t("auth.show")}
+                  </button>
               </div>
             </div>
 
@@ -155,7 +155,7 @@ export default function SignUpPage() {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 rounded-xl bg-gray-200/50 dark:bg-slate-700/50 px-3 py-1.5 text-sm font-bold text-secondary transition hover:bg-gray-200 dark:hover:bg-slate-700 hover:text-primary active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="absolute right-3 rounded-xl bg-surface-hover/80 dark:bg-slate-700/50 px-3 py-1.5 text-sm font-bold text-secondary transition hover:bg-surface-hover dark:hover:bg-slate-700 hover:text-primary active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {showConfirmPassword ? t("auth.hide") : t("auth.show")}
                 </button>

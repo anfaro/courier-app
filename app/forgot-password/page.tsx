@@ -3,12 +3,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useLanguage } from "@/components/LanguageProvider";
 import AuthLanguageSelector from "@/components/AuthLanguageSelector";
 import AuthThemeSelector from "@/components/AuthThemeSelector";
 
 export default function ForgotPasswordPage() {
   const { t } = useLanguage();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -33,6 +35,13 @@ export default function ForgotPasswordPage() {
         // Show success message regardless of whether the email actually exists
         setMessage(data.message);
         setEmail(""); // Clear the input
+
+        // AUTO REDIRECT: If token is provided (dev shortcut), go to reset page
+        if (data.token) {
+          setTimeout(() => {
+            router.push(`/reset-password?token=${data.token}`);
+          }, 1500); // Slight delay for the success message to be seen
+        }
       } else {
         setError(data.message || t("auth.something_wrong"));
       }

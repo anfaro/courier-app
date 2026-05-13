@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
 
     await logAccess({
-      userId: token?.id ? parseInt(token.id as string) : undefined,
+      userId: token?.id as string | undefined,
       userName: token?.name as string,
       pathname,
       method,

@@ -1,18 +1,17 @@
-import { logServerAccess } from "@/lib/logger";
 // app/api/deliveries/[id]/route.ts
 import { NextResponse, NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
 import { deliveries } from "@/lib/schema";
 import { eq } from "drizzle-orm";
-import { logActivity } from "@/lib/logger";
+import { logActivity, logServerAccess, logError } from "@/lib/logger";
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (token) await logServerAccess(req, token);
     const resolvedParams = await params;
-    const deliveryId = parseInt(resolvedParams.id);
+    const deliveryId = resolvedParams.id;
     const body = await req.json();
     const { status, proofOfDeliveryDataUrl, codAmount, receiverName } = body;
 
@@ -30,17 +29,20 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     if (token) {
       await logActivity({
-        userId: token.id as number,
+        userId: token.id as string,
         userName: token.name as string,
         action: "DELIVERY_UPDATED",
         details: `Updated waybill status to ${status}`,
-        targetId: deliveryId.toString()
+        targetId: deliveryId
       });
     }
 
     return NextResponse.json({ message: "Waybill updated successfully" }, { status: 200 });
   } catch (error) {
-    console.error("Error updating delivery:", error);
+    await logError({
+      errorName: "UpdateDeliveryError",
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ message: "Failed to update waybill" }, { status: 500 });
   }
 }
@@ -50,23 +52,26 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (token) await logServerAccess(req, token);
     const resolvedParams = await params;
-    const deliveryId = parseInt(resolvedParams.id);
+    const deliveryId = resolvedParams.id;
 
     await db.delete(deliveries).where(eq(deliveries.id, deliveryId));
 
     if (token) {
       await logActivity({
-        userId: token.id as number,
+        userId: token.id as string,
         userName: token.name as string,
         action: "DELIVERY_DELETED",
         details: `Deleted waybill ID: ${deliveryId}`,
-        targetId: deliveryId.toString()
+        targetId: deliveryId
       });
     }
 
     return NextResponse.json({ message: "Delivery deleted successfully" }, { status: 200 });
   } catch (error) {
-    console.error("Error deleting delivery:", error);
+    await logError({
+      errorName: "DeleteDeliveryError",
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ message: "Failed to delete delivery" }, { status: 500 });
   }
 }
@@ -76,7 +81,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (token) await logServerAccess(req, token);
     const resolvedParams = await params;
-    const deliveryId = parseInt(resolvedParams.id);
+    const deliveryId = resolvedParams.id;
     const body = await req.json();
     const { waybillNumber, receiverName, codAmount, status, proofOfDeliveryUrl } = body;
 
@@ -84,7 +89,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       .set({
         waybillNumber,
         receiverName,
-        codAmount: parseInt(codAmount) || 0,
+        codAmount: codAmount?.toString() || "0",
         status,
         proofOfDeliveryUrl,
         updatedAt: new Date(),
@@ -93,17 +98,20 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     if (token) {
       await logActivity({
-        userId: token.id as number,
+        userId: token.id as string,
         userName: token.name as string,
         action: "DELIVERY_UPDATED",
         details: `Patched waybill ${waybillNumber}`,
-        targetId: deliveryId.toString()
+        targetId: deliveryId
       });
     }
 
     return NextResponse.json({ message: "Delivery updated successfully" }, { status: 200 });
   } catch (error) {
-    console.error("Error updating delivery:", error);
+    await logError({
+      errorName: "UpdateDeliveryError",
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ message: "Failed to update delivery" }, { status: 500 });
   }
 }

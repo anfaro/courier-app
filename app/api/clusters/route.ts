@@ -1,11 +1,10 @@
-import { logServerAccess } from "@/lib/logger";
 // app/api/clusters/route.ts
 import { NextResponse, NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
 import { clusters, customerClusters } from "@/lib/schema";
-import { logActivity } from "@/lib/logger";
-
+import { logActivity, logServerAccess, logError } from "@/lib/logger";
+import { generateId } from "@/lib/utils";
 import { eq, sql } from "drizzle-orm";
 
 export async function GET() {
@@ -23,7 +22,10 @@ export async function GET() {
 
     return NextResponse.json({ clusters: allClusters }, { status: 200 });
   } catch (error) {
-    console.error("Failed to fetch clusters:", error);
+    await logError({
+      errorName: "FetchClustersError",
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ error: "Failed to fetch clusters" }, { status: 500 });
   }
 }
@@ -41,11 +43,14 @@ export async function POST(req: NextRequest) {
 
     const [newCluster] = await db
       .insert(clusters)
-      .values({ name: name.trim() })
+      .values({ 
+        id: generateId(),
+        name: name.trim() 
+      })
       .returning({ id: clusters.id });
 
     if (customerIds && Array.isArray(customerIds) && customerIds.length > 0) {
-      const joinRecords = customerIds.map((customerId: number) => ({
+      const joinRecords = customerIds.map((customerId: string) => ({
         customerId: customerId,
         clusterId: newCluster.id,
       }));
@@ -54,17 +59,20 @@ export async function POST(req: NextRequest) {
 
     if (token) {
       await logActivity({
-        userId: token.id as number,
+        userId: token.id as string,
         userName: token.name as string,
         action: "CLUSTER_CREATED",
         details: `Created new cluster: ${name}`,
-        targetId: newCluster.id.toString()
+        targetId: newCluster.id
       });
     }
 
     return NextResponse.json({ message: "Cluster created successfully" }, { status: 201 });
   } catch (error) {
-    console.error("Error creating cluster:", error);
+    await logError({
+      errorName: "CreateClusterError",
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ message: "Failed to create cluster" }, { status: 500 });
   }
 }

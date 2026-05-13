@@ -15,7 +15,17 @@ export default function BottomNav() {
   const { data: session } = useSession();
   const { t } = useLanguage();
   const [isVisible, setIsVisible] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
+
+  // Listen for modal open/close events
+  useEffect(() => {
+    const handleModalChange = (e: CustomEvent) => {
+      setIsModalOpen(e.detail.isOpen);
+    };
+    window.addEventListener("modal:change", handleModalChange as EventListener);
+    return () => window.removeEventListener("modal:change", handleModalChange as EventListener);
+  }, []);
 
   // Improved Hide/Show logic with a small threshold to prevent "flickering" during scroll
   useEffect(() => {
@@ -46,7 +56,7 @@ export default function BottomNav() {
   }, [lastScrollY]);
 
   // Hide BottomNav on auth pages
-  const authPaths = ["/login", "/signup", "/forgot-password", "/reset-password", "/not-mobile"];
+  const authPaths = ["/login", "/register", "/forgot-password", "/reset-password", "/not-mobile"];
   if (authPaths.some(path => pathname.startsWith(path))) return null;
 
   const baseNavItems = [
@@ -91,7 +101,7 @@ export default function BottomNav() {
   return (
     <div className="fixed bottom-6 left-0 right-0 z-[100] flex justify-center px-6 pb-safe pointer-events-none">
       <AnimatePresence>
-        {isVisible && (
+        {(isVisible && !isModalOpen) && (
           <motion.nav 
             initial={{ y: 100, opacity: 0, scale: 0.9 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}

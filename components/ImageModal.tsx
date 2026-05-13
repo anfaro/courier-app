@@ -14,15 +14,17 @@ export default function ImageModal({
 }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Prevent background scrolling when the image is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      window.dispatchEvent(new CustomEvent("modal:change", { detail: { isOpen: true } }));
     } else {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = "";
+      window.dispatchEvent(new CustomEvent("modal:change", { detail: { isOpen: false } }));
     }
     return () => {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = "";
+      window.dispatchEvent(new CustomEvent("modal:change", { detail: { isOpen: false } }));
     };
   }, [isOpen]);
 

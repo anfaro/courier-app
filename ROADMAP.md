@@ -42,5 +42,15 @@ Focus: Core stability, smooth animations, and essential fleet management.
 
 ### 📈 Scaling & Advanced Features
 - **Route Optimization AI**: Auto-generating the most efficient delivery sequence.
+- **Redis Support**: Distributed caching, session management, and real-time pub/sub features.
 - **Real-time Chat**: Direct communication between dispatch and couriers.
 - **Customer Portal**: Self-service tracking and order management.
+
+---
+
+## 🌟 Major Version 3.0 (The Mobile Era)
+
+### 📱 Mobile Apps (Expo)
+- **Native Android & iOS builds**: Courier companion apps built with Expo.
+- **Offline-first mode**: Queue deliveries and log PODs without internet.
+- **Push notifications**: Real-time dispatch alerts.

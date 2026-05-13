@@ -1,10 +1,9 @@
-import { logServerAccess } from "@/lib/logger";
 // app/api/upload/route.ts
 import { NextResponse, NextRequest } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { getToken } from "next-auth/jwt";
-import { logActivity } from "@/lib/logger";
+import { logServerAccess, logActivity, logError } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   try {
@@ -53,7 +52,7 @@ export async function POST(req: NextRequest) {
     // Log the upload
     if (token) {
         await logActivity({
-          userId: token.id as number,
+          userId: token.id as string,
           userName: token.name as string,
           action: "DELIVERY_UPDATED", // Generic update log
           details: `Uploaded ${type} image: ${file.name}`,
@@ -65,7 +64,10 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Upload error:", error);
+    await logError({
+      errorName: "UploadError",
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { message: "Failed to upload file" },
       { status: 500 }

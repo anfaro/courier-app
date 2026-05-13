@@ -27,11 +27,11 @@ export default function HomePage() {
         if (res.ok) {
           const data = await res.json();
           const pending = data.deliveries.filter((d: { status: string }) => d.status === "Pending");
-          const totalCod = pending.reduce((sum: number, d: { codAmount?: number }) => sum + (d.codAmount || 0), 0);
+          const totalCod = pending.reduce((sum: number, d: { codAmount?: string }) => sum + (parseInt(d.codAmount || "0") || 0), 0);
           setRouteStats({ pendingCount: pending.length, totalCod });
         }
       } catch (err) {
-        console.error("Failed to fetch home stats", err);
+        console.warn("Failed to fetch home stats", err);
       }
     }
     fetchStats();

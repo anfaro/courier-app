@@ -1,4 +1,4 @@
-
+// app/customers/[id]/edit/page.tsx
 "use client";
 
 import { useState, useEffect, use } from "react";
@@ -21,7 +21,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   const [availableClusters, setAvailableClusters] = useState<any[]>([]);
-  const [selectedClusters, setSelectedClusters] = useState<number[]>([]);
+  const [selectedClusters, setSelectedClusters] = useState<string[]>([]);
 
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -29,7 +29,6 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
   const [isDeleting, setIsDeleting] = useState(false);
   const [isResolving, setIsResolving] = useState(false);
 
-  // NEW: State for the custom MD3 Delete Modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const router = useRouter();
@@ -127,7 +126,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
     setPhoneNumber(e.target.value.replace(/\D/g, ""));
   };
 
-  const toggleCluster = (id: number) => {
+  const toggleCluster = (id: string) => {
     setSelectedClusters(prev =>
       prev.includes(id) ? prev.filter(cId => cId !== id) : [...prev, id]
     );
@@ -179,7 +178,6 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
     }
   };
 
-  // UPDATED: Actual delete execution logic moved here
   const executeDelete = async () => {
     setIsDeleting(true);
     try {
@@ -200,15 +198,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
     }
   };
 
-  const inputClass = "w-full rounded-2xl border border-gray-200 bg-gray-50 px-5 py-3.5 text-[15px] font-medium text-gray-800 transition-all focus:border-blue-500 focus:bg-card focus:outline-none focus:ring-4 focus:ring-blue-500/10 placeholder:text-gray-400";
-
-  if (isFetching) {
-    return (
-      <div className="min-h-screen bg-background pb-20">
-        <main className="mx-auto max-w-2xl p-4 sm:p-6"><div className="mt-4 flex min-h-[50vh] flex-col items-center justify-center rounded-[2.5rem] bg-card p-6 shadow-sm border border-gray-100 text-gray-500 font-medium">Loading customer...</div></main>
-      </div>
-    );
-  }
+  const inputClass = "w-full rounded-2xl border border-card-border dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-5 py-3.5 text-[15px] font-medium text-primary dark:text-slate-100 transition-all focus:border-blue-500 focus:bg-card dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 placeholder:text-secondary";
 
   return (
     <>
@@ -216,37 +206,48 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
         
         <Breadcrumbs />
 
-        <main className="mx-auto max-w-2xl p-4 sm:p-6">
-          <div className="mt-4 rounded-[2.5rem] bg-card p-6 sm:p-10 shadow-sm border border-gray-100">
-            <h1 className="text-3xl font-bold text-gray-800 mb-8">Edit Customer</h1>
+        {isFetching ? (
+          <main className="mx-auto max-w-2xl p-4 sm:p-6">
+            <div className="mt-4 flex min-h-[50vh] flex-col items-center justify-center rounded-[2.5rem] bg-card p-6 shadow-sm border border-card-border">
+              <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-[1.5rem] bg-surface-hover text-3xl mb-4 border border-card-border">
+                ⏳
+              </div>
+              <p className="text-[16px] font-bold text-secondary animate-pulse">Loading customer...</p>
+            </div>
+          </main>
+        ) : (
 
-            {error && <p className="mb-6 rounded-2xl bg-red-50 p-4 text-[15px] font-medium text-red-600">{error}</p>}
+        <main className="mx-auto max-w-2xl p-4 sm:p-6">
+          <div className="mt-4 rounded-[2.5rem] bg-card p-6 sm:p-10 shadow-sm border border-card-border">
+            <h1 className="text-3xl font-bold text-primary mb-8">Edit Customer</h1>
+
+            {error && <p className="mb-6 rounded-2xl bg-red-50 dark:bg-red-950/30 p-4 text-[15px] font-medium text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900">{error}</p>}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="mb-2 block text-[15px] font-semibold text-gray-700">Full Name</label>
+                <label className="mb-2 block text-[15px] font-semibold text-secondary">Full Name</label>
                 <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
               </div>
 
               <div>
-                <label className="mb-2 block text-[15px] font-semibold text-gray-700">Phone Number</label>
-                <div className="flex items-center rounded-2xl border border-gray-200 bg-gray-50 focus-within:border-blue-500 focus-within:bg-card focus-within:ring-4 focus-within:ring-blue-500/10 transition-all overflow-hidden">
-                  <span className="pl-5 pr-2 font-medium text-gray-500">+62</span>
-                  <input type="tel" value={phoneNumber} onChange={handlePhoneChange} className="w-full bg-transparent py-3.5 pr-5 text-[15px] font-medium text-gray-800 focus:outline-none" />
+                <label className="mb-2 block text-[15px] font-semibold text-secondary">Phone Number</label>
+                <div className="flex items-center rounded-2xl border border-card-border dark:border-slate-700 bg-gray-50 dark:bg-slate-800 focus-within:border-blue-500 focus-within:bg-card dark:focus-within:bg-slate-900 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all overflow-hidden">
+                  <span className="pl-5 pr-2 font-medium text-secondary/60">+62</span>
+                  <input type="tel" value={phoneNumber} onChange={handlePhoneChange} className="w-full bg-transparent py-3.5 pr-5 text-[15px] font-medium text-primary dark:text-slate-100 focus:outline-none" />
                 </div>
               </div>
 
               <div>
-                <label className="mb-2 block text-[15px] font-semibold text-gray-700">Address</label>
+                <label className="mb-2 block text-[15px] font-semibold text-secondary">Address</label>
                 <textarea value={address} onChange={(e) => setAddress(e.target.value)} required rows={3} className={inputClass} />
               </div>
 
               {availableClusters.length > 0 && (
                 <div>
-                  <label className="mb-3 block text-[15px] font-semibold text-gray-700">Clusters</label>
+                  <label className="mb-3 block text-[15px] font-semibold text-secondary">Clusters</label>
                   <div className="flex flex-wrap gap-2">
                     {availableClusters.map((cluster) => (
-                      <button key={cluster.id} type="button" onClick={() => toggleCluster(cluster.id)} className={`rounded-full px-4 py-2 text-[14px] font-semibold transition-all active:scale-95 ${selectedClusters.includes(cluster.id) ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                      <button key={cluster.id} type="button" onClick={() => toggleCluster(cluster.id)} className={`rounded-full px-4 py-2 text-[14px] font-semibold transition-all active:scale-95 ${selectedClusters.includes(cluster.id) ? "bg-purple-600 text-white shadow-md" : "bg-surface-hover text-secondary hover:bg-gray-200 dark:hover:bg-slate-700 border border-card-border"}`}>
                         📦 {cluster.name}
                       </button>
                     ))}
@@ -255,14 +256,14 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
               )}
 
               <div>
-                <label className="mb-2 block text-[15px] font-semibold text-gray-700">Notes</label>
+                <label className="mb-2 block text-[15px] font-semibold text-secondary">Notes</label>
                 <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className={inputClass} placeholder="e.g. Near the mosque..." />
               </div>
 
-              <div className="rounded-[2rem] bg-blue-50/50 p-6 border border-blue-100/50 space-y-4">
+              <div className="rounded-[2rem] bg-blue-50/50 dark:bg-blue-900/10 p-6 border border-blue-100/50 dark:border-blue-900/30 space-y-4">
                 <div className="flex items-center justify-between">
-                  <label className="block text-[15px] font-semibold text-blue-900">Location Data</label>
-                  <button type="button" onClick={getLocation} className="rounded-full bg-card px-4 py-2 text-[13px] font-semibold text-blue-700 shadow-sm border border-blue-100 active:scale-95 transition-all">
+                  <label className="block text-[15px] font-semibold text-blue-900 dark:text-blue-400">Location Data</label>
+                  <button type="button" onClick={getLocation} className="rounded-full bg-card dark:bg-slate-900 px-4 py-2 text-[13px] font-semibold text-blue-700 dark:text-blue-400 shadow-sm border border-blue-100 dark:border-blue-900/50 active:scale-95 transition-all">
                     📍 Update GPS
                   </button>
                 </div>
@@ -276,7 +277,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
                     onChange={(e) => setMapsLink(e.target.value)}
                   />
                   {isResolving && (
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1.5 text-[11px] font-bold text-blue-700 shadow-sm animate-pulse">
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 rounded-full bg-blue-100 dark:bg-blue-900 px-3 py-1.5 text-[11px] font-bold text-blue-700 dark:text-blue-300 shadow-sm animate-pulse">
                       <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
@@ -287,76 +288,70 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <span className="text-[12px] font-medium text-blue-700 ml-2">Latitude</span>
-                    <input type="text" value={latitude} onChange={(e) => setLatitude(e.target.value)} className="w-full rounded-xl border border-blue-100 bg-card/60 px-4 py-3 text-[14px] font-medium text-blue-900 focus:bg-card focus:outline-none" />
+                    <span className="text-[12px] font-medium text-blue-700 dark:text-blue-400 ml-2">Latitude</span>
+                    <input type="text" value={latitude} onChange={(e) => setLatitude(e.target.value)} className="w-full rounded-xl border border-blue-100 dark:border-blue-900/50 bg-card/60 dark:bg-slate-900/60 px-4 py-3 text-[14px] font-medium text-blue-900 dark:text-blue-300 focus:bg-card dark:focus:bg-slate-900 focus:outline-none" />
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[12px] font-medium text-blue-700 ml-2">Longitude</span>
-                    <input type="text" value={longitude} onChange={(e) => setLongitude(e.target.value)} className="w-full rounded-xl border border-blue-100 bg-card/60 px-4 py-3 text-[14px] font-medium text-blue-900 focus:bg-card focus:outline-none" />
+                    <span className="text-[12px] font-medium text-blue-700 dark:text-blue-400 ml-2">Longitude</span>
+                    <input type="text" value={longitude} onChange={(e) => setLongitude(e.target.value)} className="w-full rounded-xl border border-blue-100 dark:border-blue-900/50 bg-card/60 dark:bg-slate-900/60 px-4 py-3 text-[14px] font-medium text-blue-900 dark:text-blue-300 focus:bg-card dark:focus:bg-slate-900 focus:outline-none" />
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="mb-2 block text-[15px] font-semibold text-gray-700">House Picture</label>
-                {existingImageUrl && !imageFile && <img src={existingImageUrl} alt="Current" className="h-24 w-24 rounded-2xl object-cover mb-3" />}
+                <label className="mb-2 block text-[15px] font-semibold text-secondary">House Picture</label>
+                {existingImageUrl && !imageFile && <img src={existingImageUrl} alt="Current" className="h-24 w-24 rounded-2xl object-cover mb-3 border border-card-border" />}
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => { if (e.target.files) setImageFile(e.target.files[0]); }}
-                  className="w-full rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-4 text-[14px] text-gray-600 file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-blue-700 hover:file:bg-blue-100 transition-all"
+                  className="w-full rounded-2xl border border-dashed border-card-border bg-gray-50 dark:bg-slate-800 p-4 text-[14px] text-secondary file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 dark:file:bg-blue-900/30 file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-blue-700 dark:file:text-blue-400 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/50 transition-all"
                 />
               </div>
 
               <div className="flex flex-wrap gap-4 pt-4">
-                <button type="submit" disabled={isLoading} className="flex-1 rounded-full bg-blue-600 py-4 text-[15px] font-bold text-white shadow-sm active:scale-95 transition-all disabled:bg-blue-400">
+                <button type="submit" disabled={isLoading} className="flex-1 rounded-full bg-blue-600 py-4 text-[15px] font-bold text-white shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:bg-blue-400">
                   {isLoading ? "Saving..." : "Save Changes"}
                 </button>
-                <button type="button" onClick={() => router.back()} className="flex-1 rounded-full bg-gray-100 py-4 text-[15px] font-bold text-gray-700 active:scale-95 transition-all hover:bg-gray-200">Cancel</button>
-                {/* TRIGGER MODAL INSTEAD OF WINDOW.CONFIRM */}
-                <button type="button" onClick={() => setShowDeleteModal(true)} disabled={isDeleting} className="w-full rounded-full bg-red-50 py-4 text-[15px] font-bold text-red-600 hover:bg-red-100 transition-all active:scale-95">
+                <button type="button" onClick={() => router.back()} className="flex-1 rounded-full bg-surface-hover py-4 text-[15px] font-bold text-secondary active:scale-95 transition-all hover:bg-gray-200 dark:hover:bg-slate-700 border border-card-border">Cancel</button>
+                <button type="button" onClick={() => setShowDeleteModal(true)} disabled={isDeleting} className="w-full rounded-full bg-red-50 dark:bg-red-950/30 py-4 text-[15px] font-bold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all active:scale-95 border border-red-100 dark:border-red-900/30">
                   {isDeleting ? "Deleting..." : "Delete Customer"}
                 </button>
               </div>
             </form>
           </div>
         </main>
+        )}
       </div>
 
-      {/* NEW: MD3 Expressive Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-          {/* Backdrop Scrim */}
           <div
             className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity"
             onClick={() => !isDeleting && setShowDeleteModal(false)}
           ></div>
 
-          {/* Modal Container */}
-          <div className="relative w-full max-w-sm rounded-[28px] bg-card p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 flex flex-col gap-4">
+          <div className="relative w-full max-w-sm rounded-[28px] bg-card p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 flex flex-col gap-4 border border-card-border">
 
-            {/* MD3 Warning Icon Container */}
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 mb-1">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 mb-1">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </div>
 
-            {/* Content */}
             <div>
-              <h2 className="text-[22px] font-bold text-gray-900">Delete {name || "Customer"}?</h2>
-              <p className="mt-2 text-[15px] leading-relaxed text-gray-600">
+              <h2 className="text-[22px] font-bold text-primary">Delete {name || "Customer"}?</h2>
+              <p className="mt-2 text-[15px] leading-relaxed text-secondary">
                 This action cannot be undone. All data and delivery history associated with this customer will be permanently removed.
               </p>
             </div>
 
-            {/* Actions */}
             <div className="mt-4 flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(false)}
                 disabled={isDeleting}
-                className="rounded-full px-5 py-2.5 text-[14px] font-bold text-gray-700 transition-colors hover:bg-gray-100 active:scale-95 disabled:opacity-50"
+                className="rounded-full px-5 py-2.5 text-[14px] font-bold text-secondary transition-colors hover:bg-surface-hover active:scale-95 disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -375,4 +370,3 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
     </>
   );
 }
-

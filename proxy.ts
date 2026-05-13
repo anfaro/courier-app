@@ -17,7 +17,7 @@ export default withAuth(
     // 2. ADMIN PROTECTION
     if (path.startsWith("/admin")) {
       if (token?.role !== "superadmin") {
-        console.log(`Blocked access to Admin Hub for user: ${token?.email} (Role: ${token?.role})`);
+        console.warn(`[AUTH] Blocked access to Admin Hub for user: ${token?.email} (Role: ${token?.role})`);
         return NextResponse.redirect(new URL("/", req.url));
       }
     }
@@ -32,7 +32,7 @@ export default withAuth(
       authorized: ({ token, req }) => {
         const path = req.nextUrl.pathname;
         if (path === "/not-mobile") return true;
-        const publicPages = ["/login", "/signup", "/forgot-password", "/reset-password"];
+        const publicPages = ["/login", "/register", "/forgot-password", "/reset-password"];
         if (publicPages.includes(path)) return true;
         return !!token;
       },

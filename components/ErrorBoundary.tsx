@@ -21,8 +21,6 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
-    
     // Send error to our global log system
     fetch("/api/admin/system/logs/record-error", {
       method: "POST",

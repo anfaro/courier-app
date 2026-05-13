@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useConfirmation } from "./ConfirmationProvider";
 import { useLanguage } from "./LanguageProvider";
 
-export default function DeleteDeliveryButton({ deliveryId }: { deliveryId: number }) {
+export default function DeleteDeliveryButton({ deliveryId }: { deliveryId: string }) {
   const { askConfirmation } = useConfirmation();
   const { t } = useLanguage();
   const [isDeleting, setIsDeleting] = useState(false);

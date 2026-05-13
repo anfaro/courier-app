@@ -4,7 +4,7 @@ import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
 import { customers } from "@/lib/schema";
 import { inArray } from "drizzle-orm";
-import { logActivity, logServerAccess } from "@/lib/logger";
+import { logActivity, logServerAccess, logError } from "@/lib/logger";
 
 export async function DELETE(req: NextRequest) {
   try {
@@ -39,7 +39,7 @@ export async function DELETE(req: NextRequest) {
 
     // 5. LOG THE ACTIVITY
     await logActivity({
-      userId: token.id as number,
+      userId: token.id as string,
       userName: token.name as string,
       action: "CUSTOMER_DELETED",
       details: `Bulk deleted ${ids.length} customers and their linked data.`,
@@ -52,7 +52,10 @@ export async function DELETE(req: NextRequest) {
     );
 
   } catch (error: any) {
-    console.error("Bulk delete error:", error);
+    await logError({
+      errorName: "BulkDeleteCustomersError",
+      errorMessage: error.message,
+    });
     return NextResponse.json(
       { error: "Internal Server Error while deleting records." },
       { status: 500 }
