@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "./LanguageProvider";
+import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
 
 type LogType = "activity" | "errors" | "access";
 
@@ -12,24 +13,31 @@ export default function AdminAnalytics() {
   const [activeTab, setActiveTab] = useState<LogType>("activity");
   const [logs, setLogs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     async function fetchLogs() {
       setIsLoading(true);
+      setFetchError("");
       try {
-        const res = await fetch(`/api/admin/system/logs?type=${activeTab}`);
-        if (res.ok) {
-          const data = await res.json();
-          setLogs(data.logs);
+        const res = await fetchWithTimeout(`/api/admin/system/logs?type=${activeTab}`, {}, 30000);
+        if (!res.ok) throw new Error(`Server error (${res.status})`);
+        const data = await res.json();
+        setLogs(data.logs);
+      } catch (err: any) {
+        if (err.name === "AbortError") {
+          setFetchError("Request timed out.");
+        } else {
+          setFetchError(err.message || "Failed to load.");
         }
-      } catch (err) {
-        console.warn("Failed to fetch analytics", err);
+        setLogs([]);
       } finally {
         setIsLoading(false);
       }
     }
     fetchLogs();
-  }, [activeTab]);
+  }, [activeTab, refreshKey]);
 
   return (
     <div className="px-4 sm:px-6">
@@ -68,43 +76,36 @@ export default function AdminAnalytics() {
           {activeTab === 'access' && !isLoading && <span className="text-[10px] font-mono text-emerald-500 animate-pulse uppercase">● Live_Connect</span>}
         </div>
         
-        <div className={`divide-y max-h-[500px] overflow-y-auto custom-scrollbar ${activeTab === 'access' ? 'divide-slate-800/50 p-2 font-mono overflow-x-auto' : 'divide-card-border'}`}>
+        <div className={`max-h-[500px] overflow-y-auto custom-scrollbar ${activeTab === 'access' ? 'divide-y divide-slate-800/50 p-2 font-mono overflow-x-auto' : ''}`}>
           <AnimatePresence mode="wait">
-            {isLoading ? (
-              <motion.div
-                key="loading"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="p-20 text-center text-secondary font-bold"
-              >
-                {t("action.loading")}
-              </motion.div>
-            ) : (
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className={activeTab !== 'access' ? "relative" : ""}
+            >
+              {isLoading ? (
+                <div className="p-20 text-center text-secondary font-bold">
+                  <div className="flex h-12 w-12 animate-spin items-center justify-center rounded-full bg-surface-hover text-2xl border border-card-border mx-auto mb-4">
+                    ⏳
+                  </div>
+                  {t("action.loading")}
+                </div>
+              ) : (
+                <>
+                {activeTab !== 'access' && (
+                  <div className="absolute left-[27px] top-0 bottom-0 w-[2px] bg-card-border" />
+                )}
                 {logs.map((log) => (
                   <div
                     key={log.id}
                     className={activeTab === 'access' 
                         ? "px-3 py-1.5 hover:bg-slate-800/40 transition-colors"
-                        : "px-6 py-4 flex items-start gap-4 hover:bg-surface-hover transition-colors border-b border-card-border last:border-0"
+                        : "relative pl-14 pr-6 py-4 hover:bg-surface-hover transition-colors"
                     }
                   >
-                    {activeTab !== 'access' && (
-                        <div className={`mt-1 h-2 w-2 rounded-full shrink-0 ${
-                        activeTab === 'errors' ? "bg-red-500" :
-                        log.action?.includes("DELETE") ? "bg-red-500" : 
-                        log.action?.includes("CREATE") ? "bg-emerald-500" : "bg-blue-500"
-                        }`} />
-                    )}
-
-                    {/* TERMINAL STYLE FOR ACCESS LOGS */}
                     {activeTab === 'access' ? (
                         <div className="flex items-center gap-2 py-1.5 w-full text-[11px] font-mono">
                             <span className="text-slate-500 w-[90px] shrink-0">[{new Date(log.createdAt).toLocaleTimeString('id-ID', { hour12: false })}]</span>
@@ -114,7 +115,12 @@ export default function AdminAnalytics() {
                             <span className="text-blue-400 opacity-80 w-[100px] shrink-0 text-right truncate">@{log.userName || "Guest"}</span>
                         </div>
                     ) : (
-                        <div className="flex-1 min-w-0">
+                        <>
+                            <div className={`absolute left-[21px] top-[22px] h-3 w-3 rounded-full border-2 border-card ring-4 ${
+                                activeTab === 'errors' ? "bg-red-500 ring-red-500/10" :
+                                log.action?.includes("DELETE") ? "bg-red-500 ring-red-500/10" : 
+                                log.action?.includes("CREATE") ? "bg-emerald-500 ring-emerald-500/10" : "bg-blue-500 ring-blue-500/10"
+                            }`} />
                             <div className="flex items-center justify-between gap-2">
                                 <p className="text-[14px] font-black text-primary truncate">
                                 {log.userName || log.ipAddress || "System"}
@@ -134,18 +140,28 @@ export default function AdminAnalytics() {
                             {activeTab === 'errors' && (
                                 <p className="text-[12px] font-medium text-red-600/80 mt-1 line-clamp-2">{log.errorMessage}</p>
                             )}
-                        </div>
+                        </>
                     )}
                   </div>
                 ))}
                 
                 {logs.length === 0 && (
                   <div className="p-12 text-center">
+                    {fetchError ? (
+                      <div className="flex flex-col items-center gap-3">
+                        <p className="text-[14px] font-bold text-red-600">{fetchError}</p>
+                        <button onClick={() => setRefreshKey(k => k + 1)} className="rounded-xl bg-blue-600 px-5 py-2 text-[12px] font-bold text-white active:scale-90">
+                          Retry
+                        </button>
+                      </div>
+                    ) : (
                       <p className="text-secondary font-medium">{t("search.no_results")}</p>
+                    )}
                   </div>
                 )}
-              </motion.div>
-            )}
+                </>
+              )}
+            </motion.div>
           </AnimatePresence>
         </div>
       </div>

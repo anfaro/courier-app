@@ -5,14 +5,31 @@ import { db } from "@/lib/db";
 import { deliveries } from "@/lib/schema";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
 import { generateId } from "@/lib/utils";
+import { getCached, setCache } from "@/lib/cache";
 
 export async function GET(req: Request) {
   try {
+    const cacheKey = req.url;
+    const cached = getCached<{ deliveries: any[]; limit: number; offset: number }>(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached, { status: 200 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const limit = Math.min(Number(searchParams.get("limit")) || 500, 1000);
+    const offset = Number(searchParams.get("offset")) || 0;
+
     const allDeliveries = await db.query.deliveries.findMany({
       with: { customer: true },
+      limit,
+      offset,
       orderBy: (deliveries, { desc }) => [desc(deliveries.createdAt)],
     });
-    return NextResponse.json({ deliveries: allDeliveries }, { status: 200 });
+
+    const body = { deliveries: allDeliveries, limit, offset };
+    setCache(cacheKey, body, 15000);
+
+    return NextResponse.json(body, { status: 200 });
   } catch (error) {
     await logError({
       errorName: "FetchDeliveriesError",

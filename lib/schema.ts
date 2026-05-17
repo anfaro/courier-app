@@ -6,7 +6,8 @@ import {
   varchar,
   timestamp,
   boolean,
-  primaryKey
+  primaryKey,
+  index,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
@@ -47,7 +48,11 @@ export const customers = pgTable("customers", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  createdAtIdx: index("customers_created_at_idx").on(table.createdAt),
+  nameIdx: index("customers_name_idx").on(table.name),
+  phoneIdx: index("customers_phone_idx").on(table.phoneNumber),
+}));
 
 export const deliveries = pgTable("deliveries", {
   id: varchar("id", { length: 7 }).primaryKey(),
@@ -59,7 +64,10 @@ export const deliveries = pgTable("deliveries", {
   receiverName: varchar("receiver_name", { length: 256 }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  createdAtIdx: index("deliveries_created_at_idx").on(table.createdAt),
+  customerIdIdx: index("deliveries_customer_id_idx").on(table.customerId),
+}));
 
 export const customerClusters = pgTable("customer_clusters", {
   customerId: varchar("customer_id", { length: 7 })
@@ -107,7 +115,9 @@ export const logs = pgTable("logs", {
   details: text("details"),
   targetId: varchar("target_id", { length: 100 }),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  createdAtIdx: index("logs_created_at_idx").on(table.createdAt),
+}));
 
 export const errorLogs = pgTable("error_logs", {
   id: varchar("id", { length: 7 }).primaryKey(),
@@ -118,7 +128,9 @@ export const errorLogs = pgTable("error_logs", {
   stackTrace: text("stack_trace"),
   pathname: varchar("pathname", { length: 2048 }),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  createdAtIdx: index("error_logs_created_at_idx").on(table.createdAt),
+}));
 
 export const accessLogs = pgTable("access_logs", {
   id: varchar("id", { length: 7 }).primaryKey(),
@@ -129,7 +141,9 @@ export const accessLogs = pgTable("access_logs", {
   ipAddress: varchar("ip_address", { length: 100 }),
   userAgent: text("user_agent"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  createdAtIdx: index("access_logs_created_at_idx").on(table.createdAt),
+}));
 
 export const logsRelations = relations(logs, ({ one }) => ({
   user: one(users, {

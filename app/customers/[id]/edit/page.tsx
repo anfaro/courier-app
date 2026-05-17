@@ -4,6 +4,7 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ImageInput from "@/components/ImageInput";
 
 export default function EditCustomerPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -298,20 +299,16 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
                 </div>
               </div>
 
-              <div>
-                <label className="mb-2 block text-[15px] font-semibold text-secondary">House Picture</label>
-                {existingImageUrl && !imageFile && <img src={existingImageUrl} alt="Current" className="h-24 w-24 rounded-2xl object-cover mb-3 border border-card-border" />}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => { if (e.target.files) setImageFile(e.target.files[0]); }}
-                  className="w-full rounded-2xl border border-dashed border-card-border bg-gray-50 dark:bg-slate-800 p-4 text-[14px] text-secondary file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 dark:file:bg-blue-900/30 file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-blue-700 dark:file:text-blue-400 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/50 transition-all"
-                />
-              </div>
+              <ImageInput
+                label="House Picture"
+                existingImageUrl={existingImageUrl}
+                onImageChange={() => {}}
+                onFileChange={setImageFile}
+              />
 
               <div className="flex flex-wrap gap-4 pt-4">
-                <button type="submit" disabled={isLoading} className="flex-1 rounded-full bg-blue-600 py-4 text-[15px] font-bold text-white shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:bg-blue-400">
-                  {isLoading ? "Saving..." : "Save Changes"}
+                <button type="submit" disabled={isLoading} className="flex-1 rounded-full bg-blue-600 py-4 text-[15px] font-bold text-white shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:bg-blue-400 flex items-center justify-center gap-2">
+                  {isLoading ? <><div className="h-5 w-5 animate-spin rounded-full border-[2.5px] border-white border-t-transparent" /> Saving...</> : "Save Changes"}
                 </button>
                 <button type="button" onClick={() => router.back()} className="flex-1 rounded-full bg-surface-hover py-4 text-[15px] font-bold text-secondary active:scale-95 transition-all hover:bg-gray-200 dark:hover:bg-slate-700 border border-card-border">Cancel</button>
                 <button type="button" onClick={() => setShowDeleteModal(true)} disabled={isDeleting} className="w-full rounded-full bg-red-50 dark:bg-red-950/30 py-4 text-[15px] font-bold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all active:scale-95 border border-red-100 dark:border-red-900/30">

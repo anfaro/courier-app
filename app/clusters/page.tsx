@@ -7,6 +7,11 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { useSession } from "next-auth/react";
 import { useToast } from "@/components/ToastProvider";
 import { useConfirmation } from "@/components/ConfirmationProvider";
+import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
+
+const CL_PAGE_SIZE = 5;
+const clustersCache = new Map<string, { data: any[]; hasMore: boolean; ts: number }>();
+const CL_CACHE_TTL = 60000;
 
 function ClustersListContent() {
   const { t } = useLanguage();
@@ -15,7 +20,10 @@ function ClustersListContent() {
   const { askConfirmation } = useConfirmation();
 
   const [allClusters, setAllClusters] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [page, setPage] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
   
   // Management State
   const [isManagementMode, setIsManagementMode] = useState(false);
@@ -24,21 +32,42 @@ function ClustersListContent() {
 
   const isSuperAdmin = (session?.user as any)?.role === "superadmin";
 
-  useEffect(() => {
-    const fetchClusters = async () => {
-      setIsLoading(true);
-      try {
-        const res = await fetch("/api/clusters");
-        const data = await res.json();
-        setAllClusters(data.clusters || data || []);
-      } catch (error) {
-        console.warn("Failed to fetch clusters:", error);
-      } finally {
-        setIsLoading(false);
+  const fetchClusters = async (p: number) => {
+    const cacheKey = `clusters:${p}`;
+    const cached = clustersCache.get(cacheKey);
+    if (cached && Date.now() - cached.ts < CL_CACHE_TTL) {
+      setAllClusters(cached.data);
+      setHasMore(cached.hasMore);
+      setIsLoading(false);
+      setFetchError("");
+      return;
+    }
+
+    setIsLoading(true);
+    setFetchError("");
+    try {
+      const res = await fetchWithTimeout(`/api/clusters?limit=${CL_PAGE_SIZE}&offset=${p * CL_PAGE_SIZE}`, {}, 60000);
+      if (!res.ok) throw new Error(`Server error (${res.status})`);
+      const data = await res.json();
+      const list = data.clusters || data || [];
+      const more = data.hasMore ?? false;
+      clustersCache.set(cacheKey, { data: list, hasMore: more, ts: Date.now() });
+      setAllClusters(list);
+      setHasMore(more);
+    } catch (error: any) {
+      if (error.name === "AbortError") {
+        setFetchError("Request timed out. Check your connection.");
+      } else {
+        setFetchError(error.message || "Failed to load clusters.");
       }
-    };
-    fetchClusters();
-  }, []);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchClusters(page);
+  }, [page]);
 
   const toggleSelection = (id: string) => {
     setSelectedIds((prev) =>
@@ -105,6 +134,18 @@ function ClustersListContent() {
           </div>
         </div>
 
+        {fetchError && (
+          <div className="mb-4 flex items-center justify-between rounded-2xl bg-red-50 dark:bg-red-950/20 p-4 border border-red-100 dark:border-red-900/50">
+            <p className="text-[13px] font-bold text-red-700 dark:text-red-400">{fetchError}</p>
+            <button
+              onClick={() => fetchClusters(page)}
+              className="rounded-xl bg-red-600 px-4 py-2 text-[12px] font-bold text-white active:scale-90 transition-all shrink-0"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         {isManagementMode && selectedIds.length > 0 && (
           <div className="mb-6 flex items-center justify-between rounded-[24px] bg-red-50 dark:bg-red-950/20 p-4 border border-red-100 dark:border-red-900/50 animate-in fade-in slide-in-from-top-2">
             <span className="font-bold text-red-700 dark:text-red-400">{selectedIds.length} selected</span>
@@ -118,19 +159,23 @@ function ClustersListContent() {
           </div>
         )}
 
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 rounded-[2.5rem] bg-card border border-card-border shadow-sm px-6">
-            <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-[1.5rem] bg-surface-hover text-3xl mb-4 border border-card-border">
-              ⏳
-            </div>
-            <p className="text-[14px] font-bold text-secondary">{t("action.loading")}</p>
-          </div>
-        ) : allClusters.length === 0 ? (
+        {allClusters.length === 0 && !isLoading ? (
           <div className="rounded-[2.5rem] bg-card p-10 text-center shadow-sm border border-card-border">
             <p className="text-secondary font-medium">No clusters created yet.</p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-[2rem] bg-card shadow-sm border border-card-border">
+          <div className="relative overflow-hidden rounded-[2rem] bg-card shadow-sm border border-card-border">
+            {isLoading && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-card/60 backdrop-blur-sm rounded-[2rem]">
+                <div className="flex h-12 w-12 animate-spin items-center justify-center rounded-full bg-surface-hover text-2xl border border-card-border">
+                  ⏳
+                </div>
+              </div>
+            )}
+            {allClusters.length === 0 && (
+              <div className="min-h-[400px]" />
+            )}
+            {allClusters.length > 0 && (
             <ul className="divide-y divide-card-border">
               {allClusters.map((cluster) => (
                 <li 
@@ -160,9 +205,12 @@ function ClustersListContent() {
                       </div>
                     )}
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] bg-purple-100 dark:bg-purple-900/30 text-xl text-purple-700 dark:text-purple-300 shadow-sm border border-purple-200 dark:border-purple-800">📦</div>
-                    <div>
-                      <h2 className="text-[17px] font-bold tracking-tight text-primary">{cluster.name}</h2>
+                    <div className="min-w-0 flex-1">
+                      <h2 className="text-[17px] font-bold tracking-tight text-primary truncate">{cluster.name}</h2>
                       <p className="text-sm font-medium text-secondary">{cluster.customerCount} Customers</p>
+                      {cluster.notes && (
+                        <p className="text-[12px] text-secondary/60 truncate mt-1">{cluster.notes}</p>
+                      )}
                     </div>
                   </div>
 
@@ -174,6 +222,27 @@ function ClustersListContent() {
                 </li>
               ))}
             </ul>
+            )}
+
+            <div className="flex items-center justify-center gap-2 border-t border-card-border px-4 py-4">
+              <button
+                onClick={() => setPage(p => Math.max(0, p - 1))}
+                disabled={page === 0 || isLoading}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-hover text-primary font-bold transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                ‹
+              </button>
+              <span className="px-4 text-[14px] font-bold text-secondary">
+                Page {page + 1}
+              </span>
+              <button
+                onClick={() => setPage(p => p + 1)}
+                disabled={!hasMore || isLoading}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-hover text-primary font-bold transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                ›
+              </button>
+            </div>
           </div>
         )}
       </main>

@@ -1,3 +1,7 @@
+<!-- BEGIN:session-memory -->
+# IMPORTANT: At the start of every new session, read the **Session Change Log** section at the bottom of this file to retain context from previous sessions.
+<!-- END:session-memory -->
+
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 
@@ -212,6 +216,7 @@ IMPORTANT: Pattern 2 breaks `window.scrollY`-based auto-hide in BottomNav becaus
 8. **Admin sub-pages** for clusters, customers, and deliveries show placeholder content ("under construction").
 9. **Soft auth on resource endpoints**: POST/PUT/DELETE on customers, deliveries, clusters proceed even without a valid token (auth check is middleware-only for page routes).
 10. **No rate limiting or CSRF protection** implemented.
+11. **Severe network performance issue**: Fetching lists of customers, deliveries, or clusters takes ~50s with network spikes exceeding 3.5MB/s. Suspected causes: Supabase connection overhead, no pagination/limit on list queries, or excessive relational includes (e.g., `with: { clusters: { with: { cluster: true } } }` loading N+1 for every row). **Fix later**: add server-side pagination + limit, lazy-load relations, and investigate Supabase pool config. **Workaround for slow connections**: implement optimistic local creation (create record in IndexedDB/local state first, sync to server in background) and add loading skeletons with timeout fallback UI.
 
 # Drizzle ORM Usage Patterns
 
@@ -231,6 +236,10 @@ Custom `LanguageProvider` with translations object using dot-separated keys:
 - Usage: `t("delivery.hub_title")` — returns translated string or the key itself as fallback
 - Dynamic values: `t("admin.wipe_type_code").replace("[CODE]", "CONFIRM-WIPE")`
 
+# Build Policy
+
+**Do not run `next build` unless the user explicitly requests it.** Only apply code edits and let the user decide when to build. Running builds unnecessarily wastes time and may fail due to environment constraints.
+
 # Common Commands
 
 ```bash
@@ -244,3 +253,43 @@ npx drizzle-kit push
 # Lint (may not work in Termux)
 npm run lint
 ```
+
+# Session Change Log
+
+> **Clear this section before committing.** Log of every change made during the current session, for reference when writing commit messages.
+
+| # | File(s) | Description |
+|---|---|---|
+| 1 | `AGENTS.md` | Added session-memory preamble + Session Change Log table for tracking changes across sessions |
+| 2 | (analysis) | Investigated FK violation on `access_logs.user_id` — stale JWT after user deletion/DB reset causes insert with non-existent userId |
+| 3 | `lib/logger.ts` | Made `logAccess`, `logActivity`, `logError` resilient to FK violations — retry without `userId` on PG error code 23503 |
+| 4 | `app/customers/[id]/edit/page.tsx` | Replaced raw `<input type="file">` with `ImageInput` component for House Picture, matching the UI in customer new page |
+| 5 | `app/customers/[id]/edit/page.tsx` | Fixed `onImageChange is not a function` error — added missing `onImageChange` prop to `<ImageInput>` |
+| 6 | `components/ImageInput.tsx` | Fixed camera button opening gallery instead of camera — replaced hidden input with dynamically-created element setting `capture` as DOM property |
+| 7 | `app/api/admin/system/backup/route.ts`, `components/DatabaseAdmin.tsx` | Fixed backup downloading as `.json` instead of `.json.gz` — removed `Content-Encoding: gzip` (browser was decompressing transparently), changed `Content-Type` to `application/gzip`, renamed file to `.json.gz` |
+| 8 | `components/DatabaseAdmin.tsx` | Replaced indeterminate progress bar with determinate real progress tracking — reads response as stream via `getReader()`, calculates percentage from `Content-Length`, shows % text + spring-animated bar |
+| 9 | `app/admin/page.tsx` | Switched admin page from Pattern 2 (inner scroll container) to Pattern 1 (body-level scroll) so BottomNav auto-hide works via `window.scrollY` |
+| 10 | `lib/logger.ts` | Added `pruneAccessLogs()` — auto-deletes oldest records keeping max 100, runs after every `logAccess` insert |
+| 11 | `app/api/customers/route.ts`, `app/clusters/new/page.tsx`, `app/clusters/[id]/edit/page.tsx` | Switched from client-side to server-side pagination — API now returns `total` count; pages fetch only the current page's customers (limit 5, offset by page), maintaining selected customer details in a separate `selectedCustomersData` record |
+| 12 | `app/clusters/new/page.tsx`, `app/clusters/[id]/edit/page.tsx` | Fixed duplicate `useEffect` race condition (removed redundant `fetchPage(0)` effect), added `fetchingCustomers` state + animated hourglass loading overlay over customer list |
+| 13 | `app/api/customers/route.ts` | Fixed `db.execute` result access — postgres-js driver returns a plain array (not `{rows}`), so `totalResult.rows?.[0]?.count` was always undefined. Changed to `totalResult[0]?.count` + aliased query as `AS count` |
+| 14 | `app/clusters/new/page.tsx`, `app/clusters/[id]/edit/page.tsx` | Fixed loading overlay bleed (added `overflow-hidden` + matching `rounded` to parent container with `p-2` to prevent border clipping) and made selected customers container scrollable (`max-h-48 overflow-y-auto`) |
+| 15 | `app/api/clusters/route.ts`, `app/clusters/new/page.tsx` | Added `notes` field to new cluster page — form input, POST payload, and API insert |
+| 16 | `app/clusters/[id]/page.tsx` | Polished cluster detail page — removed hardcoded gray/blue colors, replaced with CSS variable theme + purple accents to match MD3 design language |
+| 17 | `app/api/clusters/route.ts`, `app/clusters/page.tsx` | Enhanced cluster list — API now returns `notes` field; list cards show notes preview (first line, truncated) as secondary text |
+| 18 | `app/api/customers/route.ts` | Optimized list query with explicit `columns` selection to exclude unused fields (latitude, longitude, notes, timestamps) — reduces wire payload |
+| 19 | `app/error.tsx` | Redesigned error page — added collapsible details section showing full error (name, message, digest, stack trace) with toggle button |
+| 20 | `app/clusters/[id]/page.tsx` | Added server-side pagination (5 per page) via search params + simplified customer rows to name & address only (removed avatar/house picture) |
+| 21 | `app/clusters/[id]/page.tsx` | Redesigned cluster detail layout — added back link, hero card with icon + stats, inline notes card with purple accent, customer count badge |
+| 22 | `app/clusters/[id]/page.tsx` | Changed edit button from small round icon to `btn-primary` matching the Add button style |
+| 23 | `app/clusters/new/page.tsx`, `app/clusters/[id]/edit/page.tsx` | Updated loading overlay to match clusters list style — `z-20`, `bg-card/60`, spinning hourglass in `h-12 w-12 rounded-full` container, no text |
+| 24 | `app/clusters/new/page.tsx`, `app/clusters/[id]/edit/page.tsx` | Added `setFetchingCustomers(true)` to prev/next click handlers so overlay shows immediately on button press, not after useEffect fires |
+| 25 | `ROADMAP.md` | Added "Data Architecture & Storage" section to v2.0 — image storage overhaul with polymorphic `images` table, multiple house images per customer |
+| 26 | `app/api/clusters/[id]/route.ts` | Added `?limit=X&offset=Y` query param support to GET endpoint — returns paginated customers with `total` count |
+| 27 | `app/clusters/[id]/ClusterCustomerList.tsx` | New client component — fetches paginated customers from API, shows loading overlay on prev/next navigation |
+| 28 | `app/clusters/[id]/page.tsx` | Converted customer list from server-side to client-side pagination — server only fetches cluster metadata + total count, delegates to `ClusterCustomerList` |
+| 29 | `components/SystemHealth.tsx` | Added 30s polling to system health — stats and ping ms now update live |
+| 30 | `components/AuditTrailSearch.tsx` | Added 30s auto-refresh on first page with no filters |
+| 31 | `app/error.tsx` | Added error logging on mount — POSTs error details to `/api/admin/system/logs/record-error` so errors appear in audit trail |
+| 32 | `components/AuditTrailSearch.tsx` | Redesigned activity log tab — action-type icons in colored badges, human-readable labels, relative timestamps with tooltip, line-clamped details |
+| 33 | `components/AuditTrailSearch.tsx` | Redesigned access log tab for mobile — stacked card layout on small screens (timestamp, method badge, path, user, IP), keeps grid on larger screens; color-coded method badges |

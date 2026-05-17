@@ -13,8 +13,14 @@ export default function EditClusterPage({ params }: { params: Promise<{ id: stri
   const [name, setName] = useState("");
   const [notes, setNotes] = useState("");
 
-  const [availableCustomers, setAvailableCustomers] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [totalCustomers, setTotalCustomers] = useState(0);
   const [selectedCustomerIds, setSelectedCustomerIds] = useState<string[]>([]);
+  const [selectedCustomersData, setSelectedCustomersData] = useState<Record<string, { name: string; address: string }>>({});
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 5;
+  const totalPages = Math.ceil(totalCustomers / PAGE_SIZE);
+  const [fetchingCustomers, setFetchingCustomers] = useState(true);
 
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -24,15 +30,27 @@ export default function EditClusterPage({ params }: { params: Promise<{ id: stri
 
   const router = useRouter();
 
+  const fetchPage = async (p: number) => {
+    setFetchingCustomers(true);
+    try {
+      const res = await fetch(`/api/customers?limit=${PAGE_SIZE}&offset=${p * PAGE_SIZE}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCustomers(data.customers || []);
+        setTotalCustomers(data.total ?? 0);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch customers", err);
+    } finally {
+      setFetchingCustomers(false);
+    }
+  };
+
+  useEffect(() => { fetchPage(page); }, [page]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const custRes = await fetch("/api/customers");
-        if (custRes.ok) {
-          const custData = await custRes.json();
-          setAvailableCustomers(custData.customers || []);
-        }
-
         const res = await fetch(`/api/clusters/${clusterId}`);
         if (!res.ok) throw new Error("Failed to load cluster data");
         const data = await res.json();
@@ -41,8 +59,14 @@ export default function EditClusterPage({ params }: { params: Promise<{ id: stri
         setNotes(data.notes || "");
 
         if (data.customers && Array.isArray(data.customers)) {
-          const existingIds = data.customers.map((c: any) => c.customer.id);
-          setSelectedCustomerIds(existingIds);
+          const ids: string[] = [];
+          const details: Record<string, { name: string; address: string }> = {};
+          data.customers.forEach((c: any) => {
+            ids.push(c.customer.id);
+            details[c.customer.id] = { name: c.customer.name, address: c.customer.address };
+          });
+          setSelectedCustomerIds(ids);
+          setSelectedCustomersData(details);
         }
       } catch (err: any) {
         setError(err.message);
@@ -54,9 +78,16 @@ export default function EditClusterPage({ params }: { params: Promise<{ id: stri
   }, [clusterId]);
 
   const toggleCustomer = (id: string) => {
-    setSelectedCustomerIds(prev =>
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-    );
+    setSelectedCustomerIds((prev) => {
+      if (prev.includes(id)) {
+        setSelectedCustomersData((d) => { const { [id]: _, ...rest } = d; return rest; });
+        return prev.filter((item) => item !== id);
+      } else {
+        const c = customers.find(c => c.id === id);
+        if (c) setSelectedCustomersData((d) => ({ ...d, [id]: { name: c.name, address: c.address } }));
+        return [...prev, id];
+      }
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -160,36 +191,97 @@ export default function EditClusterPage({ params }: { params: Promise<{ id: stri
               <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
             </div>
 
-            <div>
+            <div className="relative">
               <label className="mb-3 block text-[15px] font-semibold text-secondary">Manage Customers</label>
-              <div className="max-h-64 overflow-y-auto rounded-3xl border border-card-border bg-surface-hover/50 p-2 space-y-2">
-                {availableCustomers.length === 0 ? (
+              <div className="relative rounded-3xl border border-card-border bg-surface-hover/50 p-2 space-y-2 min-h-[120px] overflow-hidden">
+                {fetchingCustomers && (
+                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-card/60 backdrop-blur-sm rounded-[1.5rem]">
+                    <div className="flex h-12 w-12 animate-spin items-center justify-center rounded-full bg-surface-hover text-2xl border border-card-border">
+                      ⏳
+                    </div>
+                  </div>
+                )}
+
+                {customers.length === 0 ? (
                   <p className="p-4 text-center text-sm text-secondary">No customers available</p>
                 ) : (
-                  availableCustomers.map((customer) => {
-                    const isSelected = selectedCustomerIds.includes(customer.id);
-                    return (
-                      <button
-                        key={customer.id}
-                        type="button"
-                        onClick={() => toggleCustomer(customer.id)}
-                        className={`flex w-full items-center gap-3 rounded-2xl p-3 text-left transition-all active:scale-[0.98] ${isSelected
-                          ? "bg-purple-600 text-white shadow-md"
-                          : "bg-card text-primary hover:bg-surface-hover border border-card-border"
-                          }`}
-                      >
-                        <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${isSelected ? "border-white bg-white/20" : "border-card-border"}`}>
-                          {isSelected && <span className="text-[10px]">✔</span>}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className={`truncate text-sm font-bold ${isSelected ? "text-white" : "text-primary"}`}>{customer.name}</p>
-                          <p className={`truncate text-[11px] ${isSelected ? "text-purple-100" : "text-secondary"}`}>{customer.address}</p>
-                        </div>
-                      </button>
-                    );
-                  })
+                  <>
+                    {customers.map((customer) => {
+                      const isSelected = selectedCustomerIds.includes(customer.id);
+                      return (
+                        <button
+                          key={customer.id}
+                          type="button"
+                          onClick={() => toggleCustomer(customer.id)}
+                          className={`flex w-full items-center gap-3 rounded-2xl p-3 text-left transition-all active:scale-[0.98] ${isSelected
+                            ? "bg-purple-600 text-white shadow-md"
+                            : "bg-card text-primary hover:bg-surface-hover border border-card-border"
+                            }`}
+                        >
+                          <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${isSelected ? "border-white bg-white/20" : "border-card-border"}`}>
+                            {isSelected && <span className="text-[10px]">✔</span>}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className={`truncate text-sm font-bold ${isSelected ? "text-white" : "text-primary"}`}>{customer.name}</p>
+                            <p className={`truncate text-[11px] ${isSelected ? "text-purple-100" : "text-secondary"}`}>{customer.address}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+
+                    {totalPages > 0 && (
+                      <div className="flex items-center justify-between px-1 py-1">
+                        <button
+                          type="button"
+                          onClick={() => { setFetchingCustomers(true); setPage(p => Math.max(0, p - 1)); }}
+                          disabled={page === 0}
+                          className="rounded-xl bg-card px-3.5 py-2 text-[12px] font-bold text-primary active:scale-90 disabled:opacity-30 transition-all border border-card-border"
+                        >
+                          ← Prev
+                        </button>
+                        <span className="text-[12px] font-bold text-secondary">{page + 1} / {totalPages}</span>
+                        <button
+                          type="button"
+                          onClick={() => { setFetchingCustomers(true); setPage(p => Math.min(totalPages - 1, p + 1)); }}
+                          disabled={page >= totalPages - 1}
+                          className="rounded-xl bg-card px-3.5 py-2 text-[12px] font-bold text-primary active:scale-90 disabled:opacity-30 transition-all border border-card-border"
+                        >
+                          Next →
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
+
+              {selectedCustomerIds.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="mb-2 text-[14px] font-semibold text-secondary">
+                    Selected Customers ({selectedCustomerIds.length})
+                  </h4>
+                  <div className="rounded-2xl bg-purple-50/50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-800 p-3 space-y-2 max-h-48 overflow-y-auto">
+                    {selectedCustomerIds.map(id => {
+                      const c = selectedCustomersData[id];
+                      if (!c) return null;
+                      return (
+                        <div key={id} className="flex items-center justify-between rounded-xl bg-card px-4 py-3 border border-card-border">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[14px] font-bold text-primary truncate">{c.name}</p>
+                            <p className="text-[12px] text-secondary truncate">{c.address}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => toggleCustomer(id)}
+                            className="ml-3 shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-bold text-red-600 bg-red-50 dark:bg-red-900/20 active:scale-90 transition-all"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>

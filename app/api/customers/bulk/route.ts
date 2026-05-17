@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       notes: item.notes || null,
     }));
 
-    const result = await db.insert(customers).values(formattedData);
+    const result = await db.insert(customers).values(formattedData).returning();
 
     if (token) {
       await logActivity({
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       message: `Successfully added ${body.length} customers`,
-      result
+      customers: result,
     });
 
   } catch (error: any) {

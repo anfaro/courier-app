@@ -40,6 +40,23 @@ Focus: Core stability, smooth animations, and essential fleet management.
 - **Multi-Window Support**: Manage maps, logs, and user chats simultaneously.
 - **Keyboard-First Workflow**: Rapid entry and navigation for back-office efficiency.
 
+### ⚙️ Deployment & DevOps
+- **Portable Config Loading**: App reads `.env` and config files from `$HOME/.courier/` at startup instead of relying on project-root files. Allows the same build artifact to run on any server with a per-user config directory.
+- **Companion CLI Tool** (`courier-cli`): Standalone command-line tool to manage the app from the server terminal.
+  - Start/stop/restart the production server.
+  - Manage database credentials and connection pools.
+  - Trigger backup/restore operations.
+  - View logs, system health, and audit trail without the web UI.
+  - Seed data, migrate schemas, and run diagnostics.
+
+### 💾 Data Architecture & Storage
+- **Image Storage Overhaul**: Move `housePictureUrl` and `proofOfDeliveryUrl` to a separate `images` table (polymorphic FK via `entity_type` + `entity_id`).
+  - Customers support **multiple house images** (gallery view, reordering, set primary).
+- **S3/CDN Integration**: Offload image hosting from local filesystem to cloud storage.
+- **Hot-Reloadable Database Connection**: Replace static `db` singleton with a connection pool manager that reads credentials from a gitignored JSON config file (`data/db-config.json`). Changing DB settings via admin UI writes to the file and triggers live pool reconnect — no server restart required.
+  - First boot falls back to `DATABASE_URL` env var if config file doesn't exist yet.
+  - Emergency "Reset to env var" button in admin UI as a recovery escape hatch.
+
 ### 📈 Scaling & Advanced Features
 - **Route Optimization AI**: Auto-generating the most efficient delivery sequence.
 - **Redis Support**: Distributed caching, session management, and real-time pub/sub features.

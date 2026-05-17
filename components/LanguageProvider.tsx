@@ -181,6 +181,10 @@ export const translations: Translations = {
   "auth.registration_failed": { en: "Registration failed. Please try again.", id: "Pendaftaran gagal. Silakan coba lagi." },
   "auth.unexpected_error": { en: "An unexpected error occurred.", id: "Terjadi kesalahan yang tidak terduga." },
   "auth.something_wrong": { en: "Something went wrong.", id: "Terjadi kesalahan." },
+
+  // Image Input
+  "image.gallery": { en: "From Gallery", id: "Dari Galeri" },
+  "image.camera": { en: "Take Photo", id: "Ambil Foto" },
 };
 
 interface LanguageContextType {

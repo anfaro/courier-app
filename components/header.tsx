@@ -78,7 +78,6 @@ export default function Header() {
   const pathname = usePathname();
   const searchRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLButtonElement>(null);
-
   useEffect(() => {
     setMounted(true);
   }, []);

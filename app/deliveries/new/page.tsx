@@ -51,19 +51,31 @@ function DeliveryHubContent() {
   // --- UNIFIED PENDING LIST ---
   const [pendingList, setPendingList] = useState<any[]>([]);
 
+  const fetchSingleCustomer = async (id: string) => {
+    const res = await fetch(`/api/customers/${id}`);
+    if (!res.ok) throw new Error("Failed to fetch customer");
+    return res.json();
+  };
+
+  const fetchCustomersPage = async (lim = 500) => {
+    const res = await fetch(`/api/customers?limit=${lim}`);
+    const data = await res.json();
+    return data.customers || data || [];
+  };
+
   useEffect(() => {
     const initData = async () => {
       try {
-        const res = await fetch("/api/customers");
-        const data = await res.json();
-        setCustomers(data.customers || data || []);
-
         if (urlCustomerId) {
+          const customer = await fetchSingleCustomer(urlCustomerId);
+          setCustomers([customer]);
           setSelectedCustomerId(urlCustomerId);
           setIsLocked(true);
         } else {
-          if (data.length > 0 && inputMode === "manual") {
-            setSelectedCustomerId(data[0].id.toString());
+          const list = await fetchCustomersPage();
+          setCustomers(list);
+          if (list.length > 0 && inputMode === "manual") {
+            setSelectedCustomerId(list[0].id.toString());
           }
         }
       } catch (err) {
@@ -214,12 +226,10 @@ function DeliveryHubContent() {
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to create customer in database.");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to create customer in database.");
 
-      const fetchRes = await fetch("/api/customers");
-      const fetchData = await fetchRes.json();
-      const updatedCustomersList = fetchData.customers || fetchData || [];
-      const newCust = updatedCustomersList.find((c: any) => c.name === qaName.trim());
+      const newCust = data.customer;
 
       if (pendingLinkIndex !== null && newCust) {
         const updatedList = [...pendingList];
@@ -231,7 +241,7 @@ function DeliveryHubContent() {
         };
 
         setPendingList(updatedList);
-        setCustomers(updatedCustomersList);
+        setCustomers(prev => [newCust, ...prev]);
         setShowQuickAdd(false);
         setQaName("");
         setQaAddress("");
@@ -272,17 +282,16 @@ function DeliveryHubContent() {
         body: JSON.stringify(bulkPayload),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        throw new Error("Failed to bulk resolve customers.");
+        throw new Error(data.message || "Failed to bulk resolve customers.");
       }
 
-      const fetchRes = await fetch("/api/customers");
-      const fetchData = await fetchRes.json();
-      const updatedCustomersList = fetchData.customers || fetchData || [];
+      const createdCustomers: any[] = data.customers || [];
 
       setPendingList(prevList => prevList.map(item => {
         if (item.isUnlinked) {
-          const match = updatedCustomersList.find((c: any) => c.name === item.customerName);
+          const match = createdCustomers.find((c: any) => c.name === item.customerName);
           if (match) {
             return {
               ...item,
@@ -294,7 +303,7 @@ function DeliveryHubContent() {
         return item;
       }));
 
-      setCustomers(updatedCustomersList);
+      setCustomers(prev => [...createdCustomers, ...prev]);
       showToast(`Resolved ${unlinkedNames.length} customers`, "success");
 
     } catch (err: any) {

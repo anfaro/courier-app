@@ -9,6 +9,11 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { useSession } from "next-auth/react";
 import { useToast } from "@/components/ToastProvider";
 import { useConfirmation } from "@/components/ConfirmationProvider";
+import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
+
+const PAGE_SIZE = 5;
+const pageCache = new Map<string, { customers: any[]; hasMore: boolean; ts: number }>();
+const PAGE_CACHE_TTL = 60000;
 
 function CustomersListContent() {
   const { t } = useLanguage();
@@ -19,7 +24,10 @@ function CustomersListContent() {
   const query = searchParams.get("q") || "";
 
   const [allCustomers, setAllCustomers] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [page, setPage] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
   
   // Management State
   const [isManagementMode, setIsManagementMode] = useState(false);
@@ -28,24 +36,54 @@ function CustomersListContent() {
 
   const isSuperAdmin = (session?.user as any)?.role === "superadmin";
 
-  useEffect(() => {
-    const fetchCustomers = async () => {
-      setIsLoading(true);
-      try {
-        const url = query 
-          ? `/api/customers/search?q=${encodeURIComponent(query)}`
-          : "/api/customers";
-        const res = await fetch(url);
+  const fetchCustomers = async (q: string, p: number) => {
+    const cacheKey = `${q || "__all__"}:${p}`;
+    const cached = pageCache.get(cacheKey);
+    if (cached && Date.now() - cached.ts < PAGE_CACHE_TTL) {
+      setAllCustomers(cached.customers);
+      setHasMore(cached.hasMore);
+      setIsLoading(false);
+      setFetchError("");
+      return;
+    }
+
+    setIsLoading(true);
+    setFetchError("");
+    try {
+      if (q) {
+        const url = `/api/customers/search?q=${encodeURIComponent(q)}`;
+        const res = await fetchWithTimeout(url, {}, 60000);
+        if (!res.ok) throw new Error(`Server error (${res.status})`);
         const data = await res.json();
-        setAllCustomers(data.customers || data || []);
-      } catch (error) {
-        console.warn("Failed to fetch customers:", error);
-      } finally {
-        setIsLoading(false);
+        const list = data || [];
+        pageCache.set(`${q}:0`, { customers: list, hasMore: false, ts: Date.now() });
+        setAllCustomers(list);
+        setHasMore(false);
+      } else {
+        const url = `/api/customers?limit=${PAGE_SIZE}&offset=${p * PAGE_SIZE}`;
+        const res = await fetchWithTimeout(url, {}, 60000);
+        if (!res.ok) throw new Error(`Server error (${res.status})`);
+        const data = await res.json();
+        const list = data.customers || [];
+        const more = data.hasMore ?? false;
+        pageCache.set(cacheKey, { customers: list, hasMore: more, ts: Date.now() });
+        setAllCustomers(list);
+        setHasMore(more);
       }
-    };
-    fetchCustomers();
-  }, [query]);
+    } catch (error: any) {
+      if (error.name === "AbortError") {
+        setFetchError("Request timed out. Check your connection.");
+      } else {
+        setFetchError(error.message || "Failed to load customers.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCustomers(query, page);
+  }, [query, page]);
 
   const toggleSelection = (id: string) => {
     setSelectedIds((prev) =>
@@ -135,14 +173,19 @@ function CustomersListContent() {
 
         <SearchBar />
 
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 rounded-[2rem] bg-card border border-card-border shadow-sm px-6">
-            <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-[1.5rem] bg-surface-hover text-3xl mb-4 border border-card-border">
-              ⏳
-            </div>
-            <p className="text-[14px] font-bold text-secondary">{t("action.loading")}</p>
+        {fetchError && (
+          <div className="mb-4 flex items-center justify-between rounded-2xl bg-red-50 dark:bg-red-950/20 p-4 border border-red-100 dark:border-red-900/50">
+            <p className="text-[13px] font-bold text-red-700 dark:text-red-400">{fetchError}</p>
+            <button
+              onClick={() => fetchCustomers(query, page)}
+              className="rounded-xl bg-red-600 px-4 py-2 text-[12px] font-bold text-white active:scale-90 transition-all"
+            >
+              Retry
+            </button>
           </div>
-        ) : allCustomers.length === 0 ? (
+        )}
+
+        {allCustomers.length === 0 && !isLoading ? (
           <div className="rounded-[2rem] bg-card p-10 text-center shadow-sm border border-card-border">
             <div className="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30 text-3xl">
               🕵️
@@ -162,9 +205,20 @@ function CustomersListContent() {
               </Link>
             )}
           </div>
-        ) : (
+          ) : (
           /* M3 List Container */
-          <div className="overflow-hidden rounded-[2rem] bg-card shadow-sm border border-card-border">
+          <div className="relative overflow-hidden rounded-[2rem] bg-card shadow-sm border border-card-border">
+            {isLoading && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-card/60 backdrop-blur-sm rounded-[2rem]">
+                <div className="flex h-12 w-12 animate-spin items-center justify-center rounded-full bg-surface-hover text-2xl border border-card-border">
+                  ⏳
+                </div>
+              </div>
+            )}
+            {allCustomers.length === 0 && (
+              <div className="min-h-[460px]" />
+            )}
+            {allCustomers.length > 0 && (
             <ul className="divide-y divide-card-border">
               {allCustomers.map((customer) => (
                 <li
@@ -198,17 +252,21 @@ function CustomersListContent() {
                       </div>
                     )}
                     
-                    {customer.housePictureUrl ? (
-                      <img
-                        src={customer.housePictureUrl}
-                        alt=""
-                        className="h-14 w-14 shrink-0 rounded-[1rem] object-cover border border-card-border"
-                      />
-                    ) : (
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1rem] bg-secondary text-2xl">
-                        🏠
+                    <div className="relative h-14 w-14 shrink-0">
+                      <div className="absolute inset-0 flex items-center justify-center rounded-[1rem] bg-secondary text-lg font-bold text-primary">
+                        {customer.name.charAt(0).toUpperCase()}
                       </div>
-                    )}
+                      {customer.housePictureUrl && (
+                        <img
+                          src={customer.housePictureUrl}
+                          alt=""
+                          loading="lazy"
+                          className="relative h-14 w-14 rounded-[1rem] object-cover border border-card-border"
+                          onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1'; }}
+                          style={{ opacity: 0 }}
+                        />
+                      )}
+                    </div>
 
                     <div className="min-w-0 flex-1">
                       <h2 className="truncate text-[17px] font-bold tracking-tight text-primary">
@@ -258,6 +316,29 @@ function CustomersListContent() {
                 </li>
               ))}
             </ul>
+            )}
+
+            {!query && (
+              <div className="flex items-center justify-center gap-2 border-t border-card-border px-4 py-4">
+                <button
+                  onClick={() => setPage(p => Math.max(0, p - 1))}
+                  disabled={page === 0 || isLoading}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-hover text-primary font-bold transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  ‹
+                </button>
+                <span className="px-4 text-[14px] font-bold text-secondary">
+                  Page {page + 1}
+                </span>
+                <button
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={!hasMore || isLoading}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-hover text-primary font-bold transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  ›
+                </button>
+              </div>
+            )}
           </div>
         )}
       </main>

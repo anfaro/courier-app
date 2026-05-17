@@ -5,21 +5,45 @@ import { customerClusters, customers } from "@/lib/schema";
 import { getToken } from "next-auth/jwt";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
 import { generateId } from "@/lib/utils";
+import { getCached, setCache } from "@/lib/cache";
+import { sql } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
   try {
+    const cacheKey = req.url;
+    const cached = getCached<{ customers: any[]; hasMore: boolean; limit: number; offset: number; total: number }>(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached, { status: 200 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const limit = Math.min(Number(searchParams.get("limit")) || 500, 1000);
+    const offset = Number(searchParams.get("offset")) || 0;
+
     const allCustomers = await db.query.customers.findMany({
-      with: {
-        clusters: {
-          with: {
-            cluster: true,
-          },
-        },
-      },
+      limit: limit + 1,
+      offset,
       orderBy: (customers, { desc }) => [desc(customers.createdAt)],
+      columns: {
+        id: true,
+        name: true,
+        phoneNumber: true,
+        address: true,
+        housePictureUrl: true,
+        createdAt: true,
+      },
     });
 
-    return NextResponse.json({ customers: allCustomers }, { status: 200 });
+    const hasMore = allCustomers.length > limit;
+    if (hasMore) allCustomers.pop();
+
+    const totalResult = await db.execute(sql`SELECT COUNT(*) AS count FROM customers`);
+    const total = Number(totalResult[0]?.count ?? 0);
+
+    const body = { customers: allCustomers, hasMore, limit, offset, total };
+    setCache(cacheKey, body, 15000);
+
+    return NextResponse.json(body, { status: 200 });
   } catch (error) {
     await logError({
       errorName: "FetchCustomersError",
@@ -71,7 +95,10 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ message: "Customer added successfully" }, { status: 201 });
+    return NextResponse.json({
+      message: "Customer added successfully",
+      customer: newCustomer,
+    }, { status: 201 });
   } catch (error) {
     await logError({
       errorName: "CreateCustomerError",

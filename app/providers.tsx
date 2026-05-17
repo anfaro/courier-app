@@ -8,6 +8,7 @@ import { ToastProvider } from "@/components/ToastProvider";
 import { ConfirmationProvider } from "@/components/ConfirmationProvider";
 import AccessLogger from "@/components/AccessLogger";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import OfflineBanner from "@/components/OfflineBanner";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -18,6 +19,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <ConfirmationProvider>
               <ErrorBoundary>
                 <AccessLogger />
+                <OfflineBanner />
                 {children}
               </ErrorBoundary>
             </ConfirmationProvider>

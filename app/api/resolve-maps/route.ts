@@ -44,6 +44,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ lat: metaMatch[1], lng: metaMatch[2] });
     }
 
+    // PATTERN 5: Query params in the original or final URL (destination, query, api-1)
+    for (const u of [url, finalUrl]) {
+      try {
+        const parsed = new URL(u);
+        const param = parsed.searchParams.get("destination") || parsed.searchParams.get("query");
+        if (param && param.includes(",")) {
+          const [lat, lng] = param.split(",");
+          return NextResponse.json({ lat: lat.trim(), lng: lng.trim() });
+        }
+      } catch {}
+    }
+
     return NextResponse.json({
       error: "Could not find coordinates in the generated Google URL.",
       debugUrl: finalUrl

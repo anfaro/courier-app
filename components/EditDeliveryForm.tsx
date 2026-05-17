@@ -1,5 +1,3 @@
-// components/EditDeliveryForm.tsx
-
 "use client";
 
 import { useState } from "react";
@@ -10,11 +8,12 @@ export default function EditDeliveryForm({ delivery }: { delivery: any }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [podFile, setPodFile] = useState<File | null>(null);
+  const [existingPodUrl] = useState(delivery.proofOfDeliveryUrl || "");
 
   const [formData, setFormData] = useState({
     waybillNumber: delivery.waybillNumber || "",
     receiverName: delivery.receiverName || "",
-    // Store as a raw string of numbers in state (e.g., "50000")
     codAmount: delivery.codAmount?.toString() || "0",
     status: delivery.status || "Pending",
     proofOfDeliveryUrl: delivery.proofOfDeliveryUrl || "",
@@ -28,10 +27,22 @@ export default function EditDeliveryForm({ delivery }: { delivery: any }) {
     setError("");
 
     try {
+      let finalPodUrl = existingPodUrl;
+
+      if (podFile) {
+        const uploadFormData = new FormData();
+        uploadFormData.append("file", podFile);
+        uploadFormData.append("type", "delivery");
+        const uploadRes = await fetch("/api/upload", { method: "POST", body: uploadFormData });
+        if (!uploadRes.ok) throw new Error("Image upload failed.");
+        const uploadData = await uploadRes.json();
+        finalPodUrl = uploadData.url;
+      }
+
       const res = await fetch(`/api/deliveries/${delivery.id}`, {
-        method: "PATCH",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, proofOfDeliveryUrl: finalPodUrl }),
       });
 
       if (!res.ok) throw new Error("Failed to update delivery");
@@ -54,7 +65,6 @@ export default function EditDeliveryForm({ delivery }: { delivery: any }) {
         </div>
       )}
 
-      {/* Status Selector */}
       <div>
         <label className="mb-3 block text-[12px] font-black uppercase tracking-widest text-secondary">
           Delivery Status
@@ -105,7 +115,6 @@ export default function EditDeliveryForm({ delivery }: { delivery: any }) {
           />
         </div>
 
-        {/* --- UPDATED: Beautiful Auto-Formatting IDR Input --- */}
         <div>
           <label className="mb-2 block text-[13px] font-black uppercase tracking-widest text-secondary">
             COD Amount
@@ -117,14 +126,11 @@ export default function EditDeliveryForm({ delivery }: { delivery: any }) {
             <input
               type="text"
               inputMode="numeric"
-              // Add thousands separators for display
               value={formData.codAmount ? Number(formData.codAmount).toLocaleString('id-ID') : ""}
               onChange={(e) => {
-                // Strip everything except numbers before saving to state
                 const rawValue = e.target.value.replace(/\D/g, "");
                 setFormData({ ...formData, codAmount: rawValue });
               }}
-              // Add padding-left so text doesn't overlap the "Rp"
               className={`${inputClass} pl-12`}
               placeholder="0"
             />
@@ -135,8 +141,9 @@ export default function EditDeliveryForm({ delivery }: { delivery: any }) {
       <div className="bg-gray-50 rounded-3xl p-4 border border-card-border">
         <ImageInput
           label="Proof of Delivery / Signature"
-          existingImageUrl={formData.proofOfDeliveryUrl}
+          existingImageUrl={existingPodUrl}
           onImageChange={(base64String) => setFormData({ ...formData, proofOfDeliveryUrl: base64String || "" })}
+          onFileChange={(file) => setPodFile(file)}
         />
       </div>
 
@@ -159,4 +166,3 @@ export default function EditDeliveryForm({ delivery }: { delivery: any }) {
     </form>
   );
 }
-

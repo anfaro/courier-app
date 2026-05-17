@@ -3,6 +3,7 @@ import { db } from "./db";
 import { logs, errorLogs, accessLogs } from "./schema";
 import { NextRequest } from "next/server";
 import { generateId } from "./utils";
+import { sql } from "drizzle-orm";
 
 export type LogAction = 
   | "USER_LOGIN"
@@ -33,16 +34,27 @@ export async function logActivity({
   details?: string;
   targetId?: string;
 }) {
-  try {
-    await db.insert(logs).values({
+  const insert = (uid?: string) =>
+    db.insert(logs).values({
       id: generateId(),
-      userId,
+      userId: uid,
       userName,
       action,
       details,
       targetId
     });
-  } catch (error) {
+
+  try {
+    await insert(userId);
+  } catch (error: any) {
+    if (
+      userId &&
+      error?.code === "23503" &&
+      error?.constraint_name === "logs_user_id_users_id_fk"
+    ) {
+      await insert(undefined);
+      return;
+    }
     console.error("Critical: Failed to record activity log:", error);
   }
 }
@@ -62,17 +74,28 @@ export async function logError({
   stackTrace?: string;
   pathname?: string;
 }) {
-  try {
-    await db.insert(errorLogs).values({
+  const insert = (uid?: string) =>
+    db.insert(errorLogs).values({
       id: generateId(),
-      userId,
+      userId: uid,
       userName,
       errorName,
       errorMessage,
       stackTrace,
       pathname
     });
-  } catch (error) {
+
+  try {
+    await insert(userId);
+  } catch (error: any) {
+    if (
+      userId &&
+      error?.code === "23503" &&
+      error?.constraint_name === "error_logs_user_id_users_id_fk"
+    ) {
+      await insert(undefined);
+      return;
+    }
     console.error("Critical: Failed to record error log:", error);
   }
 }
@@ -92,18 +115,42 @@ export async function logAccess({
   ipAddress?: string;
   userAgent?: string;
 }) {
-  try {
-    await db.insert(accessLogs).values({
+  const insert = (uid?: string) =>
+    db.insert(accessLogs).values({
       id: generateId(),
-      userId,
+      userId: uid,
       userName,
       pathname,
       method,
       ipAddress,
       userAgent
     });
-  } catch (error) {
+
+  try {
+    await insert(userId);
+    pruneAccessLogs();
+  } catch (error: any) {
+    if (
+      userId &&
+      error?.code === "23503" &&
+      error?.constraint_name === "access_logs_user_id_users_id_fk"
+    ) {
+      await insert(undefined);
+      return;
+    }
     console.error("Critical: Failed to record access log:", error);
+  }
+}
+
+async function pruneAccessLogs(max = 100) {
+  try {
+    await db.execute(sql`
+      DELETE FROM access_logs WHERE id IN (
+        SELECT id FROM access_logs ORDER BY created_at DESC OFFSET ${max}
+      )
+    `);
+  } catch {
+    // silently swallow — cleanup is best-effort
   }
 }
 

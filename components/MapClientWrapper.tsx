@@ -1,10 +1,7 @@
-// components/MapClientWrapper.tsx
-
 "use client";
 
 import dynamic from "next/dynamic";
 
-// Dynamically import the map to completely disable Server-Side Rendering
 const DynamicMap = dynamic(() => import("@/components/DeliveryMap"), {
   ssr: false,
   loading: () => (
@@ -14,6 +11,6 @@ const DynamicMap = dynamic(() => import("@/components/DeliveryMap"), {
   ),
 });
 
-export default function MapClientWrapper({ deliveries }: { deliveries: any[] }) {
-  return <DynamicMap deliveries={deliveries} />;
+export default function MapClientWrapper({ deliveries, clusters }: { deliveries: any[]; clusters: any[] }) {
+  return <DynamicMap deliveries={deliveries} clusters={clusters} />;
 }

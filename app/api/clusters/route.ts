@@ -6,21 +6,44 @@ import { clusters, customerClusters } from "@/lib/schema";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
 import { generateId } from "@/lib/utils";
 import { eq, sql } from "drizzle-orm";
+import { getCached, setCache } from "@/lib/cache";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const cacheKey = req.url;
+    const cached = getCached<{ clusters: any[]; hasMore: boolean; limit: number; offset: number }>(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached, { status: 200 });
+    }
+    if (cached) {
+      return NextResponse.json(cached, { status: 200 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const limit = Math.min(Number(searchParams.get("limit")) || 500, 1000);
+    const offset = Number(searchParams.get("offset")) || 0;
+
     const allClusters = await db
       .select({
         id: clusters.id,
         name: clusters.name,
+        notes: clusters.notes,
         customerCount: sql<number>`count(${customerClusters.customerId})`.mapWith(Number),
       })
       .from(clusters)
       .leftJoin(customerClusters, eq(clusters.id, customerClusters.clusterId))
       .groupBy(clusters.id)
-      .orderBy(clusters.name);
+      .orderBy(clusters.name)
+      .limit(limit + 1)
+      .offset(offset);
 
-    return NextResponse.json({ clusters: allClusters }, { status: 200 });
+    const hasMore = allClusters.length > limit;
+    if (hasMore) allClusters.pop();
+
+    const body = { clusters: allClusters, hasMore, limit, offset };
+    setCache(cacheKey, body, 15000);
+
+    return NextResponse.json(body, { status: 200 });
   } catch (error) {
     await logError({
       errorName: "FetchClustersError",
@@ -35,7 +58,7 @@ export async function POST(req: NextRequest) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (token) await logServerAccess(req, token);
     const body = await req.json();
-    const { name, customerIds } = body;
+    const { name, notes, customerIds } = body;
 
     if (!name || name.trim() === "") {
       return NextResponse.json({ message: "Cluster name is required" }, { status: 400 });
@@ -45,7 +68,8 @@ export async function POST(req: NextRequest) {
       .insert(clusters)
       .values({ 
         id: generateId(),
-        name: name.trim() 
+        name: name.trim(),
+        notes: notes || null,
       })
       .returning({ id: clusters.id });
 

@@ -1,15 +1,46 @@
-// app/api/clusters/[id]/route.ts
 import { NextResponse, NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
 import { clusters, customerClusters } from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const resolvedParams = await params;
     const id = resolvedParams.id;
+    const { searchParams } = new URL(req.url);
+    const limit = searchParams.get("limit");
+    const offset = searchParams.get("offset");
+
+    if (limit) {
+      const cluster = await db.query.clusters.findFirst({
+        where: eq(clusters.id, id),
+        columns: { id: true, name: true, notes: true },
+      });
+      if (!cluster) return NextResponse.json({ message: "Cluster not found" }, { status: 404 });
+
+      const pageSize = Math.max(1, parseInt(limit));
+      const pageOffset = Math.max(0, parseInt(offset || "0"));
+
+      const customerLinks = await db.query.customerClusters.findMany({
+        where: eq(customerClusters.clusterId, id),
+        limit: pageSize,
+        offset: pageOffset,
+        with: { customer: { columns: { id: true, name: true, address: true } } },
+      });
+
+      const totalResult = await db.execute(
+        sql`SELECT COUNT(*)::int AS count FROM customer_clusters WHERE cluster_id = ${id}`
+      );
+
+      return NextResponse.json({
+        ...cluster,
+        customers: customerLinks,
+        total: totalResult[0]?.count ?? 0,
+      }, { status: 200 });
+    }
+
     const data = await db.query.clusters.findFirst({
       where: eq(clusters.id, id),
       with: {
