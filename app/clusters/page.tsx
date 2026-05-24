@@ -9,7 +9,6 @@ import { useToast } from "@/components/ToastProvider";
 import { useConfirmation } from "@/components/ConfirmationProvider";
 import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
 
-const CL_PAGE_SIZE = 5;
 const clustersCache = new Map<string, { data: any[]; hasMore: boolean; ts: number }>();
 const CL_CACHE_TTL = 60000;
 
@@ -22,6 +21,8 @@ function ClustersListContent() {
   const [allClusters, setAllClusters] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(5);
+  const [jumpInput, setJumpInput] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState("");
   
@@ -33,7 +34,7 @@ function ClustersListContent() {
   const isSuperAdmin = (session?.user as any)?.role === "superadmin";
 
   const fetchClusters = async (p: number) => {
-    const cacheKey = `clusters:${p}`;
+    const cacheKey = `clusters:${p}:${pageSize}`;
     const cached = clustersCache.get(cacheKey);
     if (cached && Date.now() - cached.ts < CL_CACHE_TTL) {
       setAllClusters(cached.data);
@@ -46,7 +47,7 @@ function ClustersListContent() {
     setIsLoading(true);
     setFetchError("");
     try {
-      const res = await fetchWithTimeout(`/api/clusters?limit=${CL_PAGE_SIZE}&offset=${p * CL_PAGE_SIZE}`, {}, 60000);
+      const res = await fetchWithTimeout(`/api/clusters?limit=${pageSize}&offset=${p * pageSize}`, {}, 60000);
       if (!res.ok) throw new Error(`Server error (${res.status})`);
       const data = await res.json();
       const list = data.clusters || data || [];
@@ -67,7 +68,7 @@ function ClustersListContent() {
 
   useEffect(() => {
     fetchClusters(page);
-  }, [page]);
+  }, [page, pageSize]);
 
   const toggleSelection = (id: string) => {
     setSelectedIds((prev) =>
@@ -232,16 +233,37 @@ function ClustersListContent() {
               >
                 ‹
               </button>
-              <span className="px-4 text-[14px] font-bold text-secondary">
-                Page {page + 1}
-              </span>
-              <button
-                onClick={() => setPage(p => p + 1)}
-                disabled={!hasMore || isLoading}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-hover text-primary font-bold transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
+              <input
+                type="number"
+                min={1}
+                value={jumpInput}
+                onChange={e => setJumpInput(e.target.value)}
+                onKeyDown={e => {
+                    if (e.key === "Enter") {
+                      const p = parseInt(e.currentTarget.value);
+                      if (!isNaN(p) && p >= 1) { setPage(p - 1); setJumpInput(""); }
+                    }
+                  }}
+                  onBlur={() => setJumpInput("")}
+                  className="w-14 text-center text-[14px] font-bold text-secondary bg-transparent border border-transparent focus:border-purple-500 focus:bg-card rounded-lg px-1 py-0.5 outline-none"
+                  placeholder={String(page + 1)}
+                />
+                <button
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={!hasMore || isLoading}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-hover text-primary font-bold transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  ›
+                </button>
+                <select
+                value={pageSize}
+                onChange={e => { setPageSize(Number(e.target.value)); setPage(0); setJumpInput(""); }}
+                className="ml-2 rounded-xl bg-surface-hover px-2.5 py-1.5 text-[12px] font-bold text-primary border border-card-border outline-none cursor-pointer active:scale-90 transition-all"
               >
-                ›
-              </button>
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={50}>50</option>
+              </select>
             </div>
           </div>
         )}

@@ -8,6 +8,11 @@ import { useConfirmation } from "@/components/ConfirmationProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
 
+interface RestoreLog {
+  text: string;
+  type: "info" | "success" | "error" | "step";
+}
+
 export default function DatabaseAdmin() {
   const { t } = useLanguage();
   const { showToast } = useToast();
@@ -31,9 +36,18 @@ export default function DatabaseAdmin() {
   const [preview, setPreview] = useState<any[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const importFileRef = useRef<HTMLInputElement>(null);
-  const [restoring, setRestoring] = useState(false);
-  const [backingUp, setBackingUp] = useState(false);
+  // Backup modal state
+  const [showBackupModal, setShowBackupModal] = useState(false);
+  const [backupLogs, setBackupLogs] = useState<RestoreLog[]>([]);
   const [backupProgress, setBackupProgress] = useState(0);
+  const [backupRunning, setBackupRunning] = useState(false);
+
+  // Restore modal state
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
+  const [restoreLogs, setRestoreLogs] = useState<RestoreLog[]>([]);
+  const [restoreProgress, setRestoreProgress] = useState(0);
+  const [restoreRunning, setRestoreRunning] = useState(false);
+  const logEndRef = useRef<HTMLDivElement>(null);
 
   const fetchStats = useCallback(async () => {
     setLoadingStats(true);
@@ -171,19 +185,36 @@ export default function DatabaseAdmin() {
   };
 
   const handleBackup = async () => {
-    setBackingUp(true);
+    setShowBackupModal(true);
+    setBackupRunning(true);
+    setBackupLogs([]);
     setBackupProgress(0);
+
+    const addLog = (text: string, type: RestoreLog["type"] = "info") => {
+      setBackupLogs(prev => [...prev, { text, type }]);
+    };
+
     try {
+      addLog("$ backup --full", "info");
+      addLog("");
+
+      addLog("Fetching backup from server...", "step");
+      setBackupProgress(10);
+
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 180000);
-
       const res = await fetch("/api/admin/system/backup", { signal: controller.signal });
       clearTimeout(timeout);
-      if (!res.ok) throw new Error("Backup failed");
+      if (!res.ok) throw new Error("Server returned " + res.status);
+
+      addLog("  ✓ server response received", "success");
 
       const contentLength = Number(res.headers.get("Content-Length") || 0);
       const reader = res.body?.getReader();
       if (!reader) throw new Error("No response body");
+
+      addLog(`Downloading backup (${contentLength > 0 ? Math.round(contentLength / 1024) + " KB" : "streaming"})...`, "step");
+      setBackupProgress(20);
 
       const chunks: Uint8Array[] = [];
       let received = 0;
@@ -194,44 +225,166 @@ export default function DatabaseAdmin() {
         chunks.push(value);
         received += value.length;
         if (contentLength > 0) {
-          setBackupProgress(Math.round((received / contentLength) * 100));
+          const pct = Math.round((received / contentLength) * 100);
+          setBackupProgress(20 + Math.round(pct * 0.7));
         }
       }
 
-      const blob = new Blob(chunks);
+      addLog(`  ✓ downloaded ${received > 0 ? Math.round(received / 1024) + " KB" : "complete"}`, "success");
+
+      addLog("Saving backup file...", "step");
+      setBackupProgress(95);
+
+      const blob = new Blob(chunks, { type: "application/gzip" });
       const filename = `backup-${new Date().toISOString().slice(0, 10)}.json.gz`;
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url; a.download = filename; a.click();
       URL.revokeObjectURL(url);
+
+      addLog(`  ✓ saved as ${filename}`, "success");
+      addLog("");
+      addLog("Backup complete!", "success");
+      setBackupProgress(100);
       showToast("Backup downloaded.", "success");
-    } catch { showToast("Backup download failed.", "error"); } finally { setBackingUp(false); setBackupProgress(0); }
+    } catch (e: any) {
+      addLog(`  ✗ ${e.message || "Backup failed"}`, "error");
+      showToast("Backup download failed.", "error");
+    } finally {
+      setBackupRunning(false);
+    }
   };
 
-  const handleRestore = async (file: File | null) => {
-    if (!file) return;
-    const confirmed = await askConfirmation({ title: "Restore Backup", message: "This will insert backup data on top of existing records. Duplicates (same ID) will be skipped.", confirmText: "Restore", type: "warning" });
-    if (!confirmed) return;
-    setRestoring(true);
+  useEffect(() => {
+    if (logEndRef.current) {
+      logEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [restoreLogs, backupLogs]);
+
+  const runRestore = async (file: File) => {
+    setShowRestoreModal(true);
+    setRestoreRunning(true);
+    setRestoreLogs([]);
+    setRestoreProgress(0);
+
+    const addLog = (text: string, type: RestoreLog["type"] = "info") => {
+      setRestoreLogs(prev => [...prev, { text, type }]);
+    };
+
     try {
-      let data: any;
+      addLog("$ restore --file=" + file.name, "info");
+      addLog("");
+
+      addLog("Extracting backup file...", "step");
+      setRestoreProgress(5);
       const buf = await file.arrayBuffer();
-      // Detect gzip magic number (0x1f8b) or try as plain JSON
       const header = new Uint8Array(buf.slice(0, 2));
+      let data: any;
+
       if (header[0] === 0x1f && header[1] === 0x8b) {
         const ds = new DecompressionStream("gzip");
         const stream = new Blob([buf]).stream().pipeThrough(ds);
         const text = await new Response(stream).text();
         data = JSON.parse(text);
+        addLog("  ✓ gzip extraction complete", "success");
       } else {
         data = JSON.parse(new TextDecoder().decode(buf));
+        addLog("  ✓ file is plain JSON (no decompression needed)", "success");
       }
-      if (!data?.data) throw new Error("Invalid backup file");
-      const res = await fetch("/api/admin/system/backup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
-      const result = await res.json();
-      if (res.ok) { showToast(result.message || "Restore complete.", "success"); fetchStats(); }
-      else { showToast(result.error || "Restore failed.", "error"); }
-    } catch (e: any) { showToast(e.message || "Invalid or corrupt backup file.", "error"); } finally { setRestoring(false); }
+
+      addLog("Parsing backup data...", "step");
+      setRestoreProgress(15);
+      await new Promise(r => setTimeout(r, 100));
+
+      if (!data?.data) throw new Error("Invalid backup file: missing .data field");
+
+      const tableNames = ["users", "customers", "deliveries", "clusters", "customerClusters", "logs", "errorLogs", "accessLogs"];
+      const activeTables = tableNames.filter(t => Array.isArray(data.data[t]) && data.data[t].length > 0);
+      const totalSteps = activeTables.length;
+      addLog(`  ✓ found ${totalSteps} tables with data`, "success");
+      addLog("");
+
+      const CHUNK_CLIENT = 5;
+      const CHUNK_DELAY_CLIENT = 300;
+      const TABLE_DELAY_CLIENT = 1500;
+
+      let tablesDone = 0;
+      for (const table of activeTables) {
+        if (tablesDone > 0) {
+          addLog(`  ⏳ waiting ${TABLE_DELAY_CLIENT}ms before next table...`, "step");
+          await new Promise(r => setTimeout(r, TABLE_DELAY_CLIENT));
+        }
+
+        const rows = data.data[table];
+        const totalChunks = Math.ceil(rows.length / CHUNK_CLIENT);
+        addLog(`$ ${table}: ${rows.length} records in ${totalChunks} chunks`, "step");
+
+        let restored = 0;
+        for (let ci = 0; ci < totalChunks; ci++) {
+          const start = ci * CHUNK_CLIENT;
+          const chunk = rows.slice(start, start + CHUNK_CLIENT);
+          const chunkLabel = `chunk ${ci + 1}/${totalChunks} (rows ${start + 1}-${Math.min(start + CHUNK_CLIENT, rows.length)})`;
+
+          let chunkOk = false;
+          for (let attempt = 0; attempt < 3; attempt++) {
+            if (attempt > 0) {
+              const backoff = [1000, 3000][attempt - 1];
+              addLog(`  ⏳ ${chunkLabel} — retry ${attempt + 1}/3 in ${backoff}ms`, "step");
+              await new Promise(r => setTimeout(r, backoff));
+            }
+            try {
+              const res = await fetch("/api/admin/system/backup", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ table, rows: chunk }),
+              });
+              const result = await res.json();
+              if (res.ok) {
+                restored += result.restored || chunk.length;
+                addLog(`  ✓ ${chunkLabel} — ${result.restored} rows`, "success");
+                chunkOk = true;
+                break;
+              } else {
+                addLog(`  ✗ ${chunkLabel} — ${result.error || "server error"}`, "error");
+              }
+            } catch (e: any) {
+              addLog(`  ✗ ${chunkLabel} — ${e.message || "network error"}`, "error");
+            }
+          }
+
+          if (!chunkOk) {
+            addLog(`  ✗ ${chunkLabel} — giving up after 3 attempts`, "error");
+          }
+
+          if (ci < totalChunks - 1) {
+            addLog(`  · waiting ${CHUNK_DELAY_CLIENT}ms...`, "info");
+            await new Promise(r => setTimeout(r, CHUNK_DELAY_CLIENT));
+          }
+
+          const overallPct = 15 + Math.round(((tablesDone + (ci + 1) / totalChunks) / activeTables.length) * 80);
+          setRestoreProgress(Math.min(overallPct, 98));
+        }
+
+        addLog(`  ✓ ${table} done (${restored}/${rows.length} restored)`, "success");
+        tablesDone++;
+      }
+
+      addLog("");
+      addLog("Restore complete! Refreshing stats...", "success");
+      setRestoreProgress(100);
+      fetchStats();
+      showToast("Backup restored successfully.", "success");
+    } catch (e: any) {
+      addLog(`  ✗ ${e.message || "Unknown error"}`, "error");
+      showToast(e.message || "Restore failed.", "error");
+    } finally {
+      setRestoreRunning(false);
+    }
+  };
+
+  const handleRestore = (file: File | null) => {
+    if (!file) return;
+    runRestore(file);
   };
 
   const handleExportTable = async (table: string) => {
@@ -254,8 +407,7 @@ export default function DatabaseAdmin() {
   };
 
   return (
-    <div className="px-4 sm:px-6 mb-8 space-y-6">
-      <h2 className="text-[14px] font-bold tracking-tight text-primary uppercase tracking-widest opacity-60">Database Administration</h2>
+    <div className="space-y-6">
 
       {/* Stats */}
       <div className="rounded-[24px] bg-card border border-card-border p-5 shadow-sm">
@@ -330,7 +482,7 @@ export default function DatabaseAdmin() {
       <AnimatePresence>
         {showCodeStep && (
           <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => !isWiping && setShowCodeStep(false)} />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-md" onClick={() => !isWiping && setShowCodeStep(false)} />
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-sm rounded-[40px] bg-card p-8 shadow-2xl border border-red-500/30">
               <h3 className="text-2xl font-black text-primary mb-2">{t("admin.wipe_verification")}</h3>
               <p className="text-[14px] font-medium text-secondary mb-6 leading-relaxed">{t("admin.wipe_type_code").replace("[CODE]", "CONFIRM-WIPE")}</p>
@@ -339,6 +491,148 @@ export default function DatabaseAdmin() {
                 <button onClick={executeWipe} disabled={userInput !== "CONFIRM-WIPE" || isWiping} className="btn-danger w-full py-4 !bg-red-600 !text-white disabled:opacity-30">{isWiping ? t("admin.wipe_executing") : t("admin.wipe_execute_btn")}</button>
                 <button onClick={() => setShowCodeStep(false)} disabled={isWiping} className="btn-outline w-full py-4">{t("action.cancel")}</button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Backup Terminal Modal */}
+      <AnimatePresence>
+        {showBackupModal && (
+          <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-md" onClick={() => !backupRunning && setShowBackupModal(false)} />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-lg rounded-[24px] bg-[#0d1117] border border-[#30363d] p-5 shadow-2xl overflow-hidden">
+              <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#21262d]">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-[#ff5555]" />
+                  <div className="w-3 h-3 rounded-full bg-[#f1fa8c]" />
+                  <div className="w-3 h-3 rounded-full bg-[#50fa7b]" />
+                </div>
+                <span className="text-[12px] font-mono text-[#8b949e] ml-2">backup — bash</span>
+              </div>
+
+              <div className="font-mono text-[12px] leading-relaxed mb-4 max-h-[320px] overflow-y-auto custom-scrollbar" style={{ fontFamily: "'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace" }}>
+                {backupLogs.length === 0 && !backupRunning && (
+                  <div className="flex items-center gap-2 text-[#8b949e]">
+                    <span>$</span>
+                    <span className="animate-pulse">_</span>
+                  </div>
+                )}
+                {backupLogs.map((log, i) => (
+                  <div key={i} className={`${
+                    log.type === "success" ? "text-[#50fa7b]" :
+                    log.type === "error" ? "text-[#ff5555]" :
+                    log.type === "step" ? "text-[#8be9fd]" :
+                    log.type === "info" ? "text-[#f8f8f2]" : "text-[#6272a4]"
+                  }`}>
+                    {log.text || "\u00A0"}
+                  </div>
+                ))}
+                {backupRunning && (
+                  <div className="flex items-center gap-2 text-[#8be9fd]">
+                    <span className="animate-pulse">█</span>
+                  </div>
+                )}
+                {!backupRunning && backupLogs.length > 0 && (
+                  <div className="flex items-center gap-2 text-[#50fa7b] mt-1">
+                    <span>$ {backupLogs.some(l => l.type === "error") ? "Process completed with errors" : "Process completed successfully"}</span>
+                    <span className="animate-pulse">_</span>
+                  </div>
+                )}
+                <div ref={logEndRef} />
+              </div>
+
+              <div className="h-2 w-full rounded-full bg-[#21262d] overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-[#50fa7b]"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${backupProgress}%` }}
+                  transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                />
+              </div>
+              <div className="flex justify-between mt-1.5">
+                <span className="text-[10px] font-mono text-[#8b949e]">{backupRunning ? "Running..." : "Done"}</span>
+                <span className="text-[10px] font-mono text-[#8b949e]">{backupProgress}%</span>
+              </div>
+
+              {!backupRunning && (
+                <button onClick={() => setShowBackupModal(false)} className="mt-4 w-full rounded-xl bg-[#21262d] py-2.5 text-[12px] font-bold text-[#c9d1d9] font-mono active:scale-90 transition-all hover:bg-[#30363d]">
+                  $ exit
+                </button>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Restore Terminal Modal */}
+      <AnimatePresence>
+        {showRestoreModal && (
+          <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-md" onClick={() => !restoreRunning && setShowRestoreModal(false)} />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-lg rounded-[24px] bg-[#0d1117] border border-[#30363d] p-5 shadow-2xl overflow-hidden">
+              {/* Title bar */}
+              <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#21262d]">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-[#ff5555]" />
+                  <div className="w-3 h-3 rounded-full bg-[#f1fa8c]" />
+                  <div className="w-3 h-3 rounded-full bg-[#50fa7b]" />
+                </div>
+                <span className="text-[12px] font-mono text-[#8b949e] ml-2">restore — bash</span>
+              </div>
+
+              {/* Terminal output */}
+              <div className="font-mono text-[12px] leading-relaxed mb-4 max-h-[320px] overflow-y-auto custom-scrollbar" style={{ fontFamily: "'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace" }}>
+                {restoreLogs.length === 0 && !restoreRunning && (
+                  <div className="flex items-center gap-2 text-[#8b949e]">
+                    <span>$</span>
+                    <span className="animate-pulse">_</span>
+                  </div>
+                )}
+                {restoreLogs.map((log, i) => (
+                  <div key={i} className={`${
+                    log.type === "success" ? "text-[#50fa7b]" :
+                    log.type === "error" ? "text-[#ff5555]" :
+                    log.type === "step" ? "text-[#8be9fd]" :
+                    log.type === "info" ? "text-[#f8f8f2]" : "text-[#6272a4]"
+                  }`}>
+                    {log.text || "\u00A0"}
+                  </div>
+                ))}
+                {restoreRunning && (
+                  <div className="flex items-center gap-2 text-[#8be9fd]">
+                    <span className="animate-pulse">█</span>
+                  </div>
+                )}
+                {!restoreRunning && restoreLogs.length > 0 && (
+                  <div className="flex items-center gap-2 text-[#50fa7b] mt-1">
+                    <span>$ {restoreLogs.some(l => l.type === "error") ? "Process completed with errors" : "Process completed successfully"}</span>
+                    <span className="animate-pulse">_</span>
+                  </div>
+                )}
+                <div ref={logEndRef} />
+              </div>
+
+              {/* Progress bar */}
+              <div className="h-2 w-full rounded-full bg-[#21262d] overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-[#50fa7b]"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${restoreProgress}%` }}
+                  transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                />
+              </div>
+              <div className="flex justify-between mt-1.5">
+                <span className="text-[10px] font-mono text-[#8b949e]">{restoreRunning ? "Running..." : "Done"}</span>
+                <span className="text-[10px] font-mono text-[#8b949e]">{restoreProgress}%</span>
+              </div>
+
+              {/* Close button */}
+              {!restoreRunning && (
+                <button onClick={() => setShowRestoreModal(false)} className="mt-4 w-full rounded-xl bg-[#21262d] py-2.5 text-[12px] font-bold text-[#c9d1d9] font-mono active:scale-90 transition-all hover:bg-[#30363d]">
+                  $ exit
+                </button>
+              )}
             </motion.div>
           </div>
         )}
@@ -379,37 +673,10 @@ export default function DatabaseAdmin() {
         <h3 className="font-black text-primary text-[15px] mb-4">Backup / Restore</h3>
         <p className="text-[12px] text-secondary mb-4">Full backup exports all 8 tables as portable JSON. Image URLs are included; actual image files are not. Log tables are limited to the most recent rows (10k logs, 5k errors, 5k access logs) to prevent timeout.</p>
 
-        {backingUp ? (
-          <div className="w-full mb-4">
-            <div className="rounded-2xl bg-surface-hover p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-5 w-5 animate-spin rounded-full border-[3px] border-blue-600 border-t-transparent" />
-                  <span className="text-[13px] font-bold text-primary">Downloading backup...</span>
-                </div>
-                <span className="text-[13px] font-bold text-blue-600">{backupProgress}%</span>
-              </div>
-              <div className="h-2 w-full rounded-full bg-card-border overflow-hidden">
-                <motion.div
-                  className="h-full rounded-full bg-blue-600"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${backupProgress}%` }}
-                  transition={{ type: "spring", stiffness: 100, damping: 20 }}
-                />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <button onClick={handleBackup} disabled={backingUp} className="btn-primary w-full py-3.5 text-[13px] disabled:opacity-40 mb-4">📥 Download Full Backup</button>
-        )}
+        <button onClick={handleBackup} disabled={backupRunning} className="btn-primary w-full py-3.5 text-[13px] disabled:opacity-40 mb-4">📥 Download Full Backup</button>
 
         <div className="relative rounded-2xl border-2 border-dashed border-card-border p-6 text-center hover:border-blue-400 transition-colors">
-          {restoring && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-card/60 backdrop-blur-sm rounded-2xl">
-              <div className="flex items-center gap-2"><div className="h-5 w-5 animate-spin rounded-full border-[3px] border-blue-600 border-t-transparent" /><span className="text-[13px] font-bold text-primary">Restoring...</span></div>
-            </div>
-          )}
-          <label className={`block cursor-pointer ${restoring ? "pointer-events-none" : ""}`}>
+          <label className="block cursor-pointer">
             <input type="file" accept=".json,.json.gz,.gz" onChange={(e) => handleRestore(e.target.files?.[0] || null)} className="hidden" />
             <span className="text-2xl mb-2 block">📤</span>
             <p className="text-[13px] font-bold text-primary">Click to restore backup</p>

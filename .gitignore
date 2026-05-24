@@ -36,6 +36,14 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# database config
+data/db-config.json
+data/db-profiles.json
+
+# logs
+*.log
+public/backup-*.json.gz
+
 # vercel
 .vercel
 

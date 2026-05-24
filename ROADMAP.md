@@ -13,23 +13,26 @@ Focus: Core stability, smooth animations, and essential fleet management.
 ## 🏗️ Upcoming Features (v0.2.x - v0.9.x)
 
 ### 🗺️ Logistics & Zone Intelligence (Feature #2)
-- **Cluster Density Map**: Visual heatmap of delivery distribution.
-- **Zone Reassignment**: Tool for bulk moving customers between clusters.
-- **Real-time Fleet Tracking**: Active courier location tracking via activity logs.
+- [x] **Cluster Density Map**: Visual heatmap of delivery distribution.
+- [x] **Zone Reassignment**: Tool for bulk moving customers between clusters.
+- [x] **Real-time Fleet Tracking**: Active courier location tracking via activity logs.
 
 ### 📦 Delivery & POD Auditing (Feature #3)
-- **POD Quality Control**: Gallery-style auditor for proof-of-delivery photos.
-- **Waybill Lifecycle Timeline**: Detailed tracking from creation to fulfillment.
-- **Failed Delivery Queue**: Dedicated intervention center for failed shipments.
+- [x] **POD Quality Control**: Gallery-style auditor for proof-of-delivery photos.
+- [x] **Waybill Lifecycle Timeline**: Detailed tracking from creation to fulfillment.
+- [x] **Failed Delivery Queue**: Dedicated intervention center for failed shipments.
 
 ### 👥 Expanded Fleet Management (Feature #4 Refinement)
-- **Granular RBAC**: Expand beyond Superadmin/Courier to include Dispatchers and Hub Managers.
-- **Performance Analytics**: Leaderboards and speed metrics.
+- [x] **Granular RBAC**: Expand beyond Superadmin/Courier to include Dispatchers and Hub Managers.
+- [x] **Performance Analytics**: Leaderboards and speed metrics.
 
 ### 🛠️ System Health & Config (Feature #6)
-- **Maintenance Mode**: Global toggle for system-wide downtime.
-- **Dynamic App Config**: Admin UI for managing API keys and business rules.
-- **Flash Announcements**: Push notifications for active couriers.
+- [x] **Maintenance Mode**: Global toggle for system-wide downtime.
+- [x] **Dynamic App Config**: Admin UI for managing API keys and business rules.
+- [x] **Hot-Reloadable Database Connection**: Replace static `db` singleton with a connection pool manager that reads credentials from a gitignored JSON config file (`data/db-config.json`). Changing DB settings via admin UI writes to the file and triggers live pool reconnect — no server restart required.
+  - First boot falls back to `DATABASE_URL` env var if config file doesn't exist yet.
+  - Emergency "Reset to env var" button in admin UI as a recovery escape hatch.
+- [x] **Flash Announcements**: Push notifications for active couriers.
 
 ---
 
@@ -53,9 +56,6 @@ Focus: Core stability, smooth animations, and essential fleet management.
 - **Image Storage Overhaul**: Move `housePictureUrl` and `proofOfDeliveryUrl` to a separate `images` table (polymorphic FK via `entity_type` + `entity_id`).
   - Customers support **multiple house images** (gallery view, reordering, set primary).
 - **S3/CDN Integration**: Offload image hosting from local filesystem to cloud storage.
-- **Hot-Reloadable Database Connection**: Replace static `db` singleton with a connection pool manager that reads credentials from a gitignored JSON config file (`data/db-config.json`). Changing DB settings via admin UI writes to the file and triggers live pool reconnect — no server restart required.
-  - First boot falls back to `DATABASE_URL` env var if config file doesn't exist yet.
-  - Emergency "Reset to env var" button in admin UI as a recovery escape hatch.
 
 ### 📈 Scaling & Advanced Features
 - **Route Optimization AI**: Auto-generating the most efficient delivery sequence.

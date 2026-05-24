@@ -3,8 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
-const PAGE_SIZE = 5;
-
 type Customer = { id: string; name: string; address: string };
 
 export default function ClusterCustomerList({
@@ -17,13 +15,15 @@ export default function ClusterCustomerList({
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [total, setTotal] = useState(initialTotal);
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(5);
+  const [jumpInput, setJumpInput] = useState("");
   const [loading, setLoading] = useState(true);
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const totalPages = Math.ceil(total / pageSize);
 
   const fetchPage = async (p: number) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/clusters/${clusterId}?limit=${PAGE_SIZE}&offset=${p * PAGE_SIZE}`);
+      const res = await fetch(`/api/clusters/${clusterId}?limit=${pageSize}&offset=${p * pageSize}`);
       if (res.ok) {
         const data = await res.json();
         setCustomers(data.customers?.map((c: any) => c.customer) || []);
@@ -36,7 +36,7 @@ export default function ClusterCustomerList({
     }
   };
 
-  useEffect(() => { fetchPage(0); }, []);
+  useEffect(() => { setPage(0); fetchPage(0); }, [pageSize]);
 
   const goToPage = (p: number) => {
     setPage(p);
@@ -91,7 +91,25 @@ export default function ClusterCustomerList({
           >
             ← Previous
           </button>
-          <span className="text-[13px] font-bold text-secondary">{page + 1} / {totalPages}</span>
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              min={1}
+              max={totalPages}
+              value={jumpInput}
+              onChange={e => setJumpInput(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === "Enter") {
+                  const p = parseInt(e.currentTarget.value);
+                  if (!isNaN(p) && p >= 1 && p <= totalPages) { goToPage(p - 1); setJumpInput(""); }
+                }
+              }}
+              onBlur={() => setJumpInput("")}
+              className="w-10 text-center text-[13px] font-bold text-secondary bg-transparent border border-transparent focus:border-purple-500 focus:bg-card rounded-lg px-1 py-0.5 outline-none"
+              placeholder={String(page + 1)}
+            />
+            <span className="text-[13px] font-bold text-secondary">/ {totalPages}</span>
+          </div>
           <button
             onClick={() => goToPage(page + 1)}
             disabled={page >= totalPages - 1}
@@ -99,6 +117,15 @@ export default function ClusterCustomerList({
           >
             Next →
           </button>
+          <select
+            value={pageSize}
+            onChange={e => { setPageSize(Number(e.target.value)); setPage(0); setJumpInput(""); }}
+            className="ml-1 rounded-xl bg-surface-hover px-2 py-1.5 text-[11px] font-bold text-primary border border-card-border outline-none cursor-pointer active:scale-90 transition-all"
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={50}>50</option>
+          </select>
         </div>
       )}
     </div>

@@ -11,7 +11,6 @@ import { useToast } from "@/components/ToastProvider";
 import { useConfirmation } from "@/components/ConfirmationProvider";
 import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
 
-const PAGE_SIZE = 5;
 const pageCache = new Map<string, { customers: any[]; hasMore: boolean; ts: number }>();
 const PAGE_CACHE_TTL = 60000;
 
@@ -26,6 +25,8 @@ function CustomersListContent() {
   const [allCustomers, setAllCustomers] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(5);
+  const [jumpInput, setJumpInput] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState("");
   
@@ -37,7 +38,7 @@ function CustomersListContent() {
   const isSuperAdmin = (session?.user as any)?.role === "superadmin";
 
   const fetchCustomers = async (q: string, p: number) => {
-    const cacheKey = `${q || "__all__"}:${p}`;
+    const cacheKey = `${q || "__all__"}:${p}:${pageSize}`;
     const cached = pageCache.get(cacheKey);
     if (cached && Date.now() - cached.ts < PAGE_CACHE_TTL) {
       setAllCustomers(cached.customers);
@@ -60,7 +61,7 @@ function CustomersListContent() {
         setAllCustomers(list);
         setHasMore(false);
       } else {
-        const url = `/api/customers?limit=${PAGE_SIZE}&offset=${p * PAGE_SIZE}`;
+        const url = `/api/customers?limit=${pageSize}&offset=${p * pageSize}`;
         const res = await fetchWithTimeout(url, {}, 60000);
         if (!res.ok) throw new Error(`Server error (${res.status})`);
         const data = await res.json();
@@ -83,7 +84,7 @@ function CustomersListContent() {
 
   useEffect(() => {
     fetchCustomers(query, page);
-  }, [query, page]);
+  }, [query, page, pageSize]);
 
   const toggleSelection = (id: string) => {
     setSelectedIds((prev) =>
@@ -327,9 +328,21 @@ function CustomersListContent() {
                 >
                   ‹
                 </button>
-                <span className="px-4 text-[14px] font-bold text-secondary">
-                  Page {page + 1}
-                </span>
+                <input
+                  type="number"
+                  min={1}
+                  value={jumpInput}
+                  onChange={e => setJumpInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === "Enter") {
+                      const p = parseInt(e.currentTarget.value);
+                      if (!isNaN(p) && p >= 1) { setPage(p - 1); setJumpInput(""); }
+                    }
+                  }}
+                  onBlur={() => setJumpInput("")}
+                  className="w-14 text-center text-[14px] font-bold text-secondary bg-transparent border border-transparent focus:border-purple-500 focus:bg-card rounded-lg px-1 py-0.5 outline-none"
+                  placeholder={String(page + 1)}
+                />
                 <button
                   onClick={() => setPage(p => p + 1)}
                   disabled={!hasMore || isLoading}
@@ -337,6 +350,15 @@ function CustomersListContent() {
                 >
                   ›
                 </button>
+                <select
+                  value={pageSize}
+                  onChange={e => { setPageSize(Number(e.target.value)); setPage(0); setJumpInput(""); }}
+                  className="ml-2 rounded-xl bg-surface-hover px-2.5 py-1.5 text-[12px] font-bold text-primary border border-card-border outline-none cursor-pointer active:scale-90 transition-all"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={50}>50</option>
+                </select>
               </div>
             )}
           </div>

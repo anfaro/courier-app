@@ -1,4 +1,3 @@
-// app/api/admin/system/backup/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
@@ -15,36 +14,21 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const [usr, cust, del, cl, cc, lgs, errLgs, accLgs] = await Promise.all([
-      db.execute(sql`SELECT id, name, email, password, role, is_active, last_active_at, created_at, updated_at FROM users`),
+    const [cust, del, cl, cc] = await Promise.all([
       db.execute(sql`SELECT id, name, phone_number, address, latitude, longitude, house_picture_url, notes, created_at, updated_at FROM customers`),
       db.execute(sql`SELECT id, waybill_number, customer_id, status, cod_amount, receiver_name, proof_of_delivery_url, created_at, updated_at FROM deliveries`),
       db.execute(sql`SELECT * FROM clusters`),
       db.execute(sql`SELECT * FROM customer_clusters`),
-      db.execute(sql`SELECT * FROM logs ORDER BY created_at DESC LIMIT 10000`),
-      db.execute(sql`SELECT * FROM error_logs ORDER BY created_at DESC LIMIT 5000`),
-      db.execute(sql`SELECT * FROM access_logs ORDER BY created_at DESC LIMIT 5000`),
     ]);
 
     const backup = {
       version: 3,
       exportedAt: new Date().toISOString(),
-      meta: {
-        limits: {
-          logs: 10000,
-          errorLogs: 5000,
-          accessLogs: 5000,
-        },
-      },
       data: {
-        users: Array.isArray(usr) ? usr : [],
         customers: Array.isArray(cust) ? cust : [],
         deliveries: Array.isArray(del) ? del : [],
         clusters: Array.isArray(cl) ? cl : [],
         customerClusters: Array.isArray(cc) ? cc : [],
-        logs: Array.isArray(lgs) ? lgs : [],
-        errorLogs: Array.isArray(errLgs) ? errLgs : [],
-        accessLogs: Array.isArray(accLgs) ? accLgs : [],
       },
     };
 
@@ -65,6 +49,151 @@ export async function GET(req: NextRequest) {
   }
 }
 
+function toDate(v: any): Date {
+  if (v == null) return new Date();
+  if (v instanceof Date) return v;
+  if (typeof v === "string" || typeof v === "number") return new Date(v);
+  return new Date();
+}
+
+const CHUNK = 5;
+const CHUNK_DELAY = 300;
+
+async function sleep(ms: number) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+async function retryInsert<T>(table: any, values: T[]): Promise<void> {
+  let lastErr: any;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await db.insert(table).values(values).onConflictDoNothing();
+      return;
+    } catch (err: any) {
+      lastErr = err;
+      if (attempt < 2) {
+        await sleep(1000 * Math.pow(3, attempt));
+      }
+    }
+  }
+  throw lastErr;
+}
+
+async function restoreTable(table: string, rows: any[]): Promise<number> {
+  if (!Array.isArray(rows) || rows.length === 0) return 0;
+  let count = 0;
+
+  async function batchInsert<T>(table: any, values: T[]) {
+    for (let i = 0; i < values.length; i += CHUNK) {
+      await retryInsert(table, values.slice(i, i + CHUNK));
+      await sleep(CHUNK_DELAY);
+    }
+  }
+
+  switch (table) {
+    case "users": {
+      await db.insert(users).values(rows.map((u: any) => ({
+        id: u.id || generateId(), name: u.name, email: u.email, password: u.password,
+        role: u.role || "courier",
+        isActive: u.is_active ?? u.isActive ?? false,
+        lastActiveAt: toDate(u.last_active_at ?? u.lastActiveAt ?? null),
+        createdAt: toDate(u.created_at ?? u.createdAt),
+        updatedAt: toDate(u.updated_at ?? u.updatedAt),
+      }))).onConflictDoNothing();
+      count = rows.length;
+      break;
+    }
+    case "clusters": {
+      await batchInsert(clusters, rows.map((c: any) => ({
+        id: c.id || generateId(), name: c.name, notes: c.notes,
+        createdAt: toDate(c.created_at ?? c.createdAt),
+        updatedAt: toDate(c.updated_at ?? c.updatedAt),
+      })));
+      count = rows.length;
+      break;
+    }
+    case "customers": {
+      await batchInsert(customers, rows.map((c: any) => ({
+        id: c.id || generateId(), name: c.name,
+        phoneNumber: c.phoneNumber ?? c.phone_number,
+        address: c.address,
+        latitude: c.latitude, longitude: c.longitude,
+        housePictureUrl: c.housePictureUrl ?? c.house_picture_url,
+        notes: c.notes,
+        createdAt: toDate(c.created_at ?? c.createdAt),
+        updatedAt: toDate(c.updated_at ?? c.updatedAt),
+      })));
+      count = rows.length;
+      break;
+    }
+    case "deliveries": {
+      await batchInsert(deliveries, rows.map((d: any) => ({
+        id: d.id || generateId(),
+        waybillNumber: d.waybillNumber ?? d.waybill_number,
+        customerId: d.customerId ?? d.customer_id,
+        status: d.status || "Pending",
+        codAmount: d.codAmount ?? d.cod_amount ?? "0",
+        receiverName: d.receiverName ?? d.receiver_name,
+        proofOfDeliveryUrl: d.proofOfDeliveryUrl ?? d.proof_of_delivery_url,
+        createdAt: toDate(d.created_at ?? d.createdAt),
+        updatedAt: toDate(d.updated_at ?? d.updatedAt),
+      })));
+      count = rows.length;
+      break;
+    }
+    case "customerClusters": {
+      await batchInsert(customerClusters, rows.map((cc: any) => ({
+        customerId: cc.customerId || cc.customer_id,
+        clusterId: cc.clusterId || cc.cluster_id,
+      })));
+      count = rows.length;
+      break;
+    }
+    case "logs": {
+      await batchInsert(logs, rows.map((l: any) => ({
+        id: l.id || generateId(),
+        userId: l.userId ?? l.user_id,
+        userName: l.userName ?? l.user_name,
+        action: l.action,
+        details: l.details,
+        targetId: l.targetId ?? l.target_id,
+        createdAt: toDate(l.created_at ?? l.createdAt),
+      })));
+      count = rows.length;
+      break;
+    }
+    case "errorLogs": {
+      await batchInsert(errorLogs, rows.map((e: any) => ({
+        id: e.id || generateId(),
+        userId: e.userId ?? e.user_id,
+        userName: e.userName ?? e.user_name,
+        errorName: e.errorName ?? e.error_name,
+        errorMessage: e.errorMessage ?? e.error_message,
+        stackTrace: e.stackTrace ?? e.stack_trace,
+        pathname: e.pathname,
+        createdAt: toDate(e.created_at ?? e.createdAt),
+      })));
+      count = rows.length;
+      break;
+    }
+    case "accessLogs": {
+      await batchInsert(accessLogs, rows.map((a: any) => ({
+        id: a.id || generateId(),
+        userId: a.userId ?? a.user_id,
+        userName: a.userName ?? a.user_name,
+        pathname: a.pathname,
+        method: a.method,
+        ipAddress: a.ipAddress ?? a.ip_address,
+        userAgent: a.userAgent ?? a.user_agent,
+        createdAt: toDate(a.created_at ?? a.createdAt),
+      })));
+      count = rows.length;
+      break;
+    }
+  }
+  return count;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
@@ -73,95 +202,41 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
+    let totalRestored = 0;
+
+    // Single-table mode: { table: "customers", rows: [...] }
+    if (body.table && Array.isArray(body.rows)) {
+      totalRestored = await restoreTable(body.table, body.rows);
+      return NextResponse.json({
+        message: `Restored ${totalRestored} records in ${body.table}.`,
+        table: body.table,
+        restored: totalRestored,
+      });
+    }
+
+    // Full backup mode: { data: { users: [...], ... } }
     if (!body?.data) {
       return NextResponse.json({ error: "Invalid backup file" }, { status: 400 });
     }
 
     const { users: usrData, customers: custData, deliveries: delData, clusters: clData, customerClusters: ccData, logs: logsData, errorLogs: errData, accessLogs: accData } = body.data;
-    let restored = 0;
 
-    // Users
-    if (Array.isArray(usrData) && usrData.length > 0) {
-      for (const u of usrData) {
-        const id = u.id || generateId();
-        await db.execute(sql`INSERT INTO users (id, name, email, password, role, is_active, last_active_at, created_at, updated_at) VALUES (${id}, ${u.name}, ${u.email}, ${u.password}, ${u.role || "courier"}, ${u.is_active ?? false}, ${u.last_active_at ?? u.lastActiveAt ?? null}, ${u.created_at ?? u.createdAt ?? new Date()}, ${u.updated_at ?? u.updatedAt ?? new Date()}) ON CONFLICT (id) DO NOTHING`);
-      }
-      restored += usrData.length;
-    }
-
-    // Clusters
-    if (Array.isArray(clData) && clData.length > 0) {
-      await db.insert(clusters).values(clData.map((c: any) => ({
-        id: c.id || generateId(), name: c.name, notes: c.notes,
-        createdAt: c.created_at ?? c.createdAt ?? new Date(),
-        updatedAt: c.updated_at ?? c.updatedAt ?? new Date(),
-      }))).onConflictDoNothing();
-      restored += clData.length;
-    }
-
-    // Customers
-    if (Array.isArray(custData) && custData.length > 0) {
-      await db.insert(customers).values(custData.map((c: any) => ({
-        id: c.id || generateId(), name: c.name, phoneNumber: c.phoneNumber, address: c.address,
-        latitude: c.latitude, longitude: c.longitude, housePictureUrl: c.housePictureUrl, notes: c.notes,
-        createdAt: c.created_at ?? c.createdAt ?? new Date(),
-        updatedAt: c.updated_at ?? c.updatedAt ?? new Date(),
-      }))).onConflictDoNothing();
-      restored += custData.length;
-    }
-
-    // Customer-cluster relations
-    if (Array.isArray(ccData) && ccData.length > 0) {
-      await db.insert(customerClusters).values(ccData.map((cc: any) => ({
-        customerId: cc.customerId || cc.customer_id,
-        clusterId: cc.clusterId || cc.cluster_id,
-      }))).onConflictDoNothing();
-      restored += ccData.length;
-    }
-
-    // Deliveries
-    if (Array.isArray(delData) && delData.length > 0) {
-      await db.insert(deliveries).values(delData.map((d: any) => ({
-        id: d.id || generateId(), waybillNumber: d.waybillNumber, customerId: d.customerId,
-        status: d.status || "Pending", codAmount: d.codAmount || "0", receiverName: d.receiverName,
-        proofOfDeliveryUrl: d.proofOfDeliveryUrl,
-        createdAt: d.created_at ?? d.createdAt ?? new Date(),
-        updatedAt: d.updated_at ?? d.updatedAt ?? new Date(),
-      }))).onConflictDoNothing();
-      restored += delData.length;
-    }
-
-    // Logs
-    if (Array.isArray(logsData) && logsData.length > 0) {
-      for (const l of logsData) {
-        await db.execute(sql`INSERT INTO logs (id, user_id, user_name, action, details, target_id, created_at) VALUES (${l.id || generateId()}, ${l.userId ?? l.user_id}, ${l.userName ?? l.user_name}, ${l.action}, ${l.details}, ${l.targetId ?? l.target_id}, ${l.created_at ?? l.createdAt ?? new Date()}) ON CONFLICT (id) DO NOTHING`);
-      }
-      restored += logsData.length;
-    }
-
-    // Error logs
-    if (Array.isArray(errData) && errData.length > 0) {
-      for (const e of errData) {
-        await db.execute(sql`INSERT INTO error_logs (id, user_id, user_name, error_name, error_message, stack_trace, pathname, created_at) VALUES (${e.id || generateId()}, ${e.userId ?? e.user_id}, ${e.userName ?? e.user_name}, ${e.errorName ?? e.error_name}, ${e.errorMessage ?? e.error_message}, ${e.stackTrace ?? e.stack_trace}, ${e.pathname}, ${e.created_at ?? e.createdAt ?? new Date()}) ON CONFLICT (id) DO NOTHING`);
-      }
-      restored += errData.length;
-    }
-
-    // Access logs
-    if (Array.isArray(accData) && accData.length > 0) {
-      for (const a of accData) {
-        await db.execute(sql`INSERT INTO access_logs (id, user_id, user_name, pathname, method, ip_address, user_agent, created_at) VALUES (${a.id || generateId()}, ${a.userId ?? a.user_id}, ${a.userName ?? a.user_name}, ${a.pathname}, ${a.method}, ${a.ipAddress ?? a.ip_address}, ${a.userAgent ?? a.user_agent}, ${a.created_at ?? a.createdAt ?? new Date()}) ON CONFLICT (id) DO NOTHING`);
-      }
-      restored += accData.length;
-    }
+    totalRestored += await restoreTable("users", usrData);
+    totalRestored += await restoreTable("clusters", clData);
+    totalRestored += await restoreTable("customers", custData);
+    totalRestored += await restoreTable("customerClusters", ccData);
+    totalRestored += await restoreTable("deliveries", delData);
+    totalRestored += await restoreTable("logs", logsData);
+    totalRestored += await restoreTable("errorLogs", errData);
+    totalRestored += await restoreTable("accessLogs", accData);
 
     await logActivity({
       userId: token.id as string, userName: token.name as string,
       action: "RESTORE_EXECUTED",
-      details: `Restored ${restored} records from backup.`,
+      details: `Restored ${totalRestored} records from backup.`,
     });
 
-    return NextResponse.json({ message: `Restored ${restored} records.` });
+    return NextResponse.json({ message: `Restored ${totalRestored} records.` });
   } catch (error: any) {
     await logError({ errorName: "RestoreError", errorMessage: error.message });
     return NextResponse.json({ error: error.message || "Restore failed" }, { status: 500 });

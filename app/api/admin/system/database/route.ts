@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
-import { count } from "drizzle-orm";
+import { count, sql } from "drizzle-orm";
 import { customers, deliveries, clusters, users, logs, errorLogs, accessLogs } from "@/lib/schema";
 
 async function safeCount(table: any): Promise<number> {

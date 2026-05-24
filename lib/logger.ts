@@ -19,7 +19,9 @@ export type LogAction =
   | "BULK_DELIVERY_SAVE"
   | "CLUSTER_CREATED"
   | "CLUSTER_UPDATED"
-  | "CLUSTER_DELETED";
+  | "CLUSTER_DELETED"
+  | "RESTORE_EXECUTED"
+  | "BACKUP_DOWNLOADED";
 
 export async function logActivity({
   userId,

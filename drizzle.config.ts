@@ -16,6 +16,7 @@ export default defineConfig({
     host: process.env.HOST as string,
     user: process.env.USER,
     password: process.env.PASSWORD,
+    ssl: "require",
   },
   verbose: true,
   strict: true,

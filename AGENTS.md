@@ -258,38 +258,93 @@ npm run lint
 
 > **Clear this section before committing.** Log of every change made during the current session, for reference when writing commit messages.
 
-| # | File(s) | Description |
-|---|---|---|
-| 1 | `AGENTS.md` | Added session-memory preamble + Session Change Log table for tracking changes across sessions |
-| 2 | (analysis) | Investigated FK violation on `access_logs.user_id` — stale JWT after user deletion/DB reset causes insert with non-existent userId |
-| 3 | `lib/logger.ts` | Made `logAccess`, `logActivity`, `logError` resilient to FK violations — retry without `userId` on PG error code 23503 |
-| 4 | `app/customers/[id]/edit/page.tsx` | Replaced raw `<input type="file">` with `ImageInput` component for House Picture, matching the UI in customer new page |
-| 5 | `app/customers/[id]/edit/page.tsx` | Fixed `onImageChange is not a function` error — added missing `onImageChange` prop to `<ImageInput>` |
-| 6 | `components/ImageInput.tsx` | Fixed camera button opening gallery instead of camera — replaced hidden input with dynamically-created element setting `capture` as DOM property |
-| 7 | `app/api/admin/system/backup/route.ts`, `components/DatabaseAdmin.tsx` | Fixed backup downloading as `.json` instead of `.json.gz` — removed `Content-Encoding: gzip` (browser was decompressing transparently), changed `Content-Type` to `application/gzip`, renamed file to `.json.gz` |
-| 8 | `components/DatabaseAdmin.tsx` | Replaced indeterminate progress bar with determinate real progress tracking — reads response as stream via `getReader()`, calculates percentage from `Content-Length`, shows % text + spring-animated bar |
-| 9 | `app/admin/page.tsx` | Switched admin page from Pattern 2 (inner scroll container) to Pattern 1 (body-level scroll) so BottomNav auto-hide works via `window.scrollY` |
-| 10 | `lib/logger.ts` | Added `pruneAccessLogs()` — auto-deletes oldest records keeping max 100, runs after every `logAccess` insert |
-| 11 | `app/api/customers/route.ts`, `app/clusters/new/page.tsx`, `app/clusters/[id]/edit/page.tsx` | Switched from client-side to server-side pagination — API now returns `total` count; pages fetch only the current page's customers (limit 5, offset by page), maintaining selected customer details in a separate `selectedCustomersData` record |
-| 12 | `app/clusters/new/page.tsx`, `app/clusters/[id]/edit/page.tsx` | Fixed duplicate `useEffect` race condition (removed redundant `fetchPage(0)` effect), added `fetchingCustomers` state + animated hourglass loading overlay over customer list |
-| 13 | `app/api/customers/route.ts` | Fixed `db.execute` result access — postgres-js driver returns a plain array (not `{rows}`), so `totalResult.rows?.[0]?.count` was always undefined. Changed to `totalResult[0]?.count` + aliased query as `AS count` |
-| 14 | `app/clusters/new/page.tsx`, `app/clusters/[id]/edit/page.tsx` | Fixed loading overlay bleed (added `overflow-hidden` + matching `rounded` to parent container with `p-2` to prevent border clipping) and made selected customers container scrollable (`max-h-48 overflow-y-auto`) |
-| 15 | `app/api/clusters/route.ts`, `app/clusters/new/page.tsx` | Added `notes` field to new cluster page — form input, POST payload, and API insert |
-| 16 | `app/clusters/[id]/page.tsx` | Polished cluster detail page — removed hardcoded gray/blue colors, replaced with CSS variable theme + purple accents to match MD3 design language |
-| 17 | `app/api/clusters/route.ts`, `app/clusters/page.tsx` | Enhanced cluster list — API now returns `notes` field; list cards show notes preview (first line, truncated) as secondary text |
-| 18 | `app/api/customers/route.ts` | Optimized list query with explicit `columns` selection to exclude unused fields (latitude, longitude, notes, timestamps) — reduces wire payload |
-| 19 | `app/error.tsx` | Redesigned error page — added collapsible details section showing full error (name, message, digest, stack trace) with toggle button |
-| 20 | `app/clusters/[id]/page.tsx` | Added server-side pagination (5 per page) via search params + simplified customer rows to name & address only (removed avatar/house picture) |
-| 21 | `app/clusters/[id]/page.tsx` | Redesigned cluster detail layout — added back link, hero card with icon + stats, inline notes card with purple accent, customer count badge |
-| 22 | `app/clusters/[id]/page.tsx` | Changed edit button from small round icon to `btn-primary` matching the Add button style |
-| 23 | `app/clusters/new/page.tsx`, `app/clusters/[id]/edit/page.tsx` | Updated loading overlay to match clusters list style — `z-20`, `bg-card/60`, spinning hourglass in `h-12 w-12 rounded-full` container, no text |
-| 24 | `app/clusters/new/page.tsx`, `app/clusters/[id]/edit/page.tsx` | Added `setFetchingCustomers(true)` to prev/next click handlers so overlay shows immediately on button press, not after useEffect fires |
-| 25 | `ROADMAP.md` | Added "Data Architecture & Storage" section to v2.0 — image storage overhaul with polymorphic `images` table, multiple house images per customer |
-| 26 | `app/api/clusters/[id]/route.ts` | Added `?limit=X&offset=Y` query param support to GET endpoint — returns paginated customers with `total` count |
-| 27 | `app/clusters/[id]/ClusterCustomerList.tsx` | New client component — fetches paginated customers from API, shows loading overlay on prev/next navigation |
-| 28 | `app/clusters/[id]/page.tsx` | Converted customer list from server-side to client-side pagination — server only fetches cluster metadata + total count, delegates to `ClusterCustomerList` |
-| 29 | `components/SystemHealth.tsx` | Added 30s polling to system health — stats and ping ms now update live |
-| 30 | `components/AuditTrailSearch.tsx` | Added 30s auto-refresh on first page with no filters |
-| 31 | `app/error.tsx` | Added error logging on mount — POSTs error details to `/api/admin/system/logs/record-error` so errors appear in audit trail |
-| 32 | `components/AuditTrailSearch.tsx` | Redesigned activity log tab — action-type icons in colored badges, human-readable labels, relative timestamps with tooltip, line-clamped details |
-| 33 | `components/AuditTrailSearch.tsx` | Redesigned access log tab for mobile — stacked card layout on small screens (timestamp, method badge, path, user, IP), keeps grid on larger screens; color-coded method badges |
+*(Empty — last cleared after commit `8a61e19`)*
+
+## 2026-05-24
+
+### Added: Hot-reloadable database connection
+- `lib/db-manager.ts` (new): Connection pool manager that reads credentials from `data/db-config.json` (gitignored). `initializeDb()`, `getDbInstance()`, `updateDbConfig()`, `resetToEnvVar()`, `getDbStatus()`. `updateDbConfig()` writes config file, ends old pool, creates new connection — no server restart needed. Falls back to `DATABASE_URL` env var if config file doesn't exist.
+- `lib/db.ts`: Refactored to use a Proxy wrapping `db-manager` functions — `db` is now a Proxy that always delegates to the current `getDbInstance()`, so all imports of `db` automatically use the hot-reloaded connection. Exports `updateDbConfig`, `resetToEnvVar`, `getDbStatus`.
+- `app/api/admin/system/database/config/route.ts` (new): GET returns connection status (`connected`, `usingConfigFile`, `source`, `host`, `database`, `user`, `hasPassword`). POST accepts `{ host, port, database, user, password }` or `{ databaseUrl }` — writes config and hot-reloads. DELETE deletes config file, resets to `DATABASE_URL` env var, hot-reloads.
+- `components/DatabaseSettings.tsx`: Rewired to use new `/api/admin/system/database/config` endpoint. Added live status indicator (green/red dot, host/db info), "via db-config.json" badge, "Reset to env var" button with confirmation dialog. Form validation for required fields. Hot-reload messaging ("Saved & Hot-Reloaded").
+- `drizzle.config.ts`: Added `ssl: "require"` to connection config.
+- `.gitignore`: Added `data/db-config.json`.
+- `ROADMAP.md`: Moved "Hot-Reloadable Database Connection" from v2.0 to current milestone (v0.2.x), marked existing items (Cluster Density Map, Zone Reassignment, Fleet Tracking, POD Quality Control, Waybill Timeline, Failed Delivery Queue, Granular RBAC, Performance Analytics, Maintenance Mode, Dynamic App Config, Flash Announcements) as completed.
+
+### Added: Page size selector + jump-to-page input across paginated lists
+- `components/AuditTrailSearch.tsx`: Added `<select>` with options 5/10/25/50 and jump-to-page input. `pageSize` now state-driven (was const). Resets to page 0 on size change.
+- `app/customers/page.tsx`: Added page size selector (5/10/50) + jump input. Cache key includes pageSize to avoid stale results.
+- `app/clusters/page.tsx`: Added page size selector (5/10/50) + jump input. Cache key includes pageSize.
+- `app/clusters/[id]/ClusterCustomerList.tsx`: Added page size selector (5/10/50) + jump input. Resets to page 0 and re-fetches on size change.
+- `app/clusters/new/page.tsx`: Added page size selector (5/10/50) + jump input. `useEffect` depends on `[page, pageSize]`.
+- `app/clusters/[id]/edit/page.tsx`: Added page size selector (5/10/50) + jump input. `useEffect` depends on `[page, pageSize]`.
+
+### Changed: BottomNav from floating pill to attached bar with glassmorphism
+- **Root cause**: Floating pill nav at `bottom-6` with `rounded-[32px]` and constrained `max-w-[440px]`.
+- **Change**: Converted to full-width attached bar at `bottom-0` with `rounded-t-[28px]`, solid `bg-card` background, `border-t` top edge, and upward shadow `shadow-[0_-4px_20px_rgba(0,0,0,0.06)]`.
+- **Re-added**: Glassmorphism via `bg-card/80 dark:bg-slate-900/80 backdrop-blur-xl` for the frosted glass effect.
+- **Height**: Reduced from `h-[76px]` to `h-[72px]`.
+- **Animation**: Removed `scale` from enter/exit animation (only y translation + opacity).
+- **Imports**: Removed unused `useTheme` import.
+
+### Changed: Backup endpoint — user table excluded, restoreTable() refactored
+- `app/api/admin/system/backup/route.ts`: GET no longer fetches `users`, `logs`, `errorLogs`, `accessLogs` tables. Removed `meta.limits` from backup structure. POST fully refactored — all restore paths go through `restoreTable(table, rows)` switch with `batchInsert()` (chunks of 20, `db.insert().values().onConflictDoNothing()`). Supports both full backup mode (`{ data: {...} }`) and per-table mode (`{ table, rows }`). Added `toDate()` helper.
+
+### Added: Logger action types for backup/restore
+- `lib/logger.ts`: Added `"RESTORE_EXECUTED"` and `"BACKUP_DOWNLOADED"` to `LogAction` type.
+
+### Fixed: Free-tier DB restore still crashing (chunk size, retry, ssl, live progress)
+- `app/api/admin/system/backup/route.ts`: Reduced chunk size from 20→5 rows per INSERT. Added 300ms delay between chunks. Added `retryInsert()` with exponential backoff (1s, 3s) — retries each chunk up to 3 times instead of throwing on first transient failure.
+- `components/DatabaseAdmin.tsx`: Moved chunking from server to client — sends 5-row chunks one at a time via per-chunk POST requests. Live terminal modal now shows per-chunk progress (e.g. `chunk 3/20 (rows 11-15) ✓ 5 rows`), retry attempts with backoff countdowns, and inter-chunk delay messages. 300ms delay between chunks, 1500ms between tables. Progress bar updates after every chunk.
+- `lib/db-manager.ts`: Added `ssl: "require"` to postgres client for Supabase/Aiven compatibility. Reduced pool `max` from 3→2.
+
+### Fixed: Modal backdrop not covering BottomNav (absolute → fixed)
+- `components/DatabaseAdmin.tsx`: Changed wipe, backup, and restore modal backdrops from `absolute inset-0` to `fixed inset-0` so they always anchor to the viewport regardless of parent stacking context, ensuring the dark overlay fully covers the BottomNav.
+
+### Changed: Database Admin and Connection Settings moved to dedicated pages
+- `app/admin/database/page.tsx` (new): Dedicated page for Database Administration (backup, restore, maintenance, import/export, wipe). Renders `<DatabaseAdmin />` with page-level padding.
+- `app/admin/database/settings/page.tsx` (new): Dedicated page for Database Connection Settings (hot-reloadable connection config, connection profiles). Renders `<DatabaseSettings />`.
+- `app/admin/page.tsx`: Removed inline `<DatabaseAdmin />` and `<DatabaseSettings />`, replaced with two nav cards under a "Database" heading linking to the new pages.
+- `components/DatabaseAdmin.tsx`: Removed redundant `px-4 sm:px-6 mb-8` wrapper padding and `h2` heading (page now provides these).
+- `components/DatabaseSettings.tsx`: Same cleanup — removed wrapper padding and `h2` from both loading and main render paths.
+
+### Added: Saved connection profiles
+- `lib/db-manager.ts`: Added `saveProfile()`, `deleteProfile()`, `applyProfile()` that persist named connection configs to `data/db-profiles.json`. `getDbStatus()` now returns `profiles` array.
+- `lib/db.ts`: Exports `saveProfile`, `deleteProfile`, `applyProfile`.
+- `app/api/admin/system/database/config/route.ts`: Extended POST with `saveToProfiles` (save without connecting), `applyProfile` (connect from saved profile), and `profileName` on save (save+connect+profile in one). DELETE accepts `{ name }` to delete a specific profile.
+- `components/DatabaseSettings.tsx`: Added "Saved Profiles" section showing cards with user@host/db info, each with Connect and Delete buttons. "Save as Profile" button opens an AnimatePresence modal to name and save the current form values. Profiles load on mount via GET response.
+
+## 2026-05-21
+
+### Fixed: Backup restore failing due to snake_case/camelCase mismatch
+- **Root cause**: `app/api/admin/system/backup/route.ts` backup GET uses raw SQL (`snake_case` columns), but restore POST used `camelCase` field access (e.g. `c.phoneNumber`) without fallback to `snake_case` (e.g. `c.phone_number`) for `customers` and `deliveries` tables → fields like `phone_number`, `waybill_number`, `customer_id`, `cod_amount`, `receiver_name`, `proof_of_delivery_url`, `house_picture_url` mapped to `undefined` and were silently dropped.
+- **Fix**: Extracted per-table restore logic into `restoreTable()` helper with full `snake_case` fallbacks (e.g. `c.phoneNumber ?? c.phone_number`). Also added `sql` import to `app/api/admin/system/database/route.ts` (was missing, would crash VACUUM/REINDEX).
+
+### Added: Per-table restore API support
+- `POST /api/admin/system/backup` now accepts `{ table: string, rows: array }` for single-table restore (backward compatible with full `{ data: {...} }` format).
+
+### New: Terminal-style restore modal
+- `components/DatabaseAdmin.tsx`: Uploading a backup `.json.gz` file now **auto-opens a modal** (no confirmation dialog first).
+- Modal mimics a bash terminal (Dracula-inspired colors, `#0d1117` dark bg, green/success, red/error, cyan/step text).
+- Shows step-by-step events: extracting gzip → parsing → per-table uploads with real progress bar.
+- Each table is sent as an individual API request (enables real per-table progress tracking).
+- Progress bar uses spring animation matching the codebase's MD3 style.
+
+### Fixed: `a.toISOString is not a function` on restore
+- **Root cause**: Backup file timestamps are stored as strings (e.g. `"2026-05-16 19:28:10.977"`), but Drizzle ORM's `db.insert().values()` expects `Date` objects and calls `.toISOString()` on them. Raw SQL paths (`db.execute`) handled strings fine.
+- **Fix**: Added `toDate()` helper that converts string/number timestamps to `Date` objects. Applied to all three `db.insert().values()` paths (clusters, customers, deliveries) in `restoreTable()`.
+
+### Changed: Backup excludes log tables
+- `GET /api/admin/system/backup` no longer exports `logs`, `errorLogs`, or `accessLogs` tables.
+
+### New: Terminal-style backup modal
+- `components/DatabaseAdmin.tsx`: Backup download button now **opens a terminal modal** instead of inline progress bar.
+- Shows step-by-step events: fetching from server → downloading with byte progress → saving file trigger.
+
+### Fixed: Aiven crash on restore (batch inserts + client delay)
+- **Root cause**: Row-by-row `db.execute(sql`INSERT ...`)` loops for `users`, `logs`, `errorLogs`, `accessLogs` created many individual transactions, exhausting Aiven's resources and triggering `57P02` postmaster crash.
+- **Fix**: Converted all row-by-row inserts to Drizzle `db.insert().values(array).onConflictDoNothing()` batch inserts. Added `batchInsert()` helper with chunks of 50. Added 500ms delay between per-table requests on the client side.
+
+### Fixed: `read ETIMEDOUT` on Aiven restore (reduced batch chunk size)
+- **Root cause**: Batch chunk size of 50 rows per INSERT produced SQL statements too large for Aiven's small instance to process within the socket timeout window → `read ETIMEDOUT`.
+- **Fix**: Reduced chunk size from 50 to 20. Also bumped `connect_timeout` in `lib/db.ts` from 10s to 30s.

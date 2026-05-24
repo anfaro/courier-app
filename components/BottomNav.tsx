@@ -99,15 +99,15 @@ export default function BottomNav() {
   const navItems = [...baseNavItems, roleSpecificItem, mapItem];
 
   return (
-    <div className="fixed bottom-6 left-0 right-0 z-[100] flex justify-center px-6 pb-safe pointer-events-none">
+    <div className="fixed bottom-0 left-0 right-0 z-[100] pb-safe pointer-events-none">
       <AnimatePresence>
         {(isVisible && !isModalOpen) && (
           <motion.nav 
-            initial={{ y: 100, opacity: 0, scale: 0.9 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: 100, opacity: 0, scale: 0.9 }}
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="pointer-events-auto flex h-[76px] w-full max-w-[440px] items-center justify-between rounded-[32px] bg-card/70 dark:bg-slate-900/70 px-2 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.15)] ring-1 ring-black/5 dark:ring-white/10 border border-white/20 dark:border-white/5 transition-colors"
+            className="pointer-events-auto flex h-[72px] w-full items-center justify-between rounded-t-[28px] bg-card/80 dark:bg-slate-900/80 backdrop-blur-xl px-2 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] border-t border-card-border/50 dark:border-slate-800 transition-colors"
           >
             {navItems.map((item) => {
               const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));

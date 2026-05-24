@@ -19,8 +19,9 @@ export default function NewClusterPage() {
   const [selectedCustomerIds, setSelectedCustomerIds] = useState<string[]>([]);
   const [selectedCustomersData, setSelectedCustomersData] = useState<Record<string, { name: string; address: string }>>({});
   const [page, setPage] = useState(0);
-  const PAGE_SIZE = 5;
-  const totalPages = Math.ceil(totalCustomers / PAGE_SIZE);
+  const [pageSize, setPageSize] = useState(5);
+  const [jumpInput, setJumpInput] = useState("");
+  const totalPages = Math.ceil(totalCustomers / pageSize);
   const [fetchingCustomers, setFetchingCustomers] = useState(true);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -29,7 +30,7 @@ export default function NewClusterPage() {
   const fetchPage = async (p: number) => {
     setFetchingCustomers(true);
     try {
-      const res = await fetch(`/api/customers?limit=${PAGE_SIZE}&offset=${p * PAGE_SIZE}`);
+      const res = await fetch(`/api/customers?limit=${pageSize}&offset=${p * pageSize}`);
       if (res.ok) {
         const data = await res.json();
         setCustomers(data.customers || []);
@@ -42,7 +43,7 @@ export default function NewClusterPage() {
     }
   };
 
-  useEffect(() => { fetchPage(page); }, [page]);
+  useEffect(() => { fetchPage(page); }, [page, pageSize]);
 
   const toggleCustomer = (id: string) => {
     setSelectedCustomerIds((prev) => {
@@ -190,7 +191,25 @@ export default function NewClusterPage() {
                         >
                           ← Previous
                         </button>
-                        <span className="text-[13px] font-bold text-secondary">{page + 1} / {totalPages}</span>
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            min={1}
+                            max={totalPages}
+                            value={jumpInput}
+                            onChange={e => setJumpInput(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === "Enter") {
+                                const p = parseInt(e.currentTarget.value);
+                                if (!isNaN(p) && p >= 1 && p <= totalPages) { setFetchingCustomers(true); setPage(p - 1); setJumpInput(""); }
+                              }
+                            }}
+                            onBlur={() => setJumpInput("")}
+                            className="w-10 text-center text-[13px] font-bold text-secondary bg-transparent border border-transparent focus:border-purple-500 focus:bg-card rounded-lg px-1 py-0.5 outline-none"
+                            placeholder={String(page + 1)}
+                          />
+                          <span className="text-[13px] font-bold text-secondary">/ {totalPages}</span>
+                        </div>
                         <button
                           type="button"
                           onClick={() => { setFetchingCustomers(true); setPage(p => Math.min(totalPages - 1, p + 1)); }}
@@ -199,6 +218,15 @@ export default function NewClusterPage() {
                         >
                           Next →
                         </button>
+                        <select
+                          value={pageSize}
+                          onChange={e => { setPageSize(Number(e.target.value)); setPage(0); setJumpInput(""); }}
+                          className="ml-1 rounded-xl bg-surface-hover px-2 py-1.5 text-[11px] font-bold text-primary border border-card-border outline-none cursor-pointer active:scale-90 transition-all"
+                        >
+                          <option value={5}>5</option>
+                          <option value={10}>10</option>
+                          <option value={50}>50</option>
+                        </select>
                       </div>
                     )}
                   </>

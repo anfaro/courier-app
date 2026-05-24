@@ -13,7 +13,8 @@ export default function AuditTrailSearch() {
   const [logs, setLogs] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(0);
-  const [pageSize] = useState(25);
+  const [jumpInput, setJumpInput] = useState("");
+  const [pageSize, setPageSize] = useState(25);
   const [isLoading, setIsLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [fromDate, setFromDate] = useState("");
@@ -192,8 +193,18 @@ export default function AuditTrailSearch() {
         {(page > 0 || hasMore) && (
           <div className="flex items-center justify-center gap-2 border-t border-card-border px-4 py-3">
             <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0 || isLoading} className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-hover text-primary font-bold transition-all active:scale-90 disabled:opacity-30 text-[15px]">‹</button>
-            <span className="px-3 text-[13px] font-bold text-secondary">Page {page + 1}</span>
+            <input type="number" min={1} value={jumpInput} onChange={e => setJumpInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { const p = parseInt(e.currentTarget.value); if (!isNaN(p) && p >= 1) { setPage(p - 1); setJumpInput(""); } } }} onBlur={() => setJumpInput("")} className="w-12 text-center text-[13px] font-bold text-secondary bg-transparent border border-transparent focus:border-purple-500 focus:bg-card rounded-lg px-1 py-0.5 outline-none" placeholder={String(page + 1)} />
             <button onClick={() => setPage(p => p + 1)} disabled={!hasMore || isLoading} className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-hover text-primary font-bold transition-all active:scale-90 disabled:opacity-30 text-[15px]">›</button>
+            <select
+              value={pageSize}
+              onChange={e => { setPageSize(Number(e.target.value)); setPage(0); setJumpInput(""); }}
+              className="ml-1 rounded-xl bg-surface-hover px-2 py-1.5 text-[11px] font-bold text-primary border border-card-border outline-none cursor-pointer active:scale-90 transition-all"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
           </div>
         )}
       </div>

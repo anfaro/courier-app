@@ -1,23 +1,19 @@
 // lib/db.ts
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
-import * as schema from "./schema";
+import { initializeDb, getDbInstance, updateDbConfig, resetToEnvVar, getDbStatus, saveProfile, deleteProfile, applyProfile } from "./db-manager";
 
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  throw new Error("DATABASE_URL is missing in environment variables");
-}
+await initializeDb();
 
-const client = postgres(connectionString, {
-  prepare: false,
-  max: 3,
-  idle_timeout: 300,
-  connect_timeout: 10,
-  max_lifetime: 3600,
-});
+const _db = getDbInstance();
 
-// Warm the connection as early as possible
-await client`SELECT 1`.catch(() => {});
+export const db = new Proxy(_db, {
+  get(target, prop: string | symbol) {
+    if (prop === "then") return undefined;
+    const value = (getDbInstance() as any)[prop as string];
+    if (typeof value === "function") {
+      return value.bind(getDbInstance());
+    }
+    return value;
+  },
+}) as typeof _db;
 
-export const db = drizzle(client, { schema });
-
+export { updateDbConfig, resetToEnvVar, getDbStatus, saveProfile, deleteProfile, applyProfile };
