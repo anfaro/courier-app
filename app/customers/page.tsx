@@ -262,8 +262,10 @@ function CustomersListContent() {
                           src={customer.housePictureUrl}
                           alt=""
                           loading="lazy"
+                          referrerPolicy="no-referrer"
                           className="relative h-14 w-14 rounded-[1rem] object-cover border border-card-border"
                           onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1'; }}
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                           style={{ opacity: 0 }}
                         />
                       )}

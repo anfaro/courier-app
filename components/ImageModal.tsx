@@ -13,6 +13,8 @@ export default function ImageModal({
   thumbnailClassName: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [thumbnailError, setThumbnailError] = useState(false);
+  const [modalError, setModalError] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -31,13 +33,21 @@ export default function ImageModal({
   return (
     <>
       {/* 1. The Thumbnail (What the user taps) */}
-      <img
-        src={src}
-        alt={alt}
-        onClick={() => setIsOpen(true)}
-        className={`cursor-pointer transition-transform duration-300 hover:scale-[1.03] active:scale-90 ${thumbnailClassName}`}
-        title="Tap to enlarge"
-      />
+      {!thumbnailError ? (
+        <img
+          src={src}
+          alt={alt}
+          referrerPolicy="no-referrer"
+          onClick={() => setIsOpen(true)}
+          onError={() => setThumbnailError(true)}
+          className={`cursor-pointer transition-transform duration-300 hover:scale-[1.03] active:scale-90 ${thumbnailClassName}`}
+          title="Tap to enlarge"
+        />
+      ) : (
+        <div className={`flex items-center justify-center bg-secondary/30 ${thumbnailClassName}`}>
+          <span className="text-3xl opacity-50">🖼️</span>
+        </div>
+      )}
 
       {/* 2. The Full-Screen Modal (What opens on tap) */}
       {isOpen && (
@@ -56,12 +66,21 @@ export default function ImageModal({
           </button>
 
           {/* The Expanding Image */}
-          <img
-            src={src}
-            alt={alt}
-            onClick={(e) => e.stopPropagation()}
-            className="max-h-full max-w-full scale-95 rounded-[2rem] object-contain opacity-0 animate-[scaleUp_0.3s_ease-out_forwards] shadow-2xl"
-          />
+          {!modalError ? (
+            <img
+              src={src}
+              alt={alt}
+              referrerPolicy="no-referrer"
+              onClick={(e) => e.stopPropagation()}
+              onError={() => setModalError(true)}
+              className="max-h-full max-w-full scale-95 rounded-[2rem] object-contain opacity-0 animate-[scaleUp_0.3s_ease-out_forwards] shadow-2xl"
+            />
+          ) : (
+            <div className="flex flex-col items-center gap-4 text-white">
+              <span className="text-6xl opacity-50">❌</span>
+              <p className="text-[13px] font-bold opacity-70">Image failed to load</p>
+            </div>
+          )}
 
           <style>{`
             @keyframes fadeIn {

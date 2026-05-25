@@ -8,15 +8,14 @@ export default function EditDeliveryForm({ delivery }: { delivery: any }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [podFile, setPodFile] = useState<File | null>(null);
-  const [existingPodUrl] = useState(delivery.proofOfDeliveryUrl || "");
+  const [isImageUploading, setIsImageUploading] = useState(false);
+  const [podUrl, setPodUrl] = useState(delivery.proofOfDeliveryUrl || "");
 
   const [formData, setFormData] = useState({
     waybillNumber: delivery.waybillNumber || "",
     receiverName: delivery.receiverName || "",
     codAmount: delivery.codAmount?.toString() || "0",
     status: delivery.status || "Pending",
-    proofOfDeliveryUrl: delivery.proofOfDeliveryUrl || "",
   });
 
   const statuses = ["Pending", "Delivered", "Failed", "Rescheduled"];
@@ -27,22 +26,10 @@ export default function EditDeliveryForm({ delivery }: { delivery: any }) {
     setError("");
 
     try {
-      let finalPodUrl = existingPodUrl;
-
-      if (podFile) {
-        const uploadFormData = new FormData();
-        uploadFormData.append("file", podFile);
-        uploadFormData.append("type", "delivery");
-        const uploadRes = await fetch("/api/upload", { method: "POST", body: uploadFormData });
-        if (!uploadRes.ok) throw new Error("Image upload failed.");
-        const uploadData = await uploadRes.json();
-        finalPodUrl = uploadData.url;
-      }
-
       const res = await fetch(`/api/deliveries/${delivery.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, proofOfDeliveryUrl: finalPodUrl }),
+        body: JSON.stringify({ ...formData, proofOfDeliveryUrl: podUrl }),
       });
 
       if (!res.ok) throw new Error("Failed to update delivery");
@@ -141,9 +128,9 @@ export default function EditDeliveryForm({ delivery }: { delivery: any }) {
       <div className="bg-gray-50 rounded-3xl p-4 border border-card-border">
         <ImageInput
           label="Proof of Delivery / Signature"
-          existingImageUrl={existingPodUrl}
-          onImageChange={(base64String) => setFormData({ ...formData, proofOfDeliveryUrl: base64String || "" })}
-          onFileChange={(file) => setPodFile(file)}
+          existingImageUrl={podUrl}
+          onImageChange={setPodUrl}
+          onUploadingChange={setIsImageUploading}
         />
       </div>
 
@@ -157,7 +144,7 @@ export default function EditDeliveryForm({ delivery }: { delivery: any }) {
         </button>
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || isImageUploading}
           className="flex-[2] rounded-full bg-blue-600 py-4 text-[14px] font-black text-white hover:bg-blue-700 active:scale-90 transition-all disabled:bg-blue-300 disabled:shadow-none"
         >
           {isLoading ? "Saving..." : "Save Changes"}

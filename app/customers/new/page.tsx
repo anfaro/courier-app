@@ -322,7 +322,7 @@ export default function NewCustomerPage() {
                     {bulkList.map((c, i) => (
                       <div key={i} className="flex items-center gap-4 rounded-[2rem] bg-card border border-card-border p-3 shadow-sm">
                         <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-surface-hover border border-card-border flex items-center justify-center">
-                          {c.housePictureUrl ? <img src={c.housePictureUrl} loading="lazy" className="h-full w-full object-cover" /> : <span className="text-xl">🏠</span>}
+                          {c.housePictureUrl ? <img src={c.housePictureUrl} loading="lazy" referrerPolicy="no-referrer" className="h-full w-full object-cover" /> : <span className="text-xl">🏠</span>}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-black text-primary truncate text-[15px] leading-tight">{c.name}</p>

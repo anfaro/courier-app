@@ -6,6 +6,14 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.iimg.live",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

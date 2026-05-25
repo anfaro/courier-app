@@ -89,6 +89,15 @@ const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
 **Password reset flow**: Forgot password → generates `crypto.randomBytes(32)` token with 1hr expiry → stores in `passwordResetTokens` → **returns token in API response for dev auto-redirect** (no email sending configured).
 
+# Required Environment Variables
+
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `NEXTAUTH_URL` | App base URL (e.g. `http://localhost:3000`) |
+| `NEXTAUTH_SECRET` | NextAuth JWT signing secret |
+| `IIMG_LIVE_API_KEY` | API key for iimg.live image hosting (get at https://docs.iimg.live) |
+
 # API Route Conventions
 
 All routes in `app/api/*/route.ts`. Follow this pattern:
@@ -258,93 +267,17 @@ npm run lint
 
 > **Clear this section before committing.** Log of every change made during the current session, for reference when writing commit messages.
 
-*(Empty — last cleared after commit `8a61e19`)*
-
-## 2026-05-24
-
-### Added: Hot-reloadable database connection
-- `lib/db-manager.ts` (new): Connection pool manager that reads credentials from `data/db-config.json` (gitignored). `initializeDb()`, `getDbInstance()`, `updateDbConfig()`, `resetToEnvVar()`, `getDbStatus()`. `updateDbConfig()` writes config file, ends old pool, creates new connection — no server restart needed. Falls back to `DATABASE_URL` env var if config file doesn't exist.
-- `lib/db.ts`: Refactored to use a Proxy wrapping `db-manager` functions — `db` is now a Proxy that always delegates to the current `getDbInstance()`, so all imports of `db` automatically use the hot-reloaded connection. Exports `updateDbConfig`, `resetToEnvVar`, `getDbStatus`.
-- `app/api/admin/system/database/config/route.ts` (new): GET returns connection status (`connected`, `usingConfigFile`, `source`, `host`, `database`, `user`, `hasPassword`). POST accepts `{ host, port, database, user, password }` or `{ databaseUrl }` — writes config and hot-reloads. DELETE deletes config file, resets to `DATABASE_URL` env var, hot-reloads.
-- `components/DatabaseSettings.tsx`: Rewired to use new `/api/admin/system/database/config` endpoint. Added live status indicator (green/red dot, host/db info), "via db-config.json" badge, "Reset to env var" button with confirmation dialog. Form validation for required fields. Hot-reload messaging ("Saved & Hot-Reloaded").
-- `drizzle.config.ts`: Added `ssl: "require"` to connection config.
-- `.gitignore`: Added `data/db-config.json`.
-- `ROADMAP.md`: Moved "Hot-Reloadable Database Connection" from v2.0 to current milestone (v0.2.x), marked existing items (Cluster Density Map, Zone Reassignment, Fleet Tracking, POD Quality Control, Waybill Timeline, Failed Delivery Queue, Granular RBAC, Performance Analytics, Maintenance Mode, Dynamic App Config, Flash Announcements) as completed.
-
-### Added: Page size selector + jump-to-page input across paginated lists
-- `components/AuditTrailSearch.tsx`: Added `<select>` with options 5/10/25/50 and jump-to-page input. `pageSize` now state-driven (was const). Resets to page 0 on size change.
-- `app/customers/page.tsx`: Added page size selector (5/10/50) + jump input. Cache key includes pageSize to avoid stale results.
-- `app/clusters/page.tsx`: Added page size selector (5/10/50) + jump input. Cache key includes pageSize.
-- `app/clusters/[id]/ClusterCustomerList.tsx`: Added page size selector (5/10/50) + jump input. Resets to page 0 and re-fetches on size change.
-- `app/clusters/new/page.tsx`: Added page size selector (5/10/50) + jump input. `useEffect` depends on `[page, pageSize]`.
-- `app/clusters/[id]/edit/page.tsx`: Added page size selector (5/10/50) + jump input. `useEffect` depends on `[page, pageSize]`.
-
-### Changed: BottomNav from floating pill to attached bar with glassmorphism
-- **Root cause**: Floating pill nav at `bottom-6` with `rounded-[32px]` and constrained `max-w-[440px]`.
-- **Change**: Converted to full-width attached bar at `bottom-0` with `rounded-t-[28px]`, solid `bg-card` background, `border-t` top edge, and upward shadow `shadow-[0_-4px_20px_rgba(0,0,0,0.06)]`.
-- **Re-added**: Glassmorphism via `bg-card/80 dark:bg-slate-900/80 backdrop-blur-xl` for the frosted glass effect.
-- **Height**: Reduced from `h-[76px]` to `h-[72px]`.
-- **Animation**: Removed `scale` from enter/exit animation (only y translation + opacity).
-- **Imports**: Removed unused `useTheme` import.
-
-### Changed: Backup endpoint — user table excluded, restoreTable() refactored
-- `app/api/admin/system/backup/route.ts`: GET no longer fetches `users`, `logs`, `errorLogs`, `accessLogs` tables. Removed `meta.limits` from backup structure. POST fully refactored — all restore paths go through `restoreTable(table, rows)` switch with `batchInsert()` (chunks of 20, `db.insert().values().onConflictDoNothing()`). Supports both full backup mode (`{ data: {...} }`) and per-table mode (`{ table, rows }`). Added `toDate()` helper.
-
-### Added: Logger action types for backup/restore
-- `lib/logger.ts`: Added `"RESTORE_EXECUTED"` and `"BACKUP_DOWNLOADED"` to `LogAction` type.
-
-### Fixed: Free-tier DB restore still crashing (chunk size, retry, ssl, live progress)
-- `app/api/admin/system/backup/route.ts`: Reduced chunk size from 20→5 rows per INSERT. Added 300ms delay between chunks. Added `retryInsert()` with exponential backoff (1s, 3s) — retries each chunk up to 3 times instead of throwing on first transient failure.
-- `components/DatabaseAdmin.tsx`: Moved chunking from server to client — sends 5-row chunks one at a time via per-chunk POST requests. Live terminal modal now shows per-chunk progress (e.g. `chunk 3/20 (rows 11-15) ✓ 5 rows`), retry attempts with backoff countdowns, and inter-chunk delay messages. 300ms delay between chunks, 1500ms between tables. Progress bar updates after every chunk.
-- `lib/db-manager.ts`: Added `ssl: "require"` to postgres client for Supabase/Aiven compatibility. Reduced pool `max` from 3→2.
-
-### Fixed: Modal backdrop not covering BottomNav (absolute → fixed)
-- `components/DatabaseAdmin.tsx`: Changed wipe, backup, and restore modal backdrops from `absolute inset-0` to `fixed inset-0` so they always anchor to the viewport regardless of parent stacking context, ensuring the dark overlay fully covers the BottomNav.
-
-### Changed: Database Admin and Connection Settings moved to dedicated pages
-- `app/admin/database/page.tsx` (new): Dedicated page for Database Administration (backup, restore, maintenance, import/export, wipe). Renders `<DatabaseAdmin />` with page-level padding.
-- `app/admin/database/settings/page.tsx` (new): Dedicated page for Database Connection Settings (hot-reloadable connection config, connection profiles). Renders `<DatabaseSettings />`.
-- `app/admin/page.tsx`: Removed inline `<DatabaseAdmin />` and `<DatabaseSettings />`, replaced with two nav cards under a "Database" heading linking to the new pages.
-- `components/DatabaseAdmin.tsx`: Removed redundant `px-4 sm:px-6 mb-8` wrapper padding and `h2` heading (page now provides these).
-- `components/DatabaseSettings.tsx`: Same cleanup — removed wrapper padding and `h2` from both loading and main render paths.
-
-### Added: Saved connection profiles
-- `lib/db-manager.ts`: Added `saveProfile()`, `deleteProfile()`, `applyProfile()` that persist named connection configs to `data/db-profiles.json`. `getDbStatus()` now returns `profiles` array.
-- `lib/db.ts`: Exports `saveProfile`, `deleteProfile`, `applyProfile`.
-- `app/api/admin/system/database/config/route.ts`: Extended POST with `saveToProfiles` (save without connecting), `applyProfile` (connect from saved profile), and `profileName` on save (save+connect+profile in one). DELETE accepts `{ name }` to delete a specific profile.
-- `components/DatabaseSettings.tsx`: Added "Saved Profiles" section showing cards with user@host/db info, each with Connect and Delete buttons. "Save as Profile" button opens an AnimatePresence modal to name and save the current form values. Profiles load on mount via GET response.
-
-## 2026-05-21
-
-### Fixed: Backup restore failing due to snake_case/camelCase mismatch
-- **Root cause**: `app/api/admin/system/backup/route.ts` backup GET uses raw SQL (`snake_case` columns), but restore POST used `camelCase` field access (e.g. `c.phoneNumber`) without fallback to `snake_case` (e.g. `c.phone_number`) for `customers` and `deliveries` tables → fields like `phone_number`, `waybill_number`, `customer_id`, `cod_amount`, `receiver_name`, `proof_of_delivery_url`, `house_picture_url` mapped to `undefined` and were silently dropped.
-- **Fix**: Extracted per-table restore logic into `restoreTable()` helper with full `snake_case` fallbacks (e.g. `c.phoneNumber ?? c.phone_number`). Also added `sql` import to `app/api/admin/system/database/route.ts` (was missing, would crash VACUUM/REINDEX).
-
-### Added: Per-table restore API support
-- `POST /api/admin/system/backup` now accepts `{ table: string, rows: array }` for single-table restore (backward compatible with full `{ data: {...} }` format).
-
-### New: Terminal-style restore modal
-- `components/DatabaseAdmin.tsx`: Uploading a backup `.json.gz` file now **auto-opens a modal** (no confirmation dialog first).
-- Modal mimics a bash terminal (Dracula-inspired colors, `#0d1117` dark bg, green/success, red/error, cyan/step text).
-- Shows step-by-step events: extracting gzip → parsing → per-table uploads with real progress bar.
-- Each table is sent as an individual API request (enables real per-table progress tracking).
-- Progress bar uses spring animation matching the codebase's MD3 style.
-
-### Fixed: `a.toISOString is not a function` on restore
-- **Root cause**: Backup file timestamps are stored as strings (e.g. `"2026-05-16 19:28:10.977"`), but Drizzle ORM's `db.insert().values()` expects `Date` objects and calls `.toISOString()` on them. Raw SQL paths (`db.execute`) handled strings fine.
-- **Fix**: Added `toDate()` helper that converts string/number timestamps to `Date` objects. Applied to all three `db.insert().values()` paths (clusters, customers, deliveries) in `restoreTable()`.
-
-### Changed: Backup excludes log tables
-- `GET /api/admin/system/backup` no longer exports `logs`, `errorLogs`, or `accessLogs` tables.
-
-### New: Terminal-style backup modal
-- `components/DatabaseAdmin.tsx`: Backup download button now **opens a terminal modal** instead of inline progress bar.
-- Shows step-by-step events: fetching from server → downloading with byte progress → saving file trigger.
-
-### Fixed: Aiven crash on restore (batch inserts + client delay)
-- **Root cause**: Row-by-row `db.execute(sql`INSERT ...`)` loops for `users`, `logs`, `errorLogs`, `accessLogs` created many individual transactions, exhausting Aiven's resources and triggering `57P02` postmaster crash.
-- **Fix**: Converted all row-by-row inserts to Drizzle `db.insert().values(array).onConflictDoNothing()` batch inserts. Added `batchInsert()` helper with chunks of 50. Added 500ms delay between per-table requests on the client side.
-
-### Fixed: `read ETIMEDOUT` on Aiven restore (reduced batch chunk size)
-- **Root cause**: Batch chunk size of 50 rows per INSERT produced SQL statements too large for Aiven's small instance to process within the socket timeout window → `read ETIMEDOUT`.
-- **Fix**: Reduced chunk size from 50 to 20. Also bumped `connect_timeout` in `lib/db.ts` from 10s to 30s.
+- `lib/images.ts` — created; `uploadToIimgLive()` utility for proxying image buffer to iimg.live API
+- `app/api/upload/route.ts` — rewritten; now forwards file buffer to iimg.live instead of storing base64. Removed `type` field requirement.
+- `components/ImageInput.tsx` — added WebP conversion (Canvas API, 80% quality); uploads to `/api/upload` internally; added `onUploadingChange` prop; removed `onFileChange` prop; shows spinner during upload
+- `app/customers/[id]/edit/page.tsx` — removed `imageFile` state + pre-submit upload block; added `isImageUploading` state; ImageInput now passes CDN URL directly; submit disabled during upload
+- `components/EditDeliveryForm.tsx` — removed `podFile`/`existingPodUrl` state + pre-submit upload block; added `podUrl` state; ImageInput now passes CDN URL directly; submit disabled during upload
+- `scripts/migrate-images.ts` — created; migration script to scan existing base64 data URLs in `customers.house_picture_url` and `deliveries.proof_of_delivery_url`, decode → upload to iimg.live → update columns with CDN URLs. Aggressive batching with 429 rate-limit retry (1h wait). Idempotent.
+- `.env.local` — added `IIMG_LIVE_API_KEY` placeholder
+- `AGENTS.md` — added `IIMG_LIVE_API_KEY` to env vars table
+- `ROADMAP.md` — updated v1.0.1 checklist; marked completed items
+- `package.json` — added `migrate:images` script; added `jimp`, `sharp`, `tsx` dev deps
+- `app/customers/page.tsx` — added `referrerPolicy="no-referrer"` + `onError` (hides broken image) to customer list `<img>`
+- `components/ImageModal.tsx` — added `referrerPolicy="no-referrer"` + error state (thumbnail + modal) with fallback UI on failure
+- `app/customers/new/page.tsx` — added `referrerPolicy="no-referrer"` to bulk preview `<img>`
+- `next.config.ts` — added `images.remotePatterns` for `images.iimg.live`

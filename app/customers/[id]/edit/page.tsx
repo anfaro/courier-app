@@ -19,7 +19,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
   const [mapsLink, setMapsLink] = useState("");
 
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isImageUploading, setIsImageUploading] = useState(false);
 
   const [availableClusters, setAvailableClusters] = useState<any[]>([]);
   const [selectedClusters, setSelectedClusters] = useState<string[]>([]);
@@ -139,17 +139,6 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
     setIsLoading(true);
 
     try {
-      let finalImageUrl = existingImageUrl;
-      if (imageFile) {
-        const formData = new FormData();
-        formData.append("file", imageFile);
-        formData.append("type", "house");
-        const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
-        if (!uploadRes.ok) throw new Error("Image upload failed.");
-        const uploadData = await uploadRes.json();
-        finalImageUrl = uploadData.url;
-      }
-
       const res = await fetch(`/api/customers/${customerId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -159,7 +148,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
           address,
           latitude: latitude.toString(),
           longitude: longitude.toString(),
-          housePictureUrl: finalImageUrl,
+          housePictureUrl: existingImageUrl,
           notes,
           clusterIds: selectedClusters
         }),
@@ -302,12 +291,12 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
               <ImageInput
                 label="House Picture"
                 existingImageUrl={existingImageUrl}
-                onImageChange={() => {}}
-                onFileChange={setImageFile}
+                onImageChange={setExistingImageUrl}
+                onUploadingChange={setIsImageUploading}
               />
 
               <div className="flex flex-wrap gap-4 pt-4">
-                <button type="submit" disabled={isLoading} className="flex-1 rounded-full bg-blue-600 py-4 text-[15px] font-bold text-white shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:bg-blue-400 flex items-center justify-center gap-2">
+                <button type="submit" disabled={isLoading || isImageUploading} className="flex-1 rounded-full bg-blue-600 py-4 text-[15px] font-bold text-white shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:bg-blue-400 flex items-center justify-center gap-2">
                   {isLoading ? <><div className="h-5 w-5 animate-spin rounded-full border-[2.5px] border-white border-t-transparent" /> Saving...</> : "Save Changes"}
                 </button>
                 <button type="button" onClick={() => router.back()} className="flex-1 rounded-full bg-surface-hover py-4 text-[15px] font-bold text-secondary active:scale-95 transition-all hover:bg-gray-200 dark:hover:bg-slate-700 border border-card-border">Cancel</button>

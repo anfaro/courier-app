@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { logServerAccess, logActivity, logError } from "@/lib/logger";
+import { uploadToIimgLive } from "@/lib/images";
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,33 +10,28 @@ export async function POST(req: NextRequest) {
 
     const formData = await req.formData();
     const file = formData.get("file") as File;
-    const type = formData.get("type") as string;
 
     if (!file) {
       return NextResponse.json({ message: "No file uploaded" }, { status: 400 });
     }
 
-    const allowedTypes = ["house", "delivery"];
-    if (!allowedTypes.includes(type)) {
-      return NextResponse.json({ message: "Invalid upload type" }, { status: 400 });
-    }
-
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const base64 = buffer.toString("base64");
-    const dataUrl = `data:${file.type};base64,${base64}`;
+    const filename = file.name.replace(/\.[^.]+$/, ".webp");
+
+    const url = await uploadToIimgLive(buffer, filename);
 
     if (token) {
       await logActivity({
         userId: token.id as string,
         userName: token.name as string,
         action: "IMAGE_UPLOADED",
-        details: `Uploaded ${type} image: ${file.name}`,
+        details: `Uploaded image to iimg.live: ${filename}`,
       });
     }
 
     return NextResponse.json(
-      { message: "File uploaded successfully", url: dataUrl },
+      { message: "File uploaded successfully", url },
       { status: 201 }
     );
   } catch (error) {

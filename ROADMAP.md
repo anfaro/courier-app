@@ -10,6 +10,18 @@ Focus: Core stability, smooth animations, and essential fleet management.
 
 ---
 
+## 🔧 v1.0.1 (Image Storage Overhaul)
+- [x] **WebP Conversion on Upload**: Images converted via Canvas API (`canvas.toBlob`) in `ImageInput.tsx` at 80% quality before upload.
+- [x] **Image Hosting — iimg.live**: Integrated `POST https://api.iimg.live/upload` via `lib/images.ts`. New uploads return CDN URL (`https://images.iimg.live/...`).
+- [x] **Upload Route Updated**: `/api/upload` now proxies to iimg.live instead of storing base64. Removed `type` field requirement.
+- [x] **ImageInput Refactored**: Handles WebP conversion + upload internally. Added `onUploadingChange` prop for submit button disabling. Removed `onFileChange` (no longer needed).
+- [x] **Edit Pages Simplified**: `[id]/edit/page.tsx` and `EditDeliveryForm.tsx` — pre-submit upload blocks removed; ImageInput handles upload and passes CDN URL directly.
+- [x] **Migration Script**: `scripts/migrate-images.ts` — scans existing base64 data URLs, decodes, uploads to iimg.live, updates columns with CDN URLs. Run via `npm run migrate:images`. Respects 50 uploads/hr rate limit (~72s delay between uploads). Idempotent (skips non-base64 URLs).
+- [ ] **Run Migration**: Execute `npm run migrate:images` to migrate existing base64 data to iimg.live CDN URLs.
+- [ ] **Cleanup**: Remove base64 data from DB columns once migration is verified.
+
+---
+
 ## 🏗️ Upcoming Features (v0.2.x - v0.9.x)
 
 ### 🗺️ Logistics & Zone Intelligence (Feature #2)
