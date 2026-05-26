@@ -25,6 +25,7 @@ export default function NewCustomerPage() {
   // --- SYSTEM STATE ---
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isImageUploading, setIsImageUploading] = useState(false);
 
   // --- TABS STATE ---
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single");
@@ -216,15 +217,15 @@ export default function NewCustomerPage() {
                 </div>
               </div>
 
-              <div><ImageInput label={t("delivery.items_ready")} onImageChange={setImageFile} /></div>
+              <div><ImageInput label={t("delivery.items_ready")} onImageChange={setImageFile} onUploadingChange={setIsImageUploading} /></div>
 
               <div>
                 <label className="mb-2 block text-[13px] font-black text-secondary uppercase tracking-widest ml-1">Notes (Optional)</label>
                 <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className={inputClass} placeholder="..." />
               </div>
 
-              <button type="submit" disabled={isLoading} className="btn-primary w-full py-4 text-[16px] mt-4">
-                {isLoading ? t("action.loading") : t("action.save")}
+              <button type="submit" disabled={isLoading || isImageUploading} className="btn-primary w-full py-4 text-[16px] mt-4">
+                {isLoading ? t("action.loading") : isImageUploading ? t("action.loading") : t("action.save")}
               </button>
             </form>
           )}

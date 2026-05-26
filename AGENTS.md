@@ -267,17 +267,5 @@ npm run lint
 
 > **Clear this section before committing.** Log of every change made during the current session, for reference when writing commit messages.
 
-- `lib/images.ts` — created; `uploadToIimgLive()` utility for proxying image buffer to iimg.live API
-- `app/api/upload/route.ts` — rewritten; now forwards file buffer to iimg.live instead of storing base64. Removed `type` field requirement.
-- `components/ImageInput.tsx` — added WebP conversion (Canvas API, 80% quality); uploads to `/api/upload` internally; added `onUploadingChange` prop; removed `onFileChange` prop; shows spinner during upload
-- `app/customers/[id]/edit/page.tsx` — removed `imageFile` state + pre-submit upload block; added `isImageUploading` state; ImageInput now passes CDN URL directly; submit disabled during upload
-- `components/EditDeliveryForm.tsx` — removed `podFile`/`existingPodUrl` state + pre-submit upload block; added `podUrl` state; ImageInput now passes CDN URL directly; submit disabled during upload
-- `scripts/migrate-images.ts` — created; migration script to scan existing base64 data URLs in `customers.house_picture_url` and `deliveries.proof_of_delivery_url`, decode → upload to iimg.live → update columns with CDN URLs. Aggressive batching with 429 rate-limit retry (1h wait). Idempotent.
-- `.env.local` — added `IIMG_LIVE_API_KEY` placeholder
-- `AGENTS.md` — added `IIMG_LIVE_API_KEY` to env vars table
-- `ROADMAP.md` — updated v1.0.1 checklist; marked completed items
-- `package.json` — added `migrate:images` script; added `jimp`, `sharp`, `tsx` dev deps
-- `app/customers/page.tsx` — added `referrerPolicy="no-referrer"` + `onError` (hides broken image) to customer list `<img>`
-- `components/ImageModal.tsx` — added `referrerPolicy="no-referrer"` + error state (thumbnail + modal) with fallback UI on failure
-- `app/customers/new/page.tsx` — added `referrerPolicy="no-referrer"` to bulk preview `<img>`
-- `next.config.ts` — added `images.remotePatterns` for `images.iimg.live`
+
+

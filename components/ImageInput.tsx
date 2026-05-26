@@ -77,6 +77,7 @@ export default function ImageInput({
         const res = await fetch("/api/upload", { method: "POST", body: formData });
         if (!res.ok) throw new Error("Upload failed");
         const data = await res.json();
+        setPreview(data.url);
         onImageChange(data.url);
       } catch {
         onImageChange(null);

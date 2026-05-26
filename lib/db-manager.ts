@@ -4,8 +4,9 @@ import * as schema from "./schema";
 import { promises as fs } from "fs";
 import path from "path";
 
-const CONFIG_PATH = path.join(process.cwd(), "data", "db-config.json");
-const PROFILES_PATH = path.join(process.cwd(), "data", "db-profiles.json");
+const DATA_DIR = process.env.VERCEL ? "/tmp/data" : path.join(process.cwd(), "data");
+const CONFIG_PATH = path.join(DATA_DIR, "db-config.json");
+const PROFILES_PATH = path.join(DATA_DIR, "db-profiles.json");
 
 let currentClient: postgres.Sql | null = null;
 let currentDb: ReturnType<typeof drizzle> | null = null;

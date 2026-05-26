@@ -2,7 +2,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { useTheme } from "@/components/ThemeProvider";
 import { useLanguage } from "@/components/LanguageProvider";
@@ -18,6 +18,21 @@ export default function SettingsPage() {
   const [lastSessionName, setLastSessionName] = useState(session?.user?.name);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [appVersion, setAppVersion] = useState("...");
+  const [commitHash, setCommitHash] = useState("...");
+
+  useEffect(() => {
+    fetch("/api/app-info")
+      .then((r) => r.json())
+      .then((d) => {
+        setAppVersion(d.version);
+        setCommitHash(d.commit);
+      })
+      .catch(() => {
+        setAppVersion("0.1.0");
+        setCommitHash("unknown");
+      });
+  }, []);
 
   if (session?.user?.name !== lastSessionName) {
     setName(session?.user?.name || "");
@@ -193,10 +208,10 @@ export default function SettingsPage() {
           <div className="mt-12 pt-8 border-t border-card-border flex flex-col items-center gap-2">
             <div className="flex items-center gap-3">
               <span className="px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-[10px] font-black text-blue-600 dark:text-blue-400 tracking-wider uppercase border border-blue-100/50 dark:border-blue-800/50">
-                v0.1.0
+                v{appVersion}
               </span>
               <span className="px-2.5 py-1 rounded-full bg-gray-100 dark:bg-slate-800 text-[10px] font-black text-secondary tracking-wider uppercase border border-card-border">
-                e2d6ba1
+                {commitHash}
               </span>
             </div>
             <p className="text-[11px] font-bold text-secondary opacity-40 uppercase tracking-[0.2em]">
