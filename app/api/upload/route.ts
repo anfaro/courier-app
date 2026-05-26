@@ -37,12 +37,13 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     await logError({
       errorName: "UploadError",
-      errorMessage: error instanceof Error ? error.message : String(error),
+      errorMessage,
     });
     return NextResponse.json(
-      { message: "Failed to upload file" },
+      { message: errorMessage },
       { status: 500 }
     );
   }
