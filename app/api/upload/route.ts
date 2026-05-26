@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { logServerAccess, logActivity, logError } from "@/lib/logger";
-import { uploadToIimgLive } from "@/lib/images";
+import { uploadImage } from "@/lib/images";
 
 export const runtime = "nodejs";
 
@@ -21,14 +21,14 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(bytes);
     const filename = file.name.replace(/\.[^.]+$/, ".webp");
 
-    const url = await uploadToIimgLive(buffer, filename);
+    const url = await uploadImage(buffer, filename);
 
     if (token) {
       await logActivity({
         userId: token.id as string,
         userName: token.name as string,
         action: "IMAGE_UPLOADED",
-        details: `Uploaded image to iimg.live: ${filename}`,
+        details: `Uploaded image: ${filename}`,
       });
     }
 
