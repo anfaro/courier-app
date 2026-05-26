@@ -1,4 +1,6 @@
 // app/admin/users/page.tsx
+export const dynamic = "force-dynamic";
+
 import { db } from "@/lib/db";
 import { users } from "@/lib/schema";
 import Breadcrumbs from "@/components/Breadcrumbs";
