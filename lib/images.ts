@@ -1,12 +1,44 @@
-const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
+import https from "https";
+import http from "http";
 
-async function fetchWithRetry(url: string, options: RequestInit, retries = 3): Promise<Response> {
-  for (let i = 0; i < retries; i++) {
-    const res = await fetch(url, options);
-    if (res.ok || (res.status !== 403 && res.status !== 503)) return res;
-    await new Promise((r) => setTimeout(r, 1000 * (i + 1)));
-  }
-  return fetch(url, options);
+function multipartBody(buffer: Buffer, filename: string, boundary: string): Buffer {
+  const header = [
+    `--${boundary}`,
+    `Content-Disposition: form-data; name="image"; filename="${filename}"`,
+    "Content-Type: image/webp",
+    "",
+  ].join("\r\n");
+  const footer = `\r\n--${boundary}--\r\n`;
+  return Buffer.concat([Buffer.from(header), buffer, Buffer.from(footer)]);
+}
+
+function httpsPost(url: string, headers: Record<string, string>, body: Buffer): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const u = new URL(url);
+    const mod = u.protocol === "https:" ? https : http;
+    const req = mod.request(
+      url,
+      {
+        method: "POST",
+        headers,
+        rejectUnauthorized: true,
+      },
+      (res) => {
+        let data = "";
+        res.on("data", (chunk) => (data += chunk));
+        res.on("end", () => {
+          if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(data);
+          } else {
+            reject(new Error(`iimg.live upload failed (${res.statusCode}): ${data.substring(0, 500)}`));
+          }
+        });
+      }
+    );
+    req.on("error", reject);
+    req.write(body);
+    req.end();
+  });
 }
 
 export async function uploadToIimgLive(
@@ -18,28 +50,17 @@ export async function uploadToIimgLive(
     throw new Error("IIMG_LIVE_API_KEY is not configured");
   }
 
-  const formData = new FormData();
-  const blob = new Blob([buffer], { type: "image/webp" });
-  formData.append("image", blob, filename);
+  const boundary = "----WebKitFormBoundary" + Math.random().toString(36).slice(2, 18);
+  const body = multipartBody(buffer, filename, boundary);
 
-  const res = await fetchWithRetry("https://api.iimg.live/upload", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "User-Agent": UA,
-      Accept: "application/json, text/plain, */*",
-      Origin: "https://iimg.live",
-      Referer: "https://iimg.live/",
-    },
-    body: formData,
-  });
+  const responseText = await httpsPost("https://api.iimg.live/upload", {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": `multipart/form-data; boundary=${boundary}`,
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    Accept: "application/json, text/plain, */*",
+  }, body);
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`iimg.live upload failed (${res.status}): ${text.substring(0, 500)}`);
-  }
-
-  const data = await res.json();
+  const data = JSON.parse(responseText);
   if (!data.success || !data.url) {
     throw new Error("iimg.live returned unexpected response");
   }
