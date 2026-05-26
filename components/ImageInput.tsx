@@ -81,10 +81,10 @@ export default function ImageInput({
         const data = await res.json();
         setPreview(data.url);
         onImageChange(data.url);
-      } catch {
+      } catch (e) {
         setPreview(existingImageUrl || null);
         onImageChange(existingImageUrl || null);
-        showToast("Image upload failed", "error");
+        showToast(e instanceof Error ? e.message : "Image upload failed", "error");
       } finally {
         setIsUploading(false);
         onUploadingChange?.(false);
