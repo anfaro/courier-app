@@ -21,6 +21,7 @@ export default function AuditTrailSearch() {
   const [toDate, setToDate] = useState("");
   const [fetchKey, setFetchKey] = useState(0);
   const [fetchErr, setFetchErr] = useState("");
+  const [selectedError, setSelectedError] = useState<any | null>(null);
 
   const fetchLogs = useCallback(async () => {
     setIsLoading(true);
@@ -168,7 +169,7 @@ export default function AuditTrailSearch() {
           ) : (
             <div className="divide-y divide-card-border">
               {logs.map((log) => (
-                <div key={log.id} className="px-5 py-3.5 hover:bg-surface-hover transition-colors">
+                <div key={log.id} onClick={() => setSelectedError(log)} className="px-5 py-3.5 hover:bg-surface-hover transition-colors cursor-pointer active:scale-[0.99]">
                   <div className="flex items-start gap-4">
                     <div className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
                       log.action?.includes("DELETE") ? "bg-red-500" :
@@ -208,6 +209,58 @@ export default function AuditTrailSearch() {
           </div>
         )}
       </div>
+
+      {selectedError && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" onClick={() => setSelectedError(null)}>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative w-full max-w-lg rounded-[28px] bg-card p-6 shadow-2xl border border-card-border max-h-[80vh] overflow-y-auto custom-scrollbar" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-xl font-black text-primary">Error Details</h3>
+              <button onClick={() => setSelectedError(null)} className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-hover text-secondary hover:text-primary transition-all active:scale-90">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <span className="text-[11px] font-black text-secondary uppercase tracking-widest">Error Name</span>
+                <p className="mt-1 text-[15px] font-bold text-red-600 break-words">{selectedError.errorName}</p>
+              </div>
+
+              <div>
+                <span className="text-[11px] font-black text-secondary uppercase tracking-widest">Message</span>
+                <p className="mt-1 text-[14px] font-medium text-primary whitespace-pre-wrap break-words">{selectedError.errorMessage}</p>
+              </div>
+
+              {selectedError.stackTrace && (
+                <div>
+                  <span className="text-[11px] font-black text-secondary uppercase tracking-widest">Stack Trace</span>
+                  <pre className="mt-1 rounded-2xl bg-surface-hover p-4 text-[11px] font-mono text-primary leading-relaxed whitespace-pre-wrap break-all max-h-48 overflow-y-auto custom-scrollbar">{selectedError.stackTrace}</pre>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-card-border">
+                <div>
+                  <span className="text-[10px] font-black text-secondary uppercase tracking-widest">User</span>
+                  <p className="mt-0.5 text-[13px] font-bold text-primary">{selectedError.userName || "System"}</p>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black text-secondary uppercase tracking-widest">User ID</span>
+                  <p className="mt-0.5 text-[13px] font-mono text-secondary">{selectedError.userId || "—"}</p>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black text-secondary uppercase tracking-widest">Path</span>
+                  <p className="mt-0.5 text-[13px] font-mono text-secondary break-all">{selectedError.pathname || "—"}</p>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black text-secondary uppercase tracking-widest">Timestamp</span>
+                  <p className="mt-0.5 text-[13px] font-bold text-primary">{new Date(selectedError.createdAt).toLocaleString("id-ID")}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
