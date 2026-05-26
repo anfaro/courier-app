@@ -77,7 +77,11 @@ export default function ImageInput({
         const formData = new FormData();
         formData.append("file", webpFile);
         const res = await fetch("/api/upload", { method: "POST", body: formData });
-        if (!res.ok) throw new Error("Upload failed");
+        if (!res.ok) {
+          let msg = `Upload failed (${res.status})`;
+          try { const err = await res.json(); if (err.message) msg = err.message; } catch {}
+          throw new Error(msg);
+        }
         const data = await res.json();
         setPreview(data.url);
         onImageChange(data.url);
