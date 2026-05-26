@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useLanguage } from "./LanguageProvider";
+import { useToast } from "./ToastProvider";
 
 interface ImageInputProps {
   label: string;
@@ -21,6 +22,7 @@ export default function ImageInput({
   const lastExistingRef = useRef(existingImageUrl);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const { t } = useLanguage();
+  const { showToast } = useToast();
 
   if (existingImageUrl !== lastExistingRef.current) {
     setPreview(existingImageUrl || null);
@@ -80,7 +82,9 @@ export default function ImageInput({
         setPreview(data.url);
         onImageChange(data.url);
       } catch {
-        onImageChange(null);
+        setPreview(existingImageUrl || null);
+        onImageChange(existingImageUrl || null);
+        showToast("Image upload failed", "error");
       } finally {
         setIsUploading(false);
         onUploadingChange?.(false);

@@ -3,6 +3,8 @@ import { getToken } from "next-auth/jwt";
 import { logServerAccess, logActivity, logError } from "@/lib/logger";
 import { uploadToIimgLive } from "@/lib/images";
 
+export const runtime = "nodejs";
+
 export async function POST(req: NextRequest) {
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
