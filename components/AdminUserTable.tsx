@@ -200,7 +200,7 @@ export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }
       value: "courier", 
       label: "Courier", 
       icon: "📦", 
-      desc: "Field staff managing deliveries and Waybills.",
+      desc: "Field staff managing customers and routes.",
       color: "blue"
     },
     { 

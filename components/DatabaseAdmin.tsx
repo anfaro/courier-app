@@ -298,7 +298,7 @@ export default function DatabaseAdmin() {
 
       if (!data?.data) throw new Error("Invalid backup file: missing .data field");
 
-      const tableNames = ["users", "customers", "deliveries", "clusters", "customerClusters", "logs", "errorLogs", "accessLogs"];
+      const tableNames = ["users", "customers", "clusters", "customerClusters", "logs", "errorLogs", "accessLogs"];
       const activeTables = tableNames.filter(t => Array.isArray(data.data[t]) && data.data[t].length > 0);
       const totalSteps = activeTables.length;
       addLog(`  ✓ found ${totalSteps} tables with data`, "success");
@@ -643,6 +643,7 @@ export default function DatabaseAdmin() {
         <h3 className="font-black text-primary text-[15px] mb-4">Import / Export Data</h3>
         <div className="flex gap-2 mb-4">
           <button onClick={() => { setImportMode("customers"); setPreview([]); }} className={`rounded-full px-4 py-2 text-[11px] font-bold transition-all active:scale-90 ${importMode === "customers" ? "bg-blue-600 text-white shadow-sm" : "bg-surface-hover text-secondary"}`}>Customers</button>
+          <button onClick={() => { setImportMode("customers"); setPreview([]); }} className="rounded-full px-4 py-2 text-[11px] font-bold bg-surface-hover text-secondary opacity-50 cursor-not-allowed">Clusters</button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={(e) => { e.preventDefault(); setDragOver(false); handleImportFile(e.dataTransfer.files[0]); }} className={`relative rounded-2xl border-2 border-dashed p-6 text-center transition-colors ${dragOver ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/10" : "border-card-border"}`}>

@@ -64,17 +64,6 @@ test("schema: customers table structure", () => {
   expect(customers.address.notNull).toBe(true);
 });
 
-test("schema: deliveries table structure", () => {
-  const deliveries = schema.deliveries;
-  expect(deliveries).toBeDefined();
-  expect(deliveries.id.primaryKey).toBe(true);
-  expect(deliveries.waybillNumber.notNull).toBe(true);
-  expect(deliveries.waybillNumber.unique).toBe(true);
-  expect(deliveries.customerId).toBeDefined();
-  expect(deliveries.status.defaultTo).toBe("Pending");
-  expect(deliveries.codAmount.defaultTo).toBe("0");
-});
-
 test("schema: customerClusters table structure", () => {
   const customerClusters = schema.customerClusters;
   expect(customerClusters).toBeDefined();
@@ -115,18 +104,12 @@ test("schema: accessLogs table structure", () => {
 
 // --- Relation Tests ---
 
-test("schema: relations - customers to deliveries", () => {
+test("schema: relations - customers to clusters", () => {
   const customers = schema.customers;
-  const deliveries = schema.deliveries;
   const relations = schema.customersRelations;
 
   expect(relations).toBeDefined();
-  expect(relations.deliveries).toBeDefined();
-  // This checks that the 'deliveries' relation is defined on the customers schema
-  // Further checks could involve ensuring the foreign key on deliveries.customerId points correctly
-  expect(deliveries.customerId).toBeDefined(); // Ensure the FK column exists on deliveries
-  expect(deliveries.customerId.references).toBeDefined();
-  expect(deliveries.customerId.references.table).toBe(customers); // Check if it references the customers table
+  expect(relations.clusters).toBeDefined();
 });
 
 test("schema: relations - clusters to customerClusters", () => {
@@ -161,19 +144,6 @@ test("schema: relations - customerClusters to customer and cluster", () => {
   expect(customerClusters.clusterId).toBeDefined();
   expect(customerClusters.clusterId.references).toBeDefined();
   expect(customerClusters.clusterId.references.table).toBe(clusters);
-});
-
-test("schema: relations - deliveries to customer", () => {
-  const deliveries = schema.deliveries;
-  const customers = schema.customers;
-  const relations = schema.deliveriesRelations;
-
-  expect(relations).toBeDefined();
-  expect(relations.customer).toBeDefined();
-  // Check if the deliveries table has a foreign key referencing customers.id
-  expect(deliveries.customerId).toBeDefined();
-  expect(deliveries.customerId.references).toBeDefined();
-  expect(deliveries.customerId.references.table).toBe(customers);
 });
 
 test("schema: relations - logs to user", () => {

@@ -328,7 +328,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
             <div>
               <h2 className="text-[22px] font-bold text-primary">Delete {name || "Customer"}?</h2>
               <p className="mt-2 text-[15px] leading-relaxed text-secondary">
-                This action cannot be undone. All data and delivery history associated with this customer will be permanently removed.
+                This action cannot be undone. All data associated with this customer will be permanently removed.
               </p>
             </div>
 

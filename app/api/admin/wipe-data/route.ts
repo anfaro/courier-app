@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
-import { customers, deliveries, clusters, logs, passwordResetTokens } from "@/lib/schema";
+import { customers, clusters, logs, passwordResetTokens } from "@/lib/schema";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
@@ -21,7 +21,6 @@ export async function POST(req: NextRequest) {
     }
 
     // Sequential deletion to respect potential (though cascading) constraints
-    await db.delete(deliveries);
     await db.delete(customers);
     await db.delete(clusters);
     await db.delete(passwordResetTokens);
@@ -31,7 +30,7 @@ export async function POST(req: NextRequest) {
       userId: token.id as string,
       userName: token.name as string,
       action: "USER_DELETED", // Reusing an existing action type for the wipe record
-      details: "SYSTEM DATA WIPE EXECUTED. All deliveries, customers, and clusters removed.",
+      details: "SYSTEM DATA WIPE EXECUTED. All customers and clusters removed.",
     });
 
     // Finally, wipe logs if requested or keep them for audit? 

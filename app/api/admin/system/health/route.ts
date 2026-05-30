@@ -1,7 +1,8 @@
+// app/api/admin/system/health/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
-import { count } from "drizzle-orm";
+import { sql, count } from "drizzle-orm";
 import { customers, clusters, users, logs } from "@/lib/schema";
 
 export async function GET(req: NextRequest) {

@@ -13,7 +13,7 @@ export default function NotMobilePage() {
       <p className="mb-8 max-w-sm text-[15px] font-medium leading-relaxed text-gray-500">
         Our Courier Superapp is currently optimized strictly for field operations on mobile devices. 
         <br/><br/>
-        Please open this link on your smartphone to continue managing your deliveries.
+        Please open this link on your smartphone to continue managing your data.
       </p>
 
       <div className="w-full max-w-xs space-y-4">

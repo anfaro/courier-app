@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
-import { customers, deliveries, clusters, customerClusters, users, logs, errorLogs, accessLogs } from "@/lib/schema";
+import { customers, clusters, customerClusters, users, logs, errorLogs, accessLogs } from "@/lib/schema";
 import { generateId } from "@/lib/utils";
 import { logActivity, logError } from "@/lib/logger";
 import { sql } from "drizzle-orm";
@@ -14,19 +14,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const [cust, del, cl, cc] = await Promise.all([
+    const [cust, cl, cc] = await Promise.all([
       db.execute(sql`SELECT id, name, phone_number, address, latitude, longitude, house_picture_url, notes, created_at, updated_at FROM customers`),
-      db.execute(sql`SELECT id, waybill_number, customer_id, status, cod_amount, receiver_name, proof_of_delivery_url, created_at, updated_at FROM deliveries`),
       db.execute(sql`SELECT * FROM clusters`),
       db.execute(sql`SELECT * FROM customer_clusters`),
     ]);
 
     const backup = {
-      version: 3,
+      version: 4,
       exportedAt: new Date().toISOString(),
       data: {
         customers: Array.isArray(cust) ? cust : [],
-        deliveries: Array.isArray(del) ? del : [],
         clusters: Array.isArray(cl) ? cl : [],
         customerClusters: Array.isArray(cc) ? cc : [],
       },
@@ -126,21 +124,6 @@ async function restoreTable(table: string, rows: any[]): Promise<number> {
       count = rows.length;
       break;
     }
-    case "deliveries": {
-      await batchInsert(deliveries, rows.map((d: any) => ({
-        id: d.id || generateId(),
-        waybillNumber: d.waybillNumber ?? d.waybill_number,
-        customerId: d.customerId ?? d.customer_id,
-        status: d.status || "Pending",
-        codAmount: d.codAmount ?? d.cod_amount ?? "0",
-        receiverName: d.receiverName ?? d.receiver_name,
-        proofOfDeliveryUrl: d.proofOfDeliveryUrl ?? d.proof_of_delivery_url,
-        createdAt: toDate(d.created_at ?? d.createdAt),
-        updatedAt: toDate(d.updated_at ?? d.updatedAt),
-      })));
-      count = rows.length;
-      break;
-    }
     case "customerClusters": {
       await batchInsert(customerClusters, rows.map((cc: any) => ({
         customerId: cc.customerId || cc.customer_id,
@@ -219,13 +202,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid backup file" }, { status: 400 });
     }
 
-    const { users: usrData, customers: custData, deliveries: delData, clusters: clData, customerClusters: ccData, logs: logsData, errorLogs: errData, accessLogs: accData } = body.data;
+    const { users: usrData, customers: custData, clusters: clData, customerClusters: ccData, logs: logsData, errorLogs: errData, accessLogs: accData } = body.data;
 
     totalRestored += await restoreTable("users", usrData);
     totalRestored += await restoreTable("clusters", clData);
     totalRestored += await restoreTable("customers", custData);
     totalRestored += await restoreTable("customerClusters", ccData);
-    totalRestored += await restoreTable("deliveries", delData);
     totalRestored += await restoreTable("logs", logsData);
     totalRestored += await restoreTable("errorLogs", errData);
     totalRestored += await restoreTable("accessLogs", accData);

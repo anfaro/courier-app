@@ -7,7 +7,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ImageModal from "@/components/ImageModal";
 import MapModal from "@/components/MapModal";
-import VisitsManager from "@/components/VisitsManager";
+import ShareButton from "@/components/ShareButton";
+import VisitManager from "@/components/VisitManager";
 
 export default async function CustomerDetailsPage({
   params,
@@ -22,7 +23,7 @@ export default async function CustomerDetailsPage({
     with: {
       clusters: {
         with: {
-          cluster: true, 
+          cluster: true,
         },
       },
     },
@@ -36,11 +37,13 @@ export default async function CustomerDetailsPage({
       <Breadcrumbs />
 
       <main className="mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
-        {/* Header Section with Edit & WhatsApp Buttons */}
+        {/* Header Section with Edit, Share & WhatsApp Buttons */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-3xl font-extrabold tracking-tight text-primary">{customerData.name}</h1>
 
           <div className="flex items-center gap-3">
+            <ShareButton customerId={customerId} />
+
             <Link
               href={`/customers/${customerId}/edit`}
               className="btn-outline !h-12 !w-12 !p-0"
@@ -141,7 +144,7 @@ export default async function CustomerDetailsPage({
            </div>
         </div>
 
-        <VisitsManager customerId={customerId} />
+        <VisitManager customerId={customerId} />
 
       </main>
     </div>
