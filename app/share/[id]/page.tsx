@@ -3,7 +3,8 @@ import { db } from "@/lib/db";
 import { customers } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
-import ShareCustomerMap from "./ShareCustomerMap";
+import ImageModal from "@/components/ImageModal";
+import MapModal from "@/components/MapModal";
 
 export default async function SharePage({
   params,
@@ -54,14 +55,7 @@ export default async function SharePage({
         <div className="rounded-[2.5rem] border border-card-border bg-card p-6 shadow-sm space-y-5">
           {/* House Picture */}
           {customerData.housePictureUrl && (
-            <div className="overflow-hidden rounded-[1.5rem]">
-              <img
-                src={customerData.housePictureUrl}
-                alt="House"
-                className="w-full h-48 object-cover"
-                referrerPolicy="no-referrer"
-              />
-            </div>
+            <ImageModal src={customerData.housePictureUrl} alt="House" thumbnailClassName="w-full h-48 rounded-[1.5rem] object-cover" />
           )}
 
           {/* Address */}
@@ -103,13 +97,11 @@ export default async function SharePage({
 
         {/* Map */}
         {customerData.latitude && customerData.longitude && (
-          <div className="overflow-hidden rounded-[2.5rem] border border-card-border shadow-sm">
-            <ShareCustomerMap
-              latitude={customerData.latitude}
-              longitude={customerData.longitude}
-              name={customerData.name}
-            />
-          </div>
+          <MapModal
+            latitude={customerData.latitude}
+            longitude={customerData.longitude}
+            address={customerData.address}
+          />
         )}
 
         {/* Footer */}
