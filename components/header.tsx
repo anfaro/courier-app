@@ -55,13 +55,6 @@ interface SearchResults {
   users: SearchResultUser[];
 }
 
-interface SearchResults {
-  customers: SearchResultCustomer[];
-  deliveries: SearchResultDelivery[];
-  clusters: SearchResultCluster[];
-  users: SearchResultUser[];
-}
-
 import { createPortal } from "react-dom";
 
 export default function Header() {
