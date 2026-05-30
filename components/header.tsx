@@ -49,11 +49,10 @@ interface SearchResultCluster {
   name: string;
 }
 
-interface SearchResultDelivery {
-  id: string;
-  waybillNumber: string;
-  receiverName?: string;
-  customerName?: string;
+interface SearchResults {
+  customers: SearchResultCustomer[];
+  clusters: SearchResultCluster[];
+  users: SearchResultUser[];
 }
 
 interface SearchResults {
@@ -70,7 +69,7 @@ export default function Header() {
   const { t } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<SearchResults>({ customers: [], deliveries: [], clusters: [], users: [] });
+  const [searchResults, setSearchResults] = useState<SearchResults>({ customers: [], clusters: [], users: [] });
   const [isSearching, setIsSearching] = useState(false);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -103,7 +102,7 @@ export default function Header() {
   // Global Search Debounce
   useEffect(() => {
     if (!searchQuery.trim() || searchQuery.length < 2) {
-      setSearchResults({ customers: [], deliveries: [], clusters: [], users: [] });
+      setSearchResults({ customers: [], clusters: [], users: [] });
       setIsDropdownVisible(false);
       return;
     }
@@ -204,7 +203,7 @@ export default function Header() {
                   </div>
                 )}
 
-                {!isSearching && searchResults.customers.length === 0 && searchResults.deliveries.length === 0 && searchResults.clusters.length === 0 && (!searchResults.users || searchResults.users.length === 0) && (
+                {!isSearching && searchResults.customers.length === 0 && searchResults.clusters.length === 0 && (!searchResults.users || searchResults.users.length === 0) && (
                   <div className="p-8 text-center text-secondary font-bold text-[14px]">{t("search.no_results")}</div>
                 )}
 
@@ -273,27 +272,6 @@ export default function Header() {
                   </div>
                 )}
 
-                {/* DELIVERY SECTION */}
-                {searchResults.deliveries.length > 0 && (
-                  <div>
-                    <p className="px-4 py-2 text-[11px] font-black uppercase tracking-widest text-secondary/60">{t("search.waybills")}</p>
-                    {searchResults.deliveries.map((d: SearchResultDelivery) => (
-                      <motion.div
-                        key={d.id}
-                        whileTap={{ scale: 0.92, rotate: 0.5 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                      >
-                        <Link href={`/deliveries/${d.id}`} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-hover transition-colors group">
-                          <div className="h-10 w-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-lg shadow-inner group-hover:scale-110 transition-transform">📦</div>
-                          <div className="min-w-0">
-                            <p className="font-black text-primary text-[14px] truncate">{d.waybillNumber}</p>
-                            <p className="text-[12px] font-medium text-secondary truncate">{d.receiverName || d.customerName}</p>
-                          </div>
-                        </Link>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
               </motion.div>
             )}
           </AnimatePresence>

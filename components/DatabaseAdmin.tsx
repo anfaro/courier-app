@@ -31,7 +31,7 @@ export default function DatabaseAdmin() {
   const [runningAction, setRunningAction] = useState<string | null>(null);
 
   // Import/Export state
-  const [importMode, setImportMode] = useState<"customers" | "deliveries">("customers");
+  const [importMode, setImportMode] = useState<"customers">("customers");
   const [importing, setImporting] = useState(false);
   const [preview, setPreview] = useState<any[]>([]);
   const [dragOver, setDragOver] = useState(false);
@@ -108,11 +108,11 @@ export default function DatabaseAdmin() {
   };
 
   const handleExport = async (table: string) => {
-    const endpoint = table === "customers" ? "/api/customers" : table === "deliveries" ? "/api/deliveries" : `/api/clusters`;
+    const endpoint = table === "customers" ? "/api/customers" : `/api/clusters`;
     try {
       const res = await fetch(endpoint);
       const data = await res.json();
-      const list = data.customers || data.deliveries || data.clusters || data || [];
+      const list = data.customers || data.clusters || data || [];
       if (!list.length) { showToast("No data to export.", "warning"); return; }
       const headers = Object.keys(list[0]).join(",");
       const rows = list.map((item: any) => Object.values(item).join(",")).join("\n");
@@ -172,7 +172,7 @@ export default function DatabaseAdmin() {
     if (!payload) { showToast("Select a CSV file first.", "error"); return; }
     setImporting(true);
     try {
-      const endpoint = importMode === "customers" ? "/api/customers/bulk" : "/api/deliveries/bulk";
+      const endpoint = "/api/customers/bulk";
       const res = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: payload });
       const data = await res.json();
       if (res.ok) {
@@ -388,11 +388,11 @@ export default function DatabaseAdmin() {
   };
 
   const handleExportTable = async (table: string) => {
-    const endpoint = table === "customers" ? "/api/customers" : table === "deliveries" ? "/api/deliveries" : "/api/clusters";
+    const endpoint = table === "customers" ? "/api/customers" : "/api/clusters";
     try {
       const res = await fetch(endpoint);
       const data = await res.json();
-      const list = data.customers || data.deliveries || data.clusters || data || [];
+      const list = data.customers || data.clusters || data || [];
       if (!list.length) { showToast("No data to export.", "warning"); return; }
       const headers = Object.keys(list[0]).join(",");
       const rows = list.map((item: any) => Object.values(item).join(",")).join("\n");
@@ -643,7 +643,6 @@ export default function DatabaseAdmin() {
         <h3 className="font-black text-primary text-[15px] mb-4">Import / Export Data</h3>
         <div className="flex gap-2 mb-4">
           <button onClick={() => { setImportMode("customers"); setPreview([]); }} className={`rounded-full px-4 py-2 text-[11px] font-bold transition-all active:scale-90 ${importMode === "customers" ? "bg-blue-600 text-white shadow-sm" : "bg-surface-hover text-secondary"}`}>Customers</button>
-          <button onClick={() => { setImportMode("deliveries"); setPreview([]); }} className={`rounded-full px-4 py-2 text-[11px] font-bold transition-all active:scale-90 ${importMode === "deliveries" ? "bg-blue-600 text-white shadow-sm" : "bg-surface-hover text-secondary"}`}>Deliveries</button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={(e) => { e.preventDefault(); setDragOver(false); handleImportFile(e.dataTransfer.files[0]); }} className={`relative rounded-2xl border-2 border-dashed p-6 text-center transition-colors ${dragOver ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/10" : "border-card-border"}`}>

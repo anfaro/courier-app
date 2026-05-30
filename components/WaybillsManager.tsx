@@ -1,8 +1,6 @@
 
 "use client";
 
-import Link from "next/link";
-
 function getStatusColor(status: string | null) {
   switch (status) {
     case "Delivered":
@@ -26,15 +24,9 @@ export default function WaybillsManager({
 }) {
   return (
     <div className="mt-8 space-y-4">
-      {/* Header & Add Button */}
+      {/* Header */}
       <div className="flex items-center justify-between px-2">
         <h2 className="text-xl font-extrabold text-primary">Waybills ({initialDeliveries.length})</h2>
-        <Link
-          href={`/deliveries/new?customerId=${customerId}`}
-          className="rounded-full bg-blue-100 px-4 py-2 text-[13px] font-bold text-blue-700 transition-transform active:scale-90"
-        >
-          + Add New
-        </Link>
       </div>
 
       {initialDeliveries.length === 0 ? (
@@ -47,10 +39,9 @@ export default function WaybillsManager({
         /* Simple Clickable Cards Grid */
         <div className="grid gap-3 sm:grid-cols-2">
           {initialDeliveries.map((delivery) => (
-            <Link
+            <div
               key={delivery.id}
-              href={`/deliveries/${delivery.id}`}
-              className="block rounded-[28px] border border-card-border bg-card p-5 shadow-sm transition-all hover:border-blue-300 active:scale-[0.98]"
+              className="rounded-[28px] border border-card-border bg-card p-5 shadow-sm"
             >
               <div className="mb-2 flex items-start justify-between">
                 <p className="text-[17px] font-black text-primary">{delivery.waybillNumber}</p>
@@ -67,7 +58,7 @@ export default function WaybillsManager({
                   {delivery.codAmount > 0 ? `Rp ${delivery.codAmount.toLocaleString('id-ID')}` : "NON-COD"}
                 </p>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       )}

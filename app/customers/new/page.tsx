@@ -169,13 +169,13 @@ export default function NewCustomerPage() {
             onClick={() => setActiveTab("single")} 
             className={`flex-1 rounded-full py-3 text-[14px] font-black transition-all active:scale-95 ${activeTab === "single" ? "bg-card text-blue-700 dark:text-blue-400 shadow-sm" : "text-secondary hover:text-primary"}`}
           >
-            {t("delivery.manual")}
+            {t("customer.add_single")}
           </button>
           <button 
             onClick={() => setActiveTab("bulk")} 
             className={`flex-1 rounded-full py-3 text-[14px] font-black transition-all active:scale-95 ${activeTab === "bulk" ? "bg-card text-blue-700 dark:text-blue-400 shadow-sm" : "text-secondary hover:text-primary"}`}
           >
-            {t("delivery.bulk")}
+            {t("customer.add_bulk")}
           </button>
         </div>
 
@@ -217,7 +217,7 @@ export default function NewCustomerPage() {
                 </div>
               </div>
 
-              <div><ImageInput label={t("delivery.items_ready")} onImageChange={setImageFile} onUploadingChange={setIsImageUploading} /></div>
+              <div><ImageInput label={t("customer.house_picture")} onImageChange={setImageFile} onUploadingChange={setIsImageUploading} /></div>
 
               <div>
                 <label className="mb-2 block text-[13px] font-black text-secondary uppercase tracking-widest ml-1">Notes (Optional)</label>

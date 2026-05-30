@@ -1,7 +1,6 @@
 // app/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useLanguage } from "@/components/LanguageProvider";
@@ -11,31 +10,11 @@ export default function HomePage() {
   const { t, locale } = useLanguage();
   const userName = session?.user?.name || "User";
 
-  const [stats, setRouteStats] = useState({ pendingCount: 0, totalCod: 0 });
-
   // Format date based on locale - derived state to avoid extra re-renders
   const dateLocale = locale === "id" ? "id-ID" : "en-GB";
   const today = new Date().toLocaleDateString(dateLocale, {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   });
-
-  useEffect(() => {
-    // Fetch stats client-side since we are now a Client Component
-    async function fetchStats() {
-      try {
-        const res = await fetch("/api/deliveries");
-        if (res.ok) {
-          const data = await res.json();
-          const pending = data.deliveries.filter((d: { status: string }) => d.status === "Pending");
-          const totalCod = pending.reduce((sum: number, d: { codAmount?: string }) => sum + (parseInt(d.codAmount || "0") || 0), 0);
-          setRouteStats({ pendingCount: pending.length, totalCod });
-        }
-      } catch (err) {
-        console.warn("Failed to fetch home stats", err);
-      }
-    }
-    fetchStats();
-  }, []);
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -52,28 +31,26 @@ export default function HomePage() {
           </h1>
         </div>
 
-        {/* --- DAILY SNAPSHOT (Clickable Stats) --- */}
+        {/* --- QUICK LINKS --- */}
         <div>
           <h2 className="text-[14px] font-bold tracking-tight text-primary mb-3">{t("home.snapshot")}</h2>
           <div className="flex gap-3">
 
-            <Link href="/deliveries?filter=Pending" className="flex-1 rounded-[24px] bg-card p-5 shadow-sm border border-card-border hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-md transition-all active:scale-90 flex flex-col justify-center relative overflow-hidden group">
+            <Link href="/customers" className="flex-1 rounded-[24px] bg-card p-5 shadow-sm border border-card-border hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-md transition-all active:scale-90 flex flex-col justify-center relative overflow-hidden group">
               <div className="absolute right-0 top-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity text-blue-500">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
               </div>
-              <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">{t("home.pending_waybills")}</p>
-              <p className="text-[28px] leading-none font-black text-primary">{stats.pendingCount}</p>
+              <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">{t("home.manage_db")}</p>
+              <p className="text-[18px] leading-none font-black text-primary">👥 {t("nav.customers")}</p>
             </Link>
 
-            <div className="flex-[1.2] rounded-[24px] bg-orange-50 dark:bg-orange-950/20 p-5 shadow-sm border border-orange-100 dark:border-orange-900/50 flex flex-col justify-center">
-              <p className="text-[11px] font-black uppercase tracking-widest text-orange-400 dark:text-orange-500 mb-1">{t("home.to_collect")}</p>
-              <div className="flex items-baseline gap-1 whitespace-nowrap overflow-hidden text-ellipsis">
-                <span className="text-[14px] font-bold text-orange-600 dark:text-orange-400">Rp</span>
-                <span className="text-[24px] leading-none font-black text-orange-700 dark:text-orange-300 tracking-tight">
-                  {stats.totalCod.toLocaleString('id-ID')}
-                </span>
+            <Link href="/map" className="flex-[1.2] rounded-[24px] bg-emerald-50 dark:bg-emerald-950/20 p-5 shadow-sm border border-emerald-100 dark:border-emerald-900/50 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all active:scale-90 flex flex-col justify-center group">
+              <div className="absolute right-0 top-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-500">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
               </div>
-            </div>
+              <p className="text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-500 mb-1">{t("home.live_route")}</p>
+              <p className="text-[18px] leading-none font-black text-emerald-700 dark:text-emerald-300">🗺️ {t("nav.map")}</p>
+            </Link>
 
           </div>
         </div>
@@ -83,28 +60,7 @@ export default function HomePage() {
           <h2 className="text-[14px] font-bold tracking-tight text-primary mb-3">{t("home.command_center")}</h2>
           <div className="space-y-4">
 
-            {/* ACTION 1: GLOBAL ENTRY HUB */}
-            <Link href="/deliveries/new" className="block group">
-              <div className="relative overflow-hidden rounded-[32px] bg-[#0A2FFF] p-8 shadow-xl shadow-blue-600/20 transition-all active:scale-[0.98]">
-                <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/10 blur-3xl group-hover:bg-white/20 transition-all duration-500"></div>
-
-                <div className="relative z-10 flex items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-[26px] leading-tight font-black text-white mb-2 tracking-tight">
-                      {t("home.entry_hub")}
-                    </h2>
-                    <p className="text-blue-200 font-medium text-[14px] leading-snug pr-4">
-                      {t("home.entry_hub_desc")}
-                    </p>
-                  </div>
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white text-[#0A2FFF] shadow-md transition-transform duration-500 group-hover:rotate-12 group-active:scale-90">
-                    <span className="text-3xl">📦</span>
-                  </div>
-                </div>
-              </div>
-            </Link>
-
-            {/* ACTION 2: MANAGE CUSTOMERS */}
+            {/* MANAGE CUSTOMERS */}
             <Link href="/customers" className="block group">
               <div className="relative overflow-hidden rounded-[32px] bg-[#6B21A8] p-8 shadow-xl shadow-purple-600/20 transition-all active:scale-[0.98]">
                 <div className="absolute -left-10 -bottom-10 h-48 w-48 rounded-full bg-white/10 blur-3xl group-hover:bg-white/20 transition-all duration-500"></div>

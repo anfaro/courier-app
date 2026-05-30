@@ -73,8 +73,7 @@ function MarkerClusterLayer({ deliveries }: { deliveries: any[] }) {
       marker.bindPopup(`
         <div style="padding:4px;min-width:160px;">
           <p style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:#9ca3af;margin:0 0 4px 0;">${d.waybillNumber}</p>
-          <p style="font-size:15px;font-weight:700;margin:0 0 12px 0;">${d.customer.name}</p>
-          <a href="/deliveries/${d.id}" style="display:block;text-align:center;border-radius:9999px;background:#2563eb;padding:8px;font-size:11px;font-weight:700;color:white;text-decoration:none;">View Details</a>
+          <p style="font-size:15px;font-weight:700;margin:0 0 0 0;">${d.customer.name}</p>
         </div>
       `);
 
