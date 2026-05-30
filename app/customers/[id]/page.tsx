@@ -1,13 +1,13 @@
 // app/customers/[id]/page.tsx
 import { db } from "@/lib/db";
-import { customers, deliveries } from "@/lib/schema";
-import { eq, desc } from "drizzle-orm";
+import { customers } from "@/lib/schema";
+import { eq } from "drizzle-orm";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ImageModal from "@/components/ImageModal";
 import MapModal from "@/components/MapModal";
-import WaybillsManager from "@/components/WaybillsManager";
+import VisitsManager from "@/components/VisitsManager";
 
 export default async function CustomerDetailsPage({
   params,
@@ -29,12 +29,6 @@ export default async function CustomerDetailsPage({
   });
 
   if (!customerData) return notFound();
-
-  const deliveryHistory = await db
-    .select()
-    .from(deliveries)
-    .where(eq(deliveries.customerId, customerId))
-    .orderBy(desc(deliveries.createdAt));
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -147,7 +141,7 @@ export default async function CustomerDetailsPage({
            </div>
         </div>
 
-        <WaybillsManager customerId={customerId} customerName={customerData.name} initialDeliveries={deliveryHistory} />
+        <VisitsManager customerId={customerId} />
 
       </main>
     </div>
