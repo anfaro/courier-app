@@ -267,5 +267,18 @@ npm run lint
 
 > **Clear this section before committing.** Log of every change made during the current session, for reference when writing commit messages.
 
+### 2026-05-30 — v1.1.0: Visit tracking, bulk geocoding, route history + bug fixes
+- **Schema**: Added `visits` and `trips` tables; added `GEOCODE_BULK`, `VISIT_CHECKED_IN`, `VISIT_CHECKED_OUT`, `TRIP_CREATED`, `TRIP_DELETED` to `LogAction` type.
+- **DB migrations**: Generated `drizzle/0006_green_lenny_balinger.sql` (visits), `drizzle/0007_sturdy_black_widow.sql` (trips).
+- **Visit tracking**: Created `app/api/customers/[id]/visits/` API routes (GET/POST/PUT), `components/VisitsManager.tsx` with check-in/out, live timer, visit history timeline, and i18n keys (`visit.*`).
+- **Bulk geocoding**: Created `app/api/admin/geocode/route.ts` (superadmin-only, Nominatim with 1.1s rate-limit), "Geocode All" button in `AdminQuickActions.tsx`, i18n keys (`admin.geocode_*`).
+- **Route history**: Created `app/api/trips/` API routes (GET/POST/DELETE), "Save Route" modal + "Saved Routes" panel in `CustomerSelectionMap.tsx` with load/delete, i18n keys (`map.*`).
+- **Bug fixes**: Removed "Deliveries" from `SystemHealth.tsx` and health/database/backup API routes; replaced broken `delivery.*` translation keys on customer new page with `customer.add_single`, `customer.add_bulk`, `customer.house_picture`; fixed user online status always showing "Offline" by switching admin users page from `db.select().from(users)` to `db.query.users.findMany()`.
+- **Version**: Updated `package.json` from `1.0.0-bugfix1` → `1.1.0`; removed `--webpack` flag from dev/build scripts.
+- **Branch**: Created `with-deliveries` branch at commit `2d72b43` preserving the old deliveries system.
 
+### 2026-05-30 — Settings redesign + global version
+- **Settings redesign**: Rewrote `app/settings/page.tsx` with 4 sections (Profile Card, Preferences, Profile Information, About) following MD3 expressive patterns (larger radii, glassmorphism, badge styling, spring animations).
+- **Global version**: Created `lib/version.ts` as single source of truth (`APP_VERSION` + `getCommitHash()`); imported directly in settings page (no API call), `not-mobile` page, and `not-found` page (fixed stale `v0.1.0` hardcodes).
+- **API cleanup**: Simplified `app/api/app-info/route.ts` to reuse `APP_VERSION` + `getCommitHash()` from shared lib.
 

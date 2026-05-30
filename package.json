@@ -1,10 +1,10 @@
 {
   "name": "courier-superapps",
-  "version": "1.0.0-bugfix1",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --webpack",
-    "build": "next build --webpack",
+    "dev": "next dev",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",

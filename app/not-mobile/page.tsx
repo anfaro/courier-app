@@ -1,5 +1,6 @@
 // app/not-mobile/page.tsx
 import Link from "next/link";
+import { APP_VERSION } from "@/lib/version";
 
 export default function NotMobilePage() {
   return (
@@ -30,7 +31,7 @@ export default function NotMobilePage() {
       </div>
 
       <p className="mt-12 text-[12px] font-medium text-gray-400">
-        &copy; 2026 Courier Management System • v0.1.0
+        &copy; 2026 Courier Management System • v{APP_VERSION}
       </p>
     </div>
   );
