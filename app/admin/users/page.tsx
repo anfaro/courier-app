@@ -2,13 +2,12 @@
 export const dynamic = "force-dynamic";
 
 import { db } from "@/lib/db";
-import { users } from "@/lib/schema";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import AdminUserTable from "@/components/AdminUserTable";
 
 export default async function AdminUsersPage() {
-  // Fetch all users from the database
-  const allUsers = await db.select().from(users);
+  // Fetch all users via relational query API (camelCase keys)
+  const allUsers = await db.query.users.findMany();
 
   return (
     <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">

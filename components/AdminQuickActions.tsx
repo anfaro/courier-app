@@ -11,6 +11,7 @@ export default function AdminQuickActions() {
   const [showModal, setShowModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [geocoding, setGeocoding] = useState(false);
   
   const [newUser, setNewUser] = useState({
     name: "",
@@ -49,6 +50,23 @@ export default function AdminQuickActions() {
     }
   };
 
+  const handleGeocode = async () => {
+    setGeocoding(true);
+    try {
+      const res = await fetch("/api/admin/geocode", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(t("admin.geocode_success").replace("{count}", data.updated || 0), "success");
+      } else {
+        showToast(data.error || t("admin.geocode_error"), "error");
+      }
+    } catch {
+      showToast(t("admin.geocode_error"), "error");
+    } finally {
+      setGeocoding(false);
+    }
+  };
+
   const inputClass = "w-full rounded-2xl border border-card-border dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-5 py-3 text-[14px] font-medium text-primary dark:text-slate-100 outline-none focus:border-blue-500 transition-all";
 
   return (
@@ -66,14 +84,15 @@ export default function AdminQuickActions() {
           </div>
         </button>
 
-        <button 
-          disabled
-          className="flex-1 flex items-center gap-3 rounded-[24px] bg-card p-4 text-primary border border-card-border opacity-50 cursor-not-allowed"
+        <button
+          onClick={handleGeocode}
+          disabled={geocoding}
+          className="flex-1 flex items-center gap-3 rounded-[24px] bg-emerald-600 p-4 text-white shadow-lg shadow-emerald-500/20 active:scale-[0.98] transition-all hover:bg-emerald-700 disabled:opacity-50"
         >
-          <div className="h-10 w-10 bg-gray-100 dark:bg-slate-800 rounded-xl flex items-center justify-center text-xl">📑</div>
+          <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center text-xl">🌍</div>
           <div className="flex flex-col items-start">
-            <span className="font-black leading-tight text-[15px]">Reports</span>
-            <span className="text-[10px] font-bold text-secondary uppercase tracking-tighter">Coming Soon</span>
+            <span className="font-black leading-tight text-[15px]">{geocoding ? t("admin.geocode_processing") : t("admin.geocode_button")}</span>
+            <span className="text-[10px] font-bold opacity-70 uppercase tracking-tighter">{t("admin.geocode_desc")}</span>
           </div>
         </button>
       </div>

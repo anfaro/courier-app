@@ -80,9 +80,67 @@ export const customerClusters = pgTable("customer_clusters", {
   pk: primaryKey({ columns: [t.customerId, t.clusterId] }),
 }));
 
+export const visits = pgTable("visits", {
+  id: varchar("id", { length: 7 }).primaryKey(),
+  customerId: varchar("customer_id", { length: 7 }).notNull().references(() => customers.id, { onDelete: "cascade" }),
+  userId: varchar("user_id", { length: 7 }).notNull().references(() => users.id, { onDelete: "set null" }),
+  userName: varchar("user_name", { length: 256 }),
+  checkInAt: timestamp("check_in_at").defaultNow(),
+  checkOutAt: timestamp("check_out_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  customerIdx: index("visits_customer_idx").on(table.customerId),
+  userIdx: index("visits_user_idx").on(table.userId),
+  checkInIdx: index("visits_check_in_idx").on(table.checkInAt),
+}));
+
+export const trips = pgTable("trips", {
+  id: varchar("id", { length: 7 }).primaryKey(),
+  name: varchar("name", { length: 256 }).notNull(),
+  userId: varchar("user_id", { length: 7 }).notNull().references(() => users.id, { onDelete: "set null" }),
+  userName: varchar("user_name", { length: 256 }),
+  customerIds: text("customer_ids").notNull(),
+  startLat: text("start_lat"),
+  startLng: text("start_lng"),
+  startAddress: text("start_address"),
+  totalDistance: text("total_distance"),
+  totalDuration: text("total_duration"),
+  routeGeometry: text("route_geometry"),
+  stopCount: text("stop_count"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  userIdx: index("trips_user_idx").on(table.userId),
+  createdAtIdx: index("trips_created_at_idx").on(table.createdAt),
+}));
+
 export const customersRelations = relations(customers, ({ many }) => ({
   clusters: many(customerClusters),
   deliveries: many(deliveries),
+  visits: many(visits),
+}));
+
+export const visitsRelations = relations(visits, ({ one }) => ({
+  customer: one(customers, {
+    fields: [visits.customerId],
+    references: [customers.id],
+  }),
+  user: one(users, {
+    fields: [visits.userId],
+    references: [users.id],
+  }),
+}));
+
+export const tripsRelations = relations(trips, ({ one }) => ({
+  user: one(users, {
+    fields: [trips.userId],
+    references: [users.id],
+  }),
+}));
+
+export const usersRelations = relations(users, ({ many }) => ({
+  visits: many(visits),
+  trips: many(trips),
 }));
 
 export const clustersRelations = relations(clusters, ({ many }) => ({

@@ -63,6 +63,15 @@ export const translations: Translations = {
   "map.duration": { en: "Duration", id: "Durasi" },
   "map.etc": { en: "ETC", id: "Estimasi Selesai" },
   "map.clear": { en: "Clear Route", id: "Hapus Rute" },
+  "map.save_route": { en: "Save Route", id: "Simpan Rute" },
+  "map.saved_routes": { en: "Saved Routes", id: "Rute Tersimpan" },
+  "map.route_saved": { en: "Route saved!", id: "Rute disimpan!" },
+  "map.route_deleted": { en: "Route deleted", id: "Rute dihapus" },
+  "map.load_route": { en: "Loaded", id: "Dimuat" },
+  "map.no_saved_routes": { en: "No saved routes yet", id: "Belum ada rute tersimpan" },
+  "map.save_title": { en: "Save Current Route", id: "Simpan Rute Saat Ini" },
+  "map.save_desc": { en: "Give your route a name so you can load it later.", id: "Beri nama rute Anda agar dapat dimuat kembali nanti." },
+  "map.save_name_placeholder": { en: "e.g. Tuesday Morning Route", id: "cth. Rute Selasa Pagi" },
 
   // Admin / General Tables
   "admin.fleet_mgmt": { en: "Fleet Management", id: "Manajemen Armada" },
@@ -92,6 +101,12 @@ export const translations: Translations = {
   "admin.wipe_type_code": { en: "To prevent accidental wipes, please type [CODE] below to execute the deletion.", id: "Untuk mencegah penghapusan tidak sengaja, silakan ketik [CODE] di bawah ini untuk mengeksekusi penghapusan." },
   "admin.wipe_executing": { en: "Executing Wipe...", id: "Mengeksekusi Penghapusan..." },
   "admin.wipe_execute_btn": { en: "Execute Permanent Wipe", id: "Eksekusi Penghapusan Permanen" },
+  "admin.geocode_title": { en: "Geocode All Customers", id: "Geocode Semua Pelanggan" },
+  "admin.geocode_desc": { en: "Auto-resolve coordinates for customers missing GPS location.", id: "Selesaikan otomatis koordinat untuk pelanggan tanpa lokasi GPS." },
+  "admin.geocode_button": { en: "Geocode All", id: "Geocode Semua" },
+  "admin.geocode_processing": { en: "Geocoding...", id: "Memproses Geocode..." },
+  "admin.geocode_success": { en: "Geocoding complete! {count} customers updated.", id: "Geocode selesai! {count} pelanggan diperbarui." },
+  "admin.geocode_error": { en: "Geocoding failed. Check console for details.", id: "Geocode gagal. Periksa konsol untuk detail." },
   "role.admin": { en: "Admin", id: "Admin" },
   "role.courier": { en: "Courier", id: "Kurir" },
   
@@ -118,6 +133,9 @@ export const translations: Translations = {
   "customer.add": { en: "Add Customer", id: "Tambah Pelanggan" },
   "customer.pin": { en: "Pin Location", id: "Sematkan Lokasi" },
   "customer.call": { en: "Call", id: "Telepon" },
+  "customer.add_single": { en: "Manual Entry", id: "Input Manual" },
+  "customer.add_bulk": { en: "Bulk Paste", id: "Tempel Massal" },
+  "customer.house_picture": { en: "House Picture", id: "Foto Rumah" },
 
   // Delivery Page specific
   "delivery.hub_title": { en: "New Deliveries", id: "Pengiriman Baru" },
@@ -181,6 +199,19 @@ export const translations: Translations = {
   "auth.registration_failed": { en: "Registration failed. Please try again.", id: "Pendaftaran gagal. Silakan coba lagi." },
   "auth.unexpected_error": { en: "An unexpected error occurred.", id: "Terjadi kesalahan yang tidak terduga." },
   "auth.something_wrong": { en: "Something went wrong.", id: "Terjadi kesalahan." },
+
+  // Visit Tracking
+  "visit.title": { en: "Visits", id: "Kunjungan" },
+  "visit.check_in": { en: "Check In", id: "Check In" },
+  "visit.check_out": { en: "Check Out", id: "Check Out" },
+  "visit.active": { en: "Active Visit", id: "Kunjungan Aktif" },
+  "visit.checked_in": { en: "Checked in!", id: "Berhasil check in!" },
+  "visit.checked_out": { en: "Checked out!", id: "Berhasil check out!" },
+  "visit.notes_placeholder": { en: "Add notes (optional)...", id: "Tambahkan catatan (opsional)..." },
+  "visit.confirm_check_in": { en: "Start Visit", id: "Mulai Kunjungan" },
+  "visit.no_visits": { en: "No visits recorded yet", id: "Belum ada kunjungan" },
+  "visit.visit_completed": { en: "Visit Completed", id: "Kunjungan Selesai" },
+  "visit.visit_in_progress": { en: "In Progress", id: "Sedang Berlangsung" },
 
   // Image Input
   "image.gallery": { en: "From Gallery", id: "Dari Galeri" },

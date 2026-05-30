@@ -21,7 +21,12 @@ export type LogAction =
   | "CLUSTER_UPDATED"
   | "CLUSTER_DELETED"
   | "RESTORE_EXECUTED"
-  | "BACKUP_DOWNLOADED";
+  | "BACKUP_DOWNLOADED"
+  | "GEOCODE_BULK"
+  | "VISIT_CHECKED_IN"
+  | "VISIT_CHECKED_OUT"
+  | "TRIP_CREATED"
+  | "TRIP_DELETED";
 
 export async function logActivity({
   userId,
