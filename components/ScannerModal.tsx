@@ -67,7 +67,7 @@ export default function ScannerModal({ onScanSuccess, onClose }: ScannerModalPro
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm px-4">
 
       <div className="absolute top-12 left-0 right-0 text-center z-10 px-6">
-        <h2 className="text-2xl font-black text-white tracking-tight mb-2">Scan Waybill</h2>
+        <h2 className="text-2xl font-black text-white tracking-tight mb-2">Scan Barcode</h2>
         <p className="text-[14px] font-medium text-gray-300">
           Position the barcode inside the frame.
         </p>

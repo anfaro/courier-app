@@ -40,7 +40,10 @@ export async function GET(req: NextRequest) {
     const hasMore = allClusters.length > limit;
     if (hasMore) allClusters.pop();
 
-    const body = { clusters: allClusters, hasMore, limit, offset };
+    const totalResult = await db.execute(sql`SELECT COUNT(*) AS count FROM clusters`);
+    const total = Number(Array.isArray(totalResult) ? totalResult[0]?.count ?? 0 : (totalResult as any)?.rows?.[0]?.count ?? 0);
+
+    const body = { clusters: allClusters, hasMore, limit, offset, total };
     setCache(cacheKey, body, 15000);
 
     return NextResponse.json(body, { status: 200 });

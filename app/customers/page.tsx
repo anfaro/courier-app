@@ -23,6 +23,9 @@ function CustomersListContent() {
   const query = searchParams.get("q") || "";
 
   const [allCustomers, setAllCustomers] = useState<any[]>([]);
+  const [visitsMap, setVisitsMap] = useState<Record<string, string>>({});
+  const [allClusters, setAllClusters] = useState<any[]>([]);
+  const [clusterFilter, setClusterFilter] = useState("all");
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(5);
@@ -34,11 +37,14 @@ function CustomersListContent() {
   const [isManagementMode, setIsManagementMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [assignClusterId, setAssignClusterId] = useState("");
+  const [isAssigning, setIsAssigning] = useState(false);
 
   const isSuperAdmin = (session?.user as any)?.role === "superadmin";
 
   const fetchCustomers = async (q: string, p: number) => {
-    const cacheKey = `${q || "__all__"}:${p}:${pageSize}`;
+    const cf = clusterFilter !== "all" ? clusterFilter : "";
+    const cacheKey = `${q || "__all__"}:${p}:${pageSize}:${cf}`;
     const cached = pageCache.get(cacheKey);
     if (cached && Date.now() - cached.ts < PAGE_CACHE_TTL) {
       setAllCustomers(cached.customers);
@@ -61,7 +67,8 @@ function CustomersListContent() {
         setAllCustomers(list);
         setHasMore(false);
       } else {
-        const url = `/api/customers?limit=${pageSize}&offset=${p * pageSize}`;
+        const cfParam = clusterFilter !== "all" ? `&clusterId=${clusterFilter}` : "";
+        const url = `/api/customers?limit=${pageSize}&offset=${p * pageSize}${cfParam}`;
         const res = await fetchWithTimeout(url, {}, 60000);
         if (!res.ok) throw new Error(`Server error (${res.status})`);
         const data = await res.json();
@@ -84,7 +91,28 @@ function CustomersListContent() {
 
   useEffect(() => {
     fetchCustomers(query, page);
-  }, [query, page, pageSize]);
+  }, [query, page, pageSize, clusterFilter]);
+
+  useEffect(() => {
+    fetch("/api/clusters?limit=200&offset=0")
+      .then(r => r.json())
+      .then(data => setAllClusters(data.clusters || []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (allCustomers.length === 0) return;
+    fetch("/api/visits")
+      .then(r => r.json())
+      .then(data => {
+        const map: Record<string, string> = {};
+        (data.visits || []).forEach((v: any) => {
+          map[v.customer_id || v.customerId] = v.visited_at || v.visitedAt;
+        });
+        setVisitsMap(map);
+      })
+      .catch(() => {});
+  }, [allCustomers]);
 
   const toggleSelection = (id: string) => {
     setSelectedIds((prev) =>
@@ -95,7 +123,7 @@ function CustomersListContent() {
   const handleBulkDelete = async () => {
     const confirmed = await askConfirmation({
       title: `${t("admin.bulk_delete")}?`,
-      message: `You are about to permanently delete ${selectedIds.length} customers and all their waybills.`,
+      message: `You are about to permanently delete ${selectedIds.length} customers.`,
       confirmText: t("action.delete"),
       type: "danger"
     });
@@ -120,6 +148,33 @@ function CustomersListContent() {
         setIsDeleting(false);
       }
     }
+  };
+
+  const handleBulkCluster = async (action: "add" | "remove") => {
+    if (!assignClusterId) { showToast("Select a cluster first", "error"); return; }
+    const label = action === "add" ? "add to" : "remove from";
+    const confirmed = await askConfirmation({
+      title: `${action === "add" ? "Assign" : "Remove"} Cluster`,
+      message: `${action === "Add" ? "Assign" : action.charAt(0).toUpperCase() + action.slice(1)} ${selectedIds.length} customers ${label} this cluster?`,
+    });
+    if (!confirmed) return;
+    setIsAssigning(true);
+    try {
+      const res = await fetch("/api/admin/customers/bulk-cluster", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerIds: selectedIds, clusterId: assignClusterId, action }),
+      });
+      if (res.ok) {
+        showToast(`${selectedIds.length} customers ${label} cluster`, "success");
+        setSelectedIds([]);
+        setAssignClusterId("");
+        fetchCustomers(query, page);
+      } else {
+        showToast("Failed to update cluster", "error");
+      }
+    } catch { showToast("Network error", "error"); }
+    finally { setIsAssigning(false); }
   };
 
   return (
@@ -160,19 +215,67 @@ function CustomersListContent() {
         </div>
 
         {isManagementMode && selectedIds.length > 0 && (
-          <div className="mb-6 flex items-center justify-between rounded-[24px] bg-red-50 dark:bg-red-950/20 p-4 border border-red-100 dark:border-red-900/50 animate-in fade-in slide-in-from-top-2">
-            <span className="font-bold text-red-700 dark:text-red-400">{selectedIds.length} selected</span>
-            <button
-              onClick={handleBulkDelete}
-              disabled={isDeleting}
-              className="btn-danger !py-2 !px-4 text-[13px]"
-            >
-              {isDeleting ? "..." : t("admin.bulk_delete")}
-            </button>
+          <div className="mb-6 space-y-3 rounded-[24px] bg-red-50 dark:bg-red-950/20 p-4 border border-red-100 dark:border-red-900/50 animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-red-700 dark:text-red-400">{selectedIds.length} selected</span>
+              <button
+                onClick={handleBulkDelete}
+                disabled={isDeleting}
+                className="btn-danger !py-2 !px-4 text-[13px]"
+              >
+                {isDeleting ? "..." : t("admin.bulk_delete")}
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={assignClusterId}
+                onChange={(e) => setAssignClusterId(e.target.value)}
+                className="flex-1 rounded-2xl border border-red-200 dark:border-red-800 bg-background px-4 py-2.5 text-[13px] font-medium text-primary focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer"
+              >
+                <option value="">Select cluster...</option>
+                {allClusters.map((c: any) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => handleBulkCluster("add")}
+                disabled={isAssigning || !assignClusterId}
+                className="rounded-full bg-blue-600 px-4 py-2.5 text-[12px] font-bold text-white hover:bg-blue-700 transition-all active:scale-90 disabled:opacity-50"
+              >
+                Assign
+              </button>
+              <button
+                onClick={() => handleBulkCluster("remove")}
+                disabled={isAssigning || !assignClusterId}
+                className="rounded-full bg-orange-600 px-4 py-2.5 text-[12px] font-bold text-white hover:bg-orange-700 transition-all active:scale-90 disabled:opacity-50"
+              >
+                Remove
+              </button>
+            </div>
           </div>
         )}
 
-        <SearchBar />
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <SearchBar />
+          </div>
+          {allClusters.length > 0 && (
+            <div className="relative shrink-0">
+              <select
+                value={clusterFilter}
+                onChange={(e) => setClusterFilter(e.target.value)}
+                className="rounded-2xl border border-card-border bg-background px-4 py-3 text-[13px] font-medium text-primary focus:border-blue-500 outline-none transition-all shadow-inner appearance-none cursor-pointer pr-8"
+                style={{ minWidth: 120 }}
+              >
+                <option value="all">All Clusters</option>
+                {allClusters.map((c: any) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-secondary text-[10px]">▼</span>
+            </div>
+          )}
+        </div>
 
         {fetchError && (
           <div className="mb-4 flex items-center justify-between rounded-2xl bg-red-50 dark:bg-red-950/20 p-4 border border-red-100 dark:border-red-900/50">
@@ -281,9 +384,16 @@ function CustomersListContent() {
                       <p className="mt-0.5 truncate text-[13px] text-secondary/80">
                         {customer.address}
                       </p>
-                      <p className="mt-1 text-[10px] font-medium text-secondary/50">
-                        📅 {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : "-"}
-                      </p>
+                      <div className="mt-1 flex items-center gap-2">
+                        <p className="text-[10px] font-medium text-secondary/50">
+                          📅 {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : "-"}
+                        </p>
+                        {visitsMap[customer.id] && (
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 text-[9px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-tight">
+                            ✅ {new Date(visitsMap[customer.id]).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 

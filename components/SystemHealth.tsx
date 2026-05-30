@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 
 const defaultStats = [
   { label: "Customers", value: 0, icon: "🏠" },
-  { label: "Deliveries", value: 0, icon: "📦" },
   { label: "Clusters", value: 0, icon: "📍" },
   { label: "Users", value: 0, icon: "👥" },
   { label: "Log Entries", value: 0, icon: "📋" },

@@ -54,21 +54,6 @@ export const customers = pgTable("customers", {
   phoneIdx: index("customers_phone_idx").on(table.phoneNumber),
 }));
 
-export const deliveries = pgTable("deliveries", {
-  id: varchar("id", { length: 7 }).primaryKey(),
-  waybillNumber: varchar("waybill_number", { length: 256 }).notNull().unique(),
-  customerId: varchar("customer_id", { length: 7 }).references(() => customers.id, { onDelete: "cascade" }),
-  proofOfDeliveryUrl: text("proof_of_delivery_url"),
-  status: varchar("status", { length: 50 }).default("Pending"),
-  codAmount: text("cod_amount").default("0"),
-  receiverName: varchar("receiver_name", { length: 256 }),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-}, (table) => ({
-  createdAtIdx: index("deliveries_created_at_idx").on(table.createdAt),
-  customerIdIdx: index("deliveries_customer_id_idx").on(table.customerId),
-}));
-
 export const customerClusters = pgTable("customer_clusters", {
   customerId: varchar("customer_id", { length: 7 })
     .notNull()
@@ -80,13 +65,39 @@ export const customerClusters = pgTable("customer_clusters", {
   pk: primaryKey({ columns: [t.customerId, t.clusterId] }),
 }));
 
+export const customerVisits = pgTable("customer_visits", {
+  id: varchar("id", { length: 7 }).primaryKey(),
+  customerId: varchar("customer_id", { length: 7 })
+    .notNull()
+    .references(() => customers.id, { onDelete: "cascade" }),
+  userId: varchar("user_id", { length: 7 }).references(() => users.id, { onDelete: "set null" }),
+  userName: varchar("user_name", { length: 256 }),
+  visitedAt: timestamp("visited_at").defaultNow().notNull(),
+  checkedOutAt: timestamp("checked_out_at"),
+  notes: text("notes"),
+}, (table) => ({
+  customerIdIdx: index("visits_customer_id_idx").on(table.customerId),
+  visitedAtIdx: index("visits_visited_at_idx").on(table.visitedAt),
+}));
+
 export const customersRelations = relations(customers, ({ many }) => ({
   clusters: many(customerClusters),
-  deliveries: many(deliveries),
+  visits: many(customerVisits),
 }));
 
 export const clustersRelations = relations(clusters, ({ many }) => ({
   customers: many(customerClusters),
+}));
+
+export const customerVisitsRelations = relations(customerVisits, ({ one }) => ({
+  customer: one(customers, {
+    fields: [customerVisits.customerId],
+    references: [customers.id],
+  }),
+  user: one(users, {
+    fields: [customerVisits.userId],
+    references: [users.id],
+  }),
 }));
 
 export const customerClustersRelations = relations(customerClusters, ({ one }) => ({
@@ -97,13 +108,6 @@ export const customerClustersRelations = relations(customerClusters, ({ one }) =
   cluster: one(clusters, {
     fields: [customerClusters.clusterId],
     references: [clusters.id],
-  }),
-}));
-
-export const deliveriesRelations = relations(deliveries, ({ one }) => ({
-  customer: one(customers, {
-    fields: [deliveries.customerId],
-    references: [customers.id],
   }),
 }));
 
@@ -155,6 +159,27 @@ export const logsRelations = relations(logs, ({ one }) => ({
 export const errorLogsRelations = relations(errorLogs, ({ one }) => ({
   user: one(users, {
     fields: [errorLogs.userId],
+    references: [users.id],
+  }),
+}));
+
+export const savedRoutes = pgTable("saved_routes", {
+  id: varchar("id", { length: 7 }).primaryKey(),
+  userId: varchar("user_id", { length: 7 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 256 }).notNull(),
+  customerIds: text("customer_ids").notNull(),
+  startLat: varchar("start_lat", { length: 32 }),
+  startLng: varchar("start_lng", { length: 32 }),
+  endLat: varchar("end_lat", { length: 32 }),
+  endLng: varchar("end_lng", { length: 32 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const savedRoutesRelations = relations(savedRoutes, ({ one }) => ({
+  user: one(users, {
+    fields: [savedRoutes.userId],
     references: [users.id],
   }),
 }));

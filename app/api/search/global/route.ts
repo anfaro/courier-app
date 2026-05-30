@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
-import { customers, deliveries, users, clusters } from "@/lib/schema";
+import { customers, users, clusters } from "@/lib/schema";
 import { ilike, or, eq } from "drizzle-orm";
 import { logActivity, logError } from "@/lib/logger";
 
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     const q = searchParams.get("q") || "";
 
     if (!q || q.length < 2) {
-      return NextResponse.json({ customers: [], deliveries: [], users: [], clusters: [] });
+      return NextResponse.json({ customers: [], users: [], clusters: [] });
     }
 
     await logActivity({
@@ -36,30 +36,14 @@ export async function GET(req: NextRequest) {
         )
     ).limit(5);
 
-    // 2. Search in Deliveries table + Join with customers
-    const foundDeliveries = await db.select({
-        id: deliveries.id,
-        waybillNumber: deliveries.waybillNumber,
-        receiverName: deliveries.receiverName,
-        customerName: customers.name,
-    })
-    .from(deliveries)
-    .leftJoin(customers, eq(deliveries.customerId, customers.id))
-    .where(
-        or(
-          ilike(deliveries.waybillNumber, `%${q}%`),
-          ilike(deliveries.receiverName, `%${q}%`),
-          ilike(customers.name, `%${q}%`)
-        )
-    ).limit(5);
-
-    // 3. Search in Clusters table
+    // 2. Search in Clusters table
     const foundClusters = await db.select().from(clusters).where(
         ilike(clusters.name, `%${q}%`)
     ).limit(5);
 
     // 4. Search in Users table - ONLY if superadmin
     let foundUsers: any[] = [];
+    // @ts-expect-error - role check
     if (token.role === "superadmin") {
       foundUsers = await db.select({
         id: users.id,
@@ -79,7 +63,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       customers: foundCustomers,
-      deliveries: foundDeliveries,
       clusters: foundClusters,
       users: foundUsers
     });

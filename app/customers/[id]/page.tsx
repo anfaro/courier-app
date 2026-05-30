@@ -1,13 +1,14 @@
 // app/customers/[id]/page.tsx
 import { db } from "@/lib/db";
-import { customers, deliveries } from "@/lib/schema";
-import { eq, desc } from "drizzle-orm";
+import { customers } from "@/lib/schema";
+import { eq } from "drizzle-orm";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ImageModal from "@/components/ImageModal";
 import MapModal from "@/components/MapModal";
-import WaybillsManager from "@/components/WaybillsManager";
+import ShareButton from "@/components/ShareButton";
+import VisitManager from "@/components/VisitManager";
 
 export default async function CustomerDetailsPage({
   params,
@@ -22,7 +23,7 @@ export default async function CustomerDetailsPage({
     with: {
       clusters: {
         with: {
-          cluster: true, 
+          cluster: true,
         },
       },
     },
@@ -30,23 +31,19 @@ export default async function CustomerDetailsPage({
 
   if (!customerData) return notFound();
 
-  const deliveryHistory = await db
-    .select()
-    .from(deliveries)
-    .where(eq(deliveries.customerId, customerId))
-    .orderBy(desc(deliveries.createdAt));
-
   return (
     <div className="min-h-screen bg-background pb-24">
       
       <Breadcrumbs />
 
       <main className="mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
-        {/* Header Section with Edit & WhatsApp Buttons */}
+        {/* Header Section with Edit, Share & WhatsApp Buttons */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-3xl font-extrabold tracking-tight text-primary">{customerData.name}</h1>
 
           <div className="flex items-center gap-3">
+            <ShareButton customerId={customerId} />
+
             <Link
               href={`/customers/${customerId}/edit`}
               className="btn-outline !h-12 !w-12 !p-0"
@@ -147,7 +144,7 @@ export default async function CustomerDetailsPage({
            </div>
         </div>
 
-        <WaybillsManager customerId={customerId} customerName={customerData.name} initialDeliveries={deliveryHistory} />
+        <VisitManager customerId={customerId} />
 
       </main>
     </div>

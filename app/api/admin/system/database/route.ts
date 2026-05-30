@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
 import { count, sql } from "drizzle-orm";
-import { customers, deliveries, clusters, users, logs, errorLogs, accessLogs } from "@/lib/schema";
+import { customers, clusters, users, logs, errorLogs, accessLogs } from "@/lib/schema";
 
 async function safeCount(table: any): Promise<number> {
   try {
@@ -20,11 +20,11 @@ export async function GET(req: NextRequest) {
     }
 
     const results = await Promise.allSettled([
-      safeCount(customers), safeCount(deliveries), safeCount(clusters),
+      safeCount(customers), safeCount(clusters),
       safeCount(users), safeCount(logs), safeCount(errorLogs), safeCount(accessLogs),
     ]);
 
-    const names = ["customers", "deliveries", "clusters", "users", "logs", "error_logs", "access_logs"];
+    const names = ["customers", "clusters", "users", "logs", "error_logs", "access_logs"];
     const tables = names.map((name, i) => ({
       table_name: name,
       row_count: results[i].status === "fulfilled" ? results[i].value : 0,

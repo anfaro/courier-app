@@ -6,7 +6,7 @@ import { getToken } from "next-auth/jwt";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
 import { generateId } from "@/lib/utils";
 import { getCached, setCache } from "@/lib/cache";
-import { sql } from "drizzle-orm";
+import { sql, eq, inArray } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
   try {
@@ -19,8 +19,33 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const limit = Math.min(Number(searchParams.get("limit")) || 500, 1000);
     const offset = Number(searchParams.get("offset")) || 0;
+    const clusterId = searchParams.get("clusterId");
+
+    let customerIds: string[] | undefined;
+    if (clusterId) {
+      const memberRows = await db
+        .select({ customerId: customerClusters.customerId })
+        .from(customerClusters)
+        .where(eq(customerClusters.clusterId, clusterId));
+      customerIds = memberRows.map(r => r.customerId);
+      if (customerIds.length === 0) {
+        return NextResponse.json({ customers: [], hasMore: false, limit, offset, total: 0 }, { status: 200 });
+      }
+    }
 
     const allCustomers = await db.query.customers.findMany({
+      limit: limit + 1,
+      offset,
+      orderBy: (customers, { desc }) => [desc(customers.createdAt)],
+      columns: {
+        id: true,
+        name: true,
+        phoneNumber: true,
+        address: true,
+        housePictureUrl: true,
+        createdAt: true,
+      },
+      ...(customerIds ? { where: (c: any, { inArray: ia }: any) => ia(c.id, customerIds) } : {}),
       limit: limit + 1,
       offset,
       orderBy: (customers, { desc }) => [desc(customers.createdAt)],
@@ -37,8 +62,13 @@ export async function GET(req: NextRequest) {
     const hasMore = allCustomers.length > limit;
     if (hasMore) allCustomers.pop();
 
-    const totalResult = await db.execute(sql`SELECT COUNT(*) AS count FROM customers`);
-    const total = Number(totalResult[0]?.count ?? 0);
+    let total: number;
+    if (customerIds) {
+      total = customerIds.length;
+    } else {
+      const totalResult = await db.execute(sql`SELECT COUNT(*) AS count FROM customers`);
+      total = Number(totalResult[0]?.count ?? 0);
+    }
 
     const body = { customers: allCustomers, hasMore, limit, offset, total };
     setCache(cacheKey, body, 15000);

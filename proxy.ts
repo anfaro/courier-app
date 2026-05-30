@@ -32,8 +32,7 @@ export default withAuth(
       authorized: ({ token, req }) => {
         const path = req.nextUrl.pathname;
         if (path === "/not-mobile") return true;
-        const publicPages = ["/login", "/register", "/forgot-password", "/reset-password"];
-        if (publicPages.includes(path)) return true;
+        if (path === "/login" || path === "/register" || path === "/forgot-password" || path === "/reset-password" || path.startsWith("/share")) return true;
         return !!token;
       },
     },
