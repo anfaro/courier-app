@@ -25,16 +25,12 @@ export default async function MapDashboardPage() {
   ]);
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      <Breadcrumbs />
-
-      <main className="mx-auto max-w-3xl p-4 sm:p-6">
-        <h1 className="text-3xl font-extrabold tracking-tight text-primary">Route Planner</h1>
-        <p className="text-[14px] font-medium text-secondary mt-1">Select customers to visit and generate the best route.</p>
-
-        <div className="mt-6">
-          <MapClientWrapper customers={allCustomers} clusters={allClusters} />
-        </div>
+    <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
+      <div className="shrink-0 z-30 bg-background">
+        <Breadcrumbs />
+      </div>
+      <main className="flex-1 min-h-0 relative">
+        <MapClientWrapper customers={allCustomers} clusters={allClusters} />
       </main>
     </div>
   );

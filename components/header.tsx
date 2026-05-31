@@ -66,6 +66,19 @@ export default function Header() {
   const [isSearching, setIsSearching] = useState(false);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<"customer" | "cluster" | "staff" | null>(null);
+
+  const FILTER_REGEX = /^filter:(customer|cluster|staff)(\s|$)/i;
+
+  const handleSearchChange = (value: string) => {
+    const match = value.match(FILTER_REGEX);
+    if (match) {
+      setActiveFilter(match[1].toLowerCase() as "customer" | "cluster" | "staff");
+      setSearchQuery(value.replace(FILTER_REGEX, ""));
+    } else {
+      setSearchQuery(value);
+    }
+  };
   
   const pathname = usePathname();
   const searchRef = useRef<HTMLDivElement>(null);
@@ -79,6 +92,7 @@ export default function Header() {
     setIsMenuOpen(false);
     setIsDropdownVisible(false);
     setSearchQuery("");
+    setActiveFilter(null);
   }, [pathname]);
 
   // Click outside to close results dropdown
@@ -94,7 +108,8 @@ export default function Header() {
 
   // Global Search Debounce
   useEffect(() => {
-    if (!searchQuery.trim() || searchQuery.length < 2) {
+    const term = searchQuery.trim();
+    if (!term || term.length < 2) {
       setSearchResults({ customers: [], clusters: [], users: [] });
       setIsDropdownVisible(false);
       return;
@@ -104,7 +119,9 @@ export default function Header() {
       setIsSearching(true);
       setIsDropdownVisible(true);
       try {
-        const res = await fetch(`/api/search/global?q=${encodeURIComponent(searchQuery)}`);
+        const params = new URLSearchParams({ q: term });
+        if (activeFilter) params.set("type", activeFilter);
+        const res = await fetch(`/api/search/global?${params}`);
         if (res.ok) {
           const data = await res.json();
           setSearchResults(data);
@@ -117,7 +134,7 @@ export default function Header() {
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery]);
+  }, [searchQuery, activeFilter]);
 
   const authPaths = ["/login", "/register", "/forgot-password", "/reset-password", "/not-mobile"];
   if (authPaths.some(path => pathname.startsWith(path))) return null;
@@ -163,17 +180,30 @@ export default function Header() {
               </svg>
             </div>
             
-            <input 
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => searchQuery.length >= 2 && setIsDropdownVisible(true)}
-              placeholder="Search..."
-              className="w-full bg-transparent border-none outline-none text-[14px] sm:text-[15px] font-bold text-primary placeholder:text-secondary/50"
-            />
+            <div className="flex items-center gap-1 w-full">
+              {activeFilter && (
+                <button
+                  onClick={() => { setActiveFilter(null); setSearchQuery(""); }}
+                  className="shrink-0 flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-900/40 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300 active:scale-90 transition-all"
+                >
+                  {activeFilter}
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+              <input 
+                type="text"
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onFocus={() => searchQuery.trim().length >= 2 && setIsDropdownVisible(true)}
+                placeholder={activeFilter ? `Search ${activeFilter}s...` : "Search... (filter:customer, filter:cluster, filter:staff)"}
+                className="flex-1 min-w-0 bg-transparent border-none outline-none text-[14px] sm:text-[15px] font-bold text-primary placeholder:text-secondary/50"
+              />
+            </div>
 
             {searchQuery && (
-              <button onClick={() => setSearchQuery("")} className="ml-2 text-secondary hover:text-primary transition-colors">
+              <button onClick={() => { setSearchQuery(""); setActiveFilter(null); }} className="ml-2 text-secondary hover:text-primary transition-colors">
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             )}
@@ -181,7 +211,7 @@ export default function Header() {
 
           {/* SEARCH RESULTS DROPDOWN */}
           <AnimatePresence>
-            {isDropdownVisible && (searchQuery.length >= 2) && (
+            {isDropdownVisible && (searchQuery.trim().length >= 2) && (
               <motion.div 
                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -223,10 +253,10 @@ export default function Header() {
                 )}
 
                 {/* CUSTOMER SECTION */}
-                {searchResults.customers.length > 0 && (
-                  <div className="mb-2">
-                    <p className="px-4 py-2 text-[11px] font-black uppercase tracking-widest text-secondary/60">{t("search.customers")}</p>
-                    {searchResults.customers.map((c: SearchResultCustomer) => (
+                <div className="mb-2">
+                  <p className="px-4 py-2 text-[11px] font-black uppercase tracking-widest text-secondary/60">{t("search.customers")}</p>
+                  {searchResults.customers.length > 0 ? (
+                    searchResults.customers.map((c: SearchResultCustomer) => (
                       <motion.div
                         key={c.id}
                         whileTap={{ scale: 0.92, rotate: -0.5 }}
@@ -240,9 +270,21 @@ export default function Header() {
                           </div>
                         </Link>
                       </motion.div>
-                    ))}
-                  </div>
-                )}
+                    ))
+                  ) : (
+                    <Link
+                      href="/customers/new"
+                      onClick={() => setSearchQuery("")}
+                      className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-hover transition-colors group"
+                    >
+                      <div className="h-10 w-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-lg shadow-inner group-hover:scale-110 transition-transform">➕</div>
+                      <div className="min-w-0">
+                        <p className="font-black text-primary text-[14px]">Add new customer</p>
+                        <p className="text-[12px] font-medium text-secondary truncate">"{searchQuery}" wasn't found</p>
+                      </div>
+                    </Link>
+                  )}
+                </div>
 
                 {/* CLUSTER SECTION */}
                 {searchResults.clusters.length > 0 && (

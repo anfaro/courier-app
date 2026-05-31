@@ -2,10 +2,10 @@
 
 import dynamic from "next/dynamic";
 
-const DynamicMap = dynamic(() => import("@/components/RouteMap"), {
+const DynamicMap = dynamic(() => import("@/components/CustomerSelectionMap"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-[60vh] items-center justify-center rounded-[32px] bg-card border border-card-border shadow-sm">
+    <div className="flex h-full items-center justify-center bg-card">
       <span className="animate-pulse font-bold text-gray-400 text-lg">Initializing Map Engine...</span>
     </div>
   ),

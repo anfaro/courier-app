@@ -15,6 +15,7 @@ export default function AdminAnalytics() {
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [selectedLog, setSelectedLog] = useState<any | null>(null);
 
   useEffect(() => {
     async function fetchLogs() {
@@ -101,9 +102,10 @@ export default function AdminAnalytics() {
                 {logs.map((log) => (
                   <div
                     key={log.id}
+                    onClick={() => setSelectedLog(log)}
                     className={activeTab === 'access' 
-                        ? "px-3 py-1.5 hover:bg-slate-800/40 transition-colors"
-                        : "relative pl-14 pr-6 py-4 hover:bg-surface-hover transition-colors"
+                        ? "px-3 py-1.5 hover:bg-slate-800/40 transition-colors cursor-pointer"
+                        : "relative pl-14 pr-6 py-4 hover:bg-surface-hover transition-colors cursor-pointer"
                     }
                   >
                     {activeTab === 'access' ? (
@@ -165,6 +167,153 @@ export default function AdminAnalytics() {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* LOG DETAIL MODAL */}
+      <AnimatePresence>
+        {selectedLog && (
+          <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              onClick={() => setSelectedLog(null)}
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="relative w-full max-w-lg rounded-[32px] bg-card p-6 shadow-2xl border border-card-border max-h-[85vh] overflow-y-auto custom-scrollbar"
+            >
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  {activeTab === "errors" && <span className="rounded-full bg-red-100 dark:bg-red-900/30 px-3 py-1 text-[11px] font-black text-red-700 dark:text-red-400 uppercase tracking-wider">Error</span>}
+                  {activeTab === "activity" && <span className="rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 text-[11px] font-black text-blue-700 dark:text-blue-400 uppercase tracking-wider">Activity</span>}
+                  {activeTab === "access" && <span className="rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1 text-[11px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Access</span>}
+                </div>
+                <button
+                  onClick={() => setSelectedLog(null)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-hover hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors active:scale-90"
+                >
+                  <svg className="h-4 w-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Timestamp — common to all */}
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">Timestamp</p>
+                  <p className="text-[14px] font-bold text-primary">{new Date(selectedLog.createdAt).toLocaleString("id-ID", { dateStyle: "long", timeStyle: "medium" })}</p>
+                </div>
+
+                {/* Log ID */}
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">Log ID</p>
+                  <p className="text-[13px] font-mono font-bold text-primary">{selectedLog.id}</p>
+                </div>
+
+                {/* Activity-specific fields */}
+                {activeTab === "activity" && (
+                  <>
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">User</p>
+                      <p className="text-[14px] font-bold text-primary">{selectedLog.userName || "System"}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">Action</p>
+                      <p className="text-[14px] font-bold text-blue-600 dark:text-blue-400">{selectedLog.action}</p>
+                    </div>
+                    {selectedLog.details && (
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">Details</p>
+                        <p className="text-[14px] font-medium text-primary whitespace-pre-wrap bg-surface-hover rounded-2xl p-4">{selectedLog.details}</p>
+                      </div>
+                    )}
+                    {selectedLog.targetId && (
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">Target ID</p>
+                        <p className="text-[13px] font-mono font-bold text-primary">{selectedLog.targetId}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Error-specific fields */}
+                {activeTab === "errors" && (
+                  <>
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">Error Name</p>
+                      <p className="text-[14px] font-bold text-red-600 dark:text-red-400">{selectedLog.errorName}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">Error Message</p>
+                      <p className="text-[14px] font-medium text-primary bg-red-50 dark:bg-red-950/30 rounded-2xl p-4 border border-red-100 dark:border-red-900/50">{selectedLog.errorMessage}</p>
+                    </div>
+                    {selectedLog.stackTrace && (
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">Stack Trace</p>
+                        <pre className="text-[11px] font-mono text-primary bg-surface-hover rounded-2xl p-4 overflow-x-auto whitespace-pre-wrap max-h-48 custom-scrollbar">{selectedLog.stackTrace}</pre>
+                      </div>
+                    )}
+                    {selectedLog.pathname && (
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">Pathname</p>
+                        <p className="text-[13px] font-mono font-bold text-primary">{selectedLog.pathname}</p>
+                      </div>
+                    )}
+                    {selectedLog.userName && (
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">User</p>
+                        <p className="text-[14px] font-bold text-primary">{selectedLog.userName}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Access-specific fields */}
+                {activeTab === "access" && (
+                  <>
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">Method</p>
+                      <p className="inline-block rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1 text-[12px] font-black text-emerald-700 dark:text-emerald-400 font-mono">{selectedLog.method}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">Pathname</p>
+                      <p className="text-[13px] font-mono font-bold text-primary break-all">{selectedLog.pathname}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">IP Address</p>
+                        <p className="text-[13px] font-mono font-bold text-primary">{selectedLog.ipAddress || "N/A"}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">User Agent</p>
+                        <p className="text-[13px] font-mono font-bold text-primary break-all">{selectedLog.userAgent || "N/A"}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">Username</p>
+                      <p className="text-[14px] font-bold text-primary">{selectedLog.userName || "Guest"}</p>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="mt-6">
+                <button
+                  onClick={() => setSelectedLog(null)}
+                  className="w-full rounded-full bg-surface-hover py-3 text-[14px] font-bold text-secondary transition hover:bg-gray-200 dark:hover:bg-slate-700 active:scale-90 border border-card-border"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -31,12 +31,12 @@
 }
 
 .dark {
-  --background: #0f172a;
+  --background: #000000;
   --foreground: #f8fafc;
-  --card-bg: #1e293b;
-  --card-border: #334155;
-  --input-bg: #334155;
-  --surface-hover: #1e293b;
+  --card-bg: #111111;
+  --card-border: #1f1f1f;
+  --input-bg: #1a1a1a;
+  --surface-hover: #1a1a1a;
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
 }

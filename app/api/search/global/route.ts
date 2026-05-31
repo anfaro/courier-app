@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q") || "";
+    const type = searchParams.get("type") || "";
 
     if (!q || q.length < 2) {
       return NextResponse.json({ customers: [], users: [], clusters: [] });
@@ -24,41 +25,46 @@ export async function GET(req: NextRequest) {
       userId: token.id as string,
       userName: token.name as string,
       action: "USER_LOGIN",
-      details: `Global search query: "${q}"`,
+      details: `Global search query: "${q}"${type ? ` (filter: ${type})` : ""}`,
     });
 
-    // 1. Search in Customers table
-    const foundCustomers = await db.select().from(customers).where(
-        or(
-          ilike(customers.name, `%${q}%`),
-          ilike(customers.phoneNumber, `%${q}%`),
-          ilike(customers.address, `%${q}%`)
-        )
-    ).limit(5);
-
-    // 2. Search in Clusters table
-    const foundClusters = await db.select().from(clusters).where(
-        ilike(clusters.name, `%${q}%`)
-    ).limit(5);
-
-    // 4. Search in Users table - ONLY if superadmin
+    let foundCustomers: any[] = [];
+    let foundClusters: any[] = [];
     let foundUsers: any[] = [];
-    // @ts-expect-error - role check
-    if (token.role === "superadmin") {
-      foundUsers = await db.select({
-        id: users.id,
-        name: users.name,
-        email: users.email,
-        role: users.role
-      })
-      .from(users)
-      .where(
-        or(
-          ilike(users.name, `%${q}%`),
-          ilike(users.email, `%${q}%`)
+
+    if (!type || type === "customer") {
+      foundCustomers = await db.select().from(customers).where(
+          or(
+            ilike(customers.name, `%${q}%`),
+            ilike(customers.phoneNumber, `%${q}%`),
+            ilike(customers.address, `%${q}%`)
+          )
+      ).limit(5);
+    }
+
+    if (!type || type === "cluster") {
+      foundClusters = await db.select().from(clusters).where(
+          ilike(clusters.name, `%${q}%`)
+      ).limit(5);
+    }
+
+    if (!type || type === "staff") {
+      if (token.role === "superadmin") {
+        foundUsers = await db.select({
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          role: users.role
+        })
+        .from(users)
+        .where(
+          or(
+            ilike(users.name, `%${q}%`),
+            ilike(users.email, `%${q}%`)
+          )
         )
-      )
-      .limit(5);
+        .limit(5);
+      }
     }
 
     return NextResponse.json({

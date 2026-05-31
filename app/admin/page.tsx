@@ -5,6 +5,8 @@ import Link from "next/link";
 import AdminQuickActions from "@/components/AdminQuickActions";
 import SystemHealth from "@/components/SystemHealth";
 import AuditTrailSearch from "@/components/AuditTrailSearch";
+import AdminAnalytics from "@/components/AdminAnalytics";
+import AdminWipeData from "@/components/AdminWipeData";
 
 export default function AdminHubPage() {
   return (
@@ -19,6 +21,12 @@ export default function AdminHubPage() {
 
         <SystemHealth />
         <AdminQuickActions />
+
+        <div className="mb-8">
+          <h2 className="text-[14px] font-bold tracking-tight text-primary mb-3 uppercase tracking-widest opacity-60">Logs & Analytics</h2>
+          <AdminAnalytics />
+        </div>
+
         <AuditTrailSearch />
 
         <div className="mb-8">
@@ -62,6 +70,8 @@ export default function AdminHubPage() {
             </Link>
           </div>
         </div>
+
+        <AdminWipeData />
       </main>
     </div>
   );

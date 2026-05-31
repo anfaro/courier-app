@@ -4,7 +4,6 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import Link from "next/link";
-import SearchBar from "@/components/SearchBar";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useSession } from "next-auth/react";
 import { useToast } from "@/components/ToastProvider";
@@ -256,9 +255,6 @@ function CustomersListContent() {
         )}
 
         <div className="flex items-center gap-3">
-          <div className="flex-1">
-            <SearchBar />
-          </div>
           {allClusters.length > 0 && (
             <div className="relative shrink-0">
               <select

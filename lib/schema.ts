@@ -46,12 +46,15 @@ export const customers = pgTable("customers", {
   longitude: text("longitude"),
   housePictureUrl: text("house_picture_url"),
   notes: text("notes"),
+  shareToken: varchar("share_token", { length: 16 }),
+  shareTokenExpiresAt: timestamp("share_token_expires_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
   createdAtIdx: index("customers_created_at_idx").on(table.createdAt),
   nameIdx: index("customers_name_idx").on(table.name),
   phoneIdx: index("customers_phone_idx").on(table.phoneNumber),
+  shareTokenIdx: index("customers_share_token_idx").on(table.shareToken),
 }));
 
 export const customerClusters = pgTable("customer_clusters", {
