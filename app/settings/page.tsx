@@ -16,6 +16,8 @@ export default function SettingsPage() {
 
   const [name, setName] = useState(session?.user?.name || "");
   const [lastSessionName, setLastSessionName] = useState(session?.user?.name);
+  const [rate, setRate] = useState("1500");
+  const [savedRate, setSavedRate] = useState("1500");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [commitHash, setCommitHash] = useState("...");
@@ -25,6 +27,13 @@ export default function SettingsPage() {
       .then((r) => r.json())
       .then((d) => setCommitHash(d.commit))
       .catch(() => setCommitHash("unknown"));
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.rate != null) { setRate(String(d.rate)); setSavedRate(String(d.rate)); } })
+      .catch(() => {});
   }, []);
 
   if (session?.user?.name !== lastSessionName) {
@@ -76,8 +85,8 @@ export default function SettingsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: session.user?.email,
-          newName: name
+          newName: name,
+          rate: Number(rate),
         }),
       });
 
@@ -198,10 +207,27 @@ export default function SettingsPage() {
               />
             </div>
 
+            <div>
+              <label className="mb-2 block text-[13px] font-bold text-secondary">{t("settings.rate_label")}</label>
+              <div className="relative">
+                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-[15px] font-bold text-secondary">Rp</span>
+                <input
+                  type="number"
+                  value={rate}
+                  onChange={(e) => setRate(e.target.value)}
+                  min="0"
+                  step="100"
+                  className={`${inputClass} pl-12`}
+                  placeholder="1500"
+                />
+              </div>
+              <p className="mt-1.5 text-[11px] font-medium text-secondary ml-1">{t("settings.rate_hint")}</p>
+            </div>
+
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={isLoading || name === session.user?.name}
+                disabled={isLoading || (name === session.user?.name && rate === savedRate)}
                 className="btn-primary w-full sm:w-auto disabled:opacity-50 disabled:active:scale-100 !rounded-full !px-8"
               >
                 {isLoading ? t("settings.saving") : t("settings.save")}

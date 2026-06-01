@@ -353,6 +353,26 @@ export default function Header() {
 
                     <div className="space-y-1">
                       <Link
+                        href="/earnings"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center gap-3 px-5 py-3.5 text-[14px] font-bold text-primary dark:text-slate-200 transition-all hover:bg-surface-hover/50 dark:hover:bg-slate-800/50 active:scale-[0.97] rounded-2xl group"
+                      >
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">💰</span>
+                        {t("earnings.title")}
+                      </Link>
+
+                      {(session?.user as any)?.role === "superadmin" && (
+                        <Link
+                          href="/admin"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="flex items-center gap-3 px-5 py-3.5 text-[14px] font-bold text-primary dark:text-slate-200 transition-all hover:bg-surface-hover/50 dark:hover:bg-slate-800/50 active:scale-[0.97] rounded-2xl group"
+                        >
+                          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">🛡️</span>
+                          {t("nav.admin")}
+                        </Link>
+                      )}
+
+                      <Link
                         href="/settings"
                         onClick={() => setIsMenuOpen(false)}
                         className="flex items-center gap-3 px-5 py-3.5 text-[14px] font-bold text-primary dark:text-slate-200 transition-all hover:bg-surface-hover/50 dark:hover:bg-slate-800/50 active:scale-[0.97] rounded-2xl group"

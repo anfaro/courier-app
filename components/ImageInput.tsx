@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLanguage } from "./LanguageProvider";
 import { useToast } from "./ToastProvider";
 
@@ -24,10 +24,12 @@ export default function ImageInput({
   const { t } = useLanguage();
   const { showToast } = useToast();
 
-  if (existingImageUrl !== lastExistingRef.current) {
-    setPreview(existingImageUrl || null);
-    lastExistingRef.current = existingImageUrl;
-  }
+  useEffect(() => {
+    if (existingImageUrl !== lastExistingRef.current) {
+      setPreview(existingImageUrl || null);
+      lastExistingRef.current = existingImageUrl;
+    }
+  }, [existingImageUrl]);
 
   const readAsDataUrl = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {

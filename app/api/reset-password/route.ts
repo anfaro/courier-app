@@ -1,12 +1,12 @@
 // app/api/reset-password/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { users, passwordResetTokens } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { logActivity, logError } from "@/lib/logger";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const { token, newPassword } = await req.json();
     if (!token || !newPassword) return NextResponse.json({ message: "Missing token or password" }, { status: 400 });

@@ -4,7 +4,6 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import Link from "next/link";
 import AdminQuickActions from "@/components/AdminQuickActions";
 import SystemHealth from "@/components/SystemHealth";
-import AuditTrailSearch from "@/components/AuditTrailSearch";
 import AdminAnalytics from "@/components/AdminAnalytics";
 import AdminWipeData from "@/components/AdminWipeData";
 
@@ -26,8 +25,6 @@ export default function AdminHubPage() {
           <h2 className="text-[14px] font-bold tracking-tight text-primary mb-3 uppercase tracking-widest opacity-60">Logs & Analytics</h2>
           <AdminAnalytics />
         </div>
-
-        <AuditTrailSearch />
 
         <div className="mb-8">
           <h2 className="text-[14px] font-bold tracking-tight text-primary mb-3 uppercase tracking-widest opacity-60">Database</h2>

@@ -15,9 +15,6 @@ export async function GET(req: NextRequest) {
     if (cached) {
       return NextResponse.json(cached, { status: 200 });
     }
-    if (cached) {
-      return NextResponse.json(cached, { status: 200 });
-    }
 
     const { searchParams } = new URL(req.url);
     const limit = Math.min(Number(searchParams.get("limit")) || 500, 1000);

@@ -1,4 +1,4 @@
-export const APP_VERSION = "1.1.0";
+export const APP_VERSION = "1.3.0";
 
 export function getCommitHash(): string {
   if (process.env.VERCEL_GIT_COMMIT_SHA) {

@@ -1,111 +1,72 @@
+# Courier SuperApps
 
-# 📦 Courier Management System (CMS)
-### Material 3 Expressive • Next.js 15 • Drizzle ORM
+Mobile-first courier management system with customer management, session tracking, route planning, and earnings monitoring. Built for Indonesian couriers and logistics teams.
 
-A high-performance, mobile-first web application designed for couriers to manage customers, track waybills, and optimize delivery routes using intelligent clustering.
-
----
-
-## 🚀 Features Implemented
-
-### 👥 Customer Management
-* **Single Entry:** Detailed form with name, phone (+62 formatting), address, and additional notes.
-* **GPS Pinning & Resolution:** High-accuracy geolocation capture with a single tap, plus an automatic Google Maps link resolver.
-* **Image Support:** Capture house pictures via the `ImageInput` component for easier package drop-offs.
-* **Smart Search:** Real-time, debounced search that filters customers by name, address, or phone number directly from the server.
-
-### 📦 Delivery & Waybill Management
-* **Global Entry Hub (`/deliveries/new`):** Unified tabbed interface for both Manual Entry and Bulk Paste modes.
-* **Intelligent Bulk Paste:** Paste Excel/Sheets data (Waybill, COD, Name) and automatically cross-reference with the customer database.
-* **"Resolve All" Engine:** Instantly generate new customer profiles for unknown names found during bulk pasting via a highly optimized bulk API endpoint.
-* **Searchable Customer Modal:** MD3 Expressive custom dropdown that filters customers instantly without breaking the mobile layout.
-* **Digital Receipt UI:** A stunning, physical-receipt-inspired waybill details page featuring dynamic status banners, absolute actions, and tear-off style COD summary blocks.
-
-### 🌐 Intelligence & Monitoring
-* **Road-Aware Routing:** Intelligent "Best Route Possible" algorithm using OSRM to map actual driving paths between stops.
-* **ETC (Estimated Time of Completion):** Real-time journey metrics including total distance, duration, and projected finish time (id-ID localized).
-* **System Analytics:** Multi-tab admin dashboard for tracking global activity, application errors, and real-time user traffic.
-* **Mainframe Traffic Stream:** High-density, terminal-style access logs for real-time technical monitoring (GET/POST/PUT/DELETE).
-
-### 🛡 Security & Administration
-* **Fleet Management:** Full-featured user administration UI (Create, Promote/Demote, Reset Password, Offboard).
-* **Global Confirmation Dialogs:** Standardized MD3 Expressive verification engine with bouncy animations and danger-state aware styling.
-* **High-Security Wipe:** Triple-layered verification flow (MD3 Dialogs + Code Input) for permanent system data resets.
-* **Activity Audit Trail:** 100% API coverage for logging every database modification with actor and timestamp details.
+**Stack:** Next.js 16 (App Router) • Drizzle ORM • PostgreSQL (Supabase) • NextAuth v4 • Tailwind CSS v4 • Framer Motion v12 • Leaflet / OSRM
 
 ---
 
-## 📅 Roadmap & Versions
+## Changelog
 
-### Current Version (v1.0.0-stable)
-- [x] **Global Entry Hub & Bulk Paste**
-- [x] **M3 Navigation & Glass-morphism Redesign**
-- [x] **Road-Aware Routing & ETC Implementation**
-- [x] **Role-Based Access Control (RBAC)**
-- [x] **Bulk Management Trifecta** (Decentralized to list pages)
-- [x] **Global Theme Engine** (Dark/Light mode support)
-- [x] **Multi-Language (i18n)** (EN/ID localization)
+### v1.3.0 — Configurable Rate
+- Rate per package now configurable per user in Settings
+- New `rate` column on `users` table (integer, default 1500)
+- Earnings page reads dynamic rate from user settings
+- `GET /api/settings` returns user settings including rate
+- `POST /api/settings` accepts optional `rate` field
+- Rate input in Settings with Rp prefix, number input, step 100
 
-### Next Major Update (v2.0.0 - "The Dispatcher Update")
-- [ ] **Desktop Dispatcher View:** Dedicated multi-column HQ layout for large screens.
-- [ ] **PWA Support:** Offline mode, manifest generation, and service worker integration.
-- [ ] **Push Notifications:** Real-time alerts for couriers on new assignments.
-- [ ] **Fleet Telemetry:** Real-time GPS tracking of active couriers on the admin map.
-- [ ] **AI Route Optimization:** Machine learning to predict best delivery windows based on traffic history.
-- [ ] **Inventory Integration:** Track warehouse stock levels directly synced with waybills.
-- [ ] **Electronic Signature (e-POD):** In-app customer signature capture on delivery.
+### v1.2.1 — Multi-Package & Split Support
+- Multi-package per delivery row (`packages` column on `sessionDeliveries`)
+- Quantity controls (`[-]`/`[+]`) in incoming modal with running total
+- Split modal: when marking >1 packages as done/return/reschedule, choose how many
+- Historical sections (Returned, Rescheduled) collapsible with spring-toggle
+- Pending deliveries in scrollable container, history below
+- Customer selection map auto-selects all pending customers on mount
+- Map collapsible with expand/collapse + spring animation
+- Map layout restructured: top bar normal flow, map `flex-1`, route controls `shrink-0`
 
----
+### v1.2.0 — Progress & Financial Update
+- Session dashboard (`/progress`) with cards, progress bars, per-user scoping
+- Session detail with incoming arrivals, delivery list grouped by status
+- Earnings page (`/earnings`) with hero total, Rp 1.500/package rate, cutoff periods (6-20 / 20-6)
+- Map embedded in session detail (standalone `/map` page removed)
+- MD3 expressive BottomNav redesign (filled pill indicator, spring animations)
+- Profile dropdown with Earnings + Admin links
+- `sessions`, `incomings`, `sessionDeliveries` tables
 
-## 🏗 Recent Architectural Updates (May 12, 2026)
+### v1.1.0 — Visit Tracking, Bulk Geocoding, Route History
+- Check-in/out with live timers and visit history per customer
+- Bulk geocoding (Nominatim with rate limiting) for superadmins
+- Save/load/delete route history in customer selection map
+- Database migrations for `visits` and `trips` tables
+- Settings page redesign (Profile Card, Preferences, Profile Info, About)
+- Global version source of truth (`lib/version.ts`)
+- Bug fixes: user online status, removed broken delivery references from admin pages
 
-### UI/UX & Motion Design
-* **Telegram-Style Theme Transition**: Implemented a high-performance circular clip-path expansion for dark/light mode switching using the View Transitions API and Web Animations API.
-* **Animated Bottom Navigation**: Redesigned the navigation bar with Framer Motion, featuring a sliding indicator dot and spring-loaded tactile feedback.
-* **Portal-Based Header Dropdown**: Re-engineered the user profile menu using React Portals to enable a global "Glass-morphism" blur effect that covers the entire viewport.
-* **System-Wide Polish**: Resolved all underlying TypeScript and ESLint errors, ensuring 100% type safety and stability across the core logistics modules.
-
-### Monitoring, UI Standardization & i18n
-* **Global Command Search**: Header-integrated engine for Customers, Waybills, and Staff (RBAC-aware) with bouncy animations.
-* **Road-Aware TSP Routing**: Integrated OSRM API for realistic driving paths and Estimated Time of Completion (ETC).
-* **Terminal UI Access Logs**: Added a high-density midnight terminal view for real-time technical traffic monitoring.
-* **Global i18n Engine**: Implemented `LanguageProvider` with 100% UI coverage for English and Indonesian.
-* **MD3 Bouncy Buttons**: Standardized all interactions to use `active:scale-90` animations and pill-shaped bordered aesthetics.
-* **Unified Layout:** Moved Header to root layout with immediate Skeleton rendering for instant brand presence.
-* **Error Boundary:** Global crash tracking system that automatically logs stack traces to the database.
-
----
-
-## 🗺️ Project Roadmap
-For a detailed look at upcoming features (Logistics Intelligence, POD Auditing, System Health) and the major **v2.0 Desktop Version** plans, see [ROADMAP.md](./ROADMAP.md).
-
-## 🛠 Tech Stack
-* **Framework:** Next.js 15
-* **Database:** PostgreSQL
-* **ORM:** Drizzle ORM
-* **Styling:** Tailwind CSS (Material 3 principles)
-* **Animation:** Framer Motion (Bouncy/Spring physics)
-* **Routing Engine:** OSRM (Open Source Routing Machine)
+### v1.0.0 — Foundation
+- Customer, delivery, and cluster CRUD
+- Leaflet map with OSRM routing and customer pins
+- Search with server-side results across customers, staff, clusters
+- Admin dashboard with analytics tabs (activity, errors, access logs)
+- Fleet management (user CRUD, role management)
+- System health monitoring
+- File uploads with proof-of-delivery and house picture support
+- i18n (en/id) with custom LanguageProvider
+- Dark/light theme with CSS variables
 
 ---
 
-## ⚙️ Installation & Setup
+## Setup
 
-1. **Clone the repo:**
-   ```bash
-   git clone <your-repo-url>
+```bash
+git clone <repo-url>
+npm install
+# Create .env.local with DATABASE_URL, NEXTAUTH_URL, NEXTAUTH_SECRET
+npx drizzle-kit push
+npm run dev
+```
 
-2. Install Dependencies
-   ```bash
-   npm Install
+## License
 
-3. Setup Environment
-   Create a .env.local file
-   ```env
-   NEXTAUTH_URL="http://localhost:3000"
-   NEXTAUTH_SECRET="your-secret-key"
-   DATABASE_URL="postgres://..."
-
-4. Database Migration
-   ```bash
-   npx drizzle-kit push
+MIT

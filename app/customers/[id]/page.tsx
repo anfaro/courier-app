@@ -115,7 +115,7 @@ export default async function CustomerDetailsPage({
 
         {/* --- RECORD HISTORY TIMELINE --- */}
         <div className="rounded-[2.5rem] bg-card p-6 sm:p-8 border border-card-border shadow-sm">
-           <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-6 ml-1 tracking-[0.2em]">Record Timeline</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-secondary mb-6 ml-1">Record Timeline</p>
            <div className="relative pl-6 space-y-8 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-card-border">
               {/* Created At */}
               <div className="relative">

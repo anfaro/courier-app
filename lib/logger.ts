@@ -26,7 +26,14 @@ export type LogAction =
   | "VISIT_CHECKED_IN"
   | "VISIT_CHECKED_OUT"
   | "TRIP_CREATED"
-  | "TRIP_DELETED";
+  | "TRIP_DELETED"
+  | "SESSION_CREATED"
+  | "SESSION_UPDATED"
+  | "SESSION_DELETED"
+  | "INCOMING_ADDED"
+  | "DELIVERY_STATUS_CHANGED"
+  | "IMAGE_UPLOADED"
+  | "SEARCH_QUERIED";
 
 export async function logActivity({
   userId,

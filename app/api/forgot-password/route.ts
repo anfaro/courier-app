@@ -1,5 +1,5 @@
 // app/api/forgot-password/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { users, passwordResetTokens } from "@/lib/schema";
 import { eq } from "drizzle-orm";
@@ -7,7 +7,7 @@ import crypto from "crypto";
 import { logActivity, logError } from "@/lib/logger";
 import { generateId } from "@/lib/utils";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json();
     if (!email) return NextResponse.json({ message: "Email is required" }, { status: 400 });

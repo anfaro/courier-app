@@ -1,0 +1,86 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
+import { db } from "@/lib/db";
+import { sessions, incomings, sessionDeliveries } from "@/lib/schema";
+import { eq } from "drizzle-orm";
+import { generateId } from "@/lib/utils";
+import { logActivity, logServerAccess, logError } from "@/lib/logger";
+
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    await logServerAccess(req, token);
+
+    const resolvedParams = await params;
+    const sessionId = resolvedParams.id;
+
+    const existing = await db.select().from(sessions).where(eq(sessions.id, sessionId)).limit(1);
+    if (!existing.length) return NextResponse.json({ message: "Session not found" }, { status: 404 });
+    if (existing[0].userId !== token.id) return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+
+    const body = await req.json();
+    const { packages: packagesCount, customerAssignments } = body;
+
+    if (!packagesCount || !customerAssignments || !Array.isArray(customerAssignments) || customerAssignments.length === 0) {
+      return NextResponse.json({ message: "Packages count and customer assignments are required" }, { status: 400 });
+    }
+
+    const totalAssigned = customerAssignments.reduce((sum: number, a: any) => sum + (Number(a.packages) || 0), 0);
+    if (totalAssigned !== Number(packagesCount)) {
+      return NextResponse.json({ message: "Sum of assigned packages must match total packages count" }, { status: 400 });
+    }
+
+    for (const a of customerAssignments) {
+      if (!a.customerId || !a.packages || Number(a.packages) < 1) {
+        return NextResponse.json({ message: "Each assignment must have customerId and packages >= 1" }, { status: 400 });
+      }
+    }
+
+    const [incoming] = await db.insert(incomings).values({
+      id: generateId(),
+      sessionId,
+      time: new Date(),
+      packages: String(packagesCount),
+    }).returning();
+
+    const deliveryRows = customerAssignments.map((a: { customerId: string; packages: number }) => ({
+      id: generateId(),
+      sessionId,
+      incomingId: incoming.id,
+      customerId: a.customerId,
+      packages: String(a.packages),
+      status: "pending",
+    }));
+
+    await db.insert(sessionDeliveries).values(deliveryRows);
+
+    const prevTotal = Number(existing[0].totalPackages) || 0;
+    await db.update(sessions)
+      .set({
+        totalPackages: String(prevTotal + Number(packagesCount)),
+        updatedAt: new Date(),
+      })
+      .where(eq(sessions.id, sessionId));
+
+    await logActivity({
+      userId: token.id as string,
+      userName: token.name as string,
+      action: "INCOMING_ADDED",
+      details: `Added incoming with ${packagesCount} packages to session ${sessionId}`,
+      targetId: sessionId,
+    });
+
+    return NextResponse.json({
+      message: "Incoming recorded",
+      incoming,
+      deliveriesCount: deliveryRows.length,
+    }, { status: 201 });
+  } catch (error) {
+    await logError({
+      errorName: "AddIncomingError",
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
+    return NextResponse.json({ message: "Failed to add incoming" }, { status: 500 });
+  }
+}

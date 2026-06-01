@@ -1,5 +1,5 @@
 // app/api/register/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { users } from "@/lib/schema";
 import { eq } from "drizzle-orm";
@@ -7,13 +7,17 @@ import bcrypt from "bcryptjs";
 import { logActivity, logError } from "@/lib/logger";
 import { generateId } from "@/lib/utils";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { name, email, password } = body;
 
     if (!email || !password) {
       return NextResponse.json({ message: "Email and password are required" }, { status: 400 });
+    }
+
+    if (!name || name.trim() === "") {
+      return NextResponse.json({ message: "Name is required" }, { status: 400 });
     }
 
     const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);

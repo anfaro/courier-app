@@ -4,7 +4,7 @@ import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
 import { clusters } from "@/lib/schema";
 import { inArray } from "drizzle-orm";
-import { logActivity, logServerAccess } from "@/lib/logger";
+import { logActivity, logServerAccess, logError } from "@/lib/logger";
 
 export async function DELETE(req: NextRequest) {
   try {
@@ -27,6 +27,10 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ message: "Success" }, { status: 200 });
   } catch (error) {
+    await logError({
+      errorName: "BulkDeleteClustersError",
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

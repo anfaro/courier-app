@@ -315,9 +315,6 @@ function CustomersListContent() {
                 </div>
               </div>
             )}
-            {allCustomers.length === 0 && (
-              <div className="min-h-[460px]" />
-            )}
             {allCustomers.length > 0 && (
             <ul className="divide-y divide-card-border">
               {allCustomers.map((customer) => (

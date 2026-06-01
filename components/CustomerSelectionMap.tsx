@@ -88,6 +88,20 @@ export default function CustomerSelectionMap({ customers, clusters }: { customer
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingTrips, setIsLoadingTrips] = useState(false);
 
+  useEffect(() => {
+    const validIds = customers
+      .filter(c => {
+        const lat = parseFloat(c.latitude);
+        const lng = parseFloat(c.longitude);
+        return !isNaN(lat) && isFinite(lat) && lat !== 0 &&
+               !isNaN(lng) && isFinite(lng) && lng !== 0;
+      })
+      .map(c => c.id);
+    if (validIds.length > 0) {
+      setSelectedIds(new Set(validIds));
+    }
+  }, [customers]);
+
   const validCustomers = useMemo(() => customers.filter(c => {
     const lat = parseFloat(c.latitude);
     const lng = parseFloat(c.longitude);
@@ -281,54 +295,10 @@ export default function CustomerSelectionMap({ customers, clusters }: { customer
     : [-6.2088, 106.8456]);
 
   return (
-    <div className="absolute inset-0">
-      {/* Map fills everything */}
-      <MapContainer center={defaultCenter} zoom={13} className="h-full w-full z-0" zoomControl={false}>
-        <TileLayer attribution="&copy; CARTO" url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
-        <MapController flyTo={flyToCoords} onReady={(m) => { mapRef.current = m; }} />
-
-        {startCoords && (
-          <Marker position={startCoords} icon={startIcon}>
-            <Popup><strong>Start Point</strong></Popup>
-          </Marker>
-        )}
-
-        {filteredCustomers.map((c) => {
-          const lat = parseFloat(c.latitude);
-          const lng = parseFloat(c.longitude);
-          if (isNaN(lat) || isNaN(lng)) return null;
-          const isSelected = selectedIds.has(c.id);
-          return (
-            <Marker
-              key={c.id}
-              position={[lat, lng]}
-              icon={isSelected ? selectedIcon : unselectedIcon}
-              eventHandlers={{ click: () => toggleCustomer(c.id) }}
-            >
-              <Popup>
-                <div className="min-w-[160px]">
-                  <p className="text-[15px] font-bold">{c.name}</p>
-                  <p className="text-[12px] text-gray-500 mt-1">{c.address}</p>
-                  <button
-                    onClick={() => toggleCustomer(c.id)}
-                    className={`mt-2 w-full rounded-full py-2 text-[11px] font-bold text-white transition-colors ${isSelected ? 'bg-red-500' : 'bg-blue-600'}`}
-                  >
-                    {isSelected ? "Remove from route" : "Add to route"}
-                  </button>
-                </div>
-              </Popup>
-            </Marker>
-          );
-        })}
-
-        {optimizedRoute.length > 0 && (
-          <Polyline positions={optimizedRoute} pathOptions={{ color: "#0A2FFF", weight: 6, opacity: 0.8, lineJoin: "round", lineCap: "round" }} />
-        )}
-      </MapContainer>
-
-      {/* Floating Top Bar: Filters + Controls */}
-      <div className="absolute top-3 left-3 right-3 z-[1000]">
-        <div className="flex items-center gap-2 rounded-[20px] bg-card/85 backdrop-blur-xl border border-card-border/70 p-2 shadow-lg">
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Top Bar: Filters + Controls */}
+      <div className="shrink-0 px-3 pt-3 pb-2 bg-card border-b border-card-border">
+        <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <select
               value={clusterFilter}
@@ -378,64 +348,54 @@ export default function CustomerSelectionMap({ customers, clusters }: { customer
         </div>
       </div>
 
-      {/* Floating Bottom Panel: Start Point + Routing Controls */}
-      <div className="absolute bottom-[88px] left-3 right-3 z-[1000] pointer-events-none">
-        <div className="rounded-[24px] bg-card/85 backdrop-blur-xl border border-card-border/70 p-4 shadow-lg pointer-events-auto space-y-3">
-          <div className="space-y-1">
-            <label className="text-[10px] font-black uppercase tracking-widest text-secondary ml-1">{t("map.start_label")}</label>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder={startCoords ? `📍 ${startCoords[0].toFixed(4)}, ${startCoords[1].toFixed(4)}` : "Paste Google Maps Link or use My Location..."}
-                value={startLink}
-                onChange={(e) => { setStartLink(e.target.value); resolveLocation(e.target.value); }}
-                className="w-full rounded-2xl border border-card-border bg-background/70 px-4 py-[10px] text-[12px] font-bold text-primary focus:border-blue-500 outline-none transition-all shadow-inner placeholder:text-secondary/60"
-              />
-              {isResolving && <span className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />}
-              {startCoords && !startLink && <button onClick={() => setStartCoords(null)} className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 font-bold active:scale-90">✕</button>}
-            </div>
-          </div>
+      {/* Map + Bottom Controls area */}
+      <div className="flex flex-col flex-1 min-h-0">
+        <div className="flex-1 relative min-h-0 overflow-hidden">
+          <MapContainer center={defaultCenter} zoom={13} className="h-full w-full z-0" zoomControl={false}>
+            <TileLayer attribution="&copy; CARTO" url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+            <MapController flyTo={flyToCoords} onReady={(m) => { mapRef.current = m; }} />
 
-          {routeStats && (
-            <div className="grid grid-cols-3 gap-2 bg-blue-50/80 dark:bg-blue-900/20 p-3 rounded-2xl">
-              <div className="text-center">
-                <p className="text-[9px] font-black uppercase tracking-tighter text-blue-500">{t("map.distance")}</p>
-                <p className="text-[14px] font-black text-blue-700 dark:text-blue-300">{(routeStats.distance / 1000).toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km</p>
-              </div>
-              <div className="text-center border-x border-blue-100/50 dark:border-blue-800/50">
-                <p className="text-[9px] font-black uppercase tracking-tighter text-blue-500">{t("map.duration")}</p>
-                <p className="text-[14px] font-black text-blue-700 dark:text-blue-300">{formatDuration(routeStats.duration)}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-[9px] font-black uppercase tracking-tighter text-emerald-500">{t("map.etc")}</p>
-                <p className="text-[14px] font-black text-emerald-600 dark:text-emerald-400">{routeStats.completionTime}</p>
-              </div>
-            </div>
-          )}
+            {startCoords && (
+              <Marker position={startCoords} icon={startIcon}>
+                <Popup><strong>Start Point</strong></Popup>
+              </Marker>
+            )}
 
-          <button
-            onClick={calculateBestRoute}
-            disabled={selectedCustomers.length === 0 || isOptimizing}
-            className="btn-primary w-full py-[11px] text-[13px] shadow-blue-600/30 disabled:bg-gray-200 dark:disabled:bg-slate-800 disabled:text-secondary disabled:shadow-none"
-          >
-            {isOptimizing ? t("map.calculating") : `🚀 ${t("map.calculate")} (${selectedIds.size})`}
-          </button>
+            {filteredCustomers.map((c) => {
+              const lat = parseFloat(c.latitude);
+              const lng = parseFloat(c.longitude);
+              if (isNaN(lat) || isNaN(lng)) return null;
+              const isSelected = selectedIds.has(c.id);
+              return (
+                <Marker
+                  key={c.id}
+                  position={[lat, lng]}
+                  icon={isSelected ? selectedIcon : unselectedIcon}
+                  eventHandlers={{ click: () => toggleCustomer(c.id) }}
+                >
+                  <Popup>
+                    <div className="min-w-[160px]">
+                      <p className="text-[15px] font-bold">{c.name}</p>
+                      <p className="text-[12px] text-gray-500 mt-1">{c.address}</p>
+                      <button
+                        onClick={() => toggleCustomer(c.id)}
+                        className={`mt-2 w-full rounded-full py-2 text-[11px] font-bold text-white transition-colors ${isSelected ? 'bg-red-500' : 'bg-blue-600'}`}
+                      >
+                        {isSelected ? "Remove from route" : "Add to route"}
+                      </button>
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
 
-          {optimizedRoute.length > 0 && (
-            <div className="flex gap-2">
-              <button onClick={() => setShowSaveModal(true)} className="flex-1 rounded-full bg-purple-600 py-[10px] text-[12px] font-bold text-white shadow-sm transition hover:bg-purple-700 active:scale-90">
-                💾 {t("map.save_route")}
-              </button>
-              <button onClick={() => { setOptimizedRoute([]); setRouteStats(null); }} className="flex-1 text-center text-[11px] font-bold text-red-600 hover:text-red-700 transition-colors active:scale-90 border border-red-200 dark:border-red-900/50 rounded-full py-[10px]">
-                {t("map.clear")}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+            {optimizedRoute.length > 0 && (
+              <Polyline positions={optimizedRoute} pathOptions={{ color: "#0A2FFF", weight: 6, opacity: 0.8, lineJoin: "round", lineCap: "round" }} />
+            )}
+          </MapContainer>
 
-      {/* Customer List Overlay */}
-      {showCustomerList && (
+          {/* Customer List Overlay */}
+          {showCustomerList && (
         <div className="absolute inset-0 z-[1001] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowCustomerList(false)} />
           <div className="relative w-full max-w-sm rounded-[28px] bg-card border border-card-border shadow-2xl max-h-[70vh] overflow-hidden">
@@ -553,6 +513,62 @@ export default function CustomerSelectionMap({ customers, clusters }: { customer
           </div>
         </div>
       )}
+        </div>
+
+        {/* Bottom Route Controls */}
+        <div className="shrink-0 bg-card border-t border-card-border p-4 space-y-3 overflow-y-auto max-h-[280px]">
+          <div className="space-y-1">
+            <label className="text-[10px] font-black uppercase tracking-widest text-secondary ml-1">{t("map.start_label")}</label>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder={startCoords ? `📍 ${startCoords[0].toFixed(4)}, ${startCoords[1].toFixed(4)}` : "Paste Google Maps Link or use My Location..."}
+                value={startLink}
+                onChange={(e) => { setStartLink(e.target.value); resolveLocation(e.target.value); }}
+                className="w-full rounded-2xl border border-card-border bg-background/70 px-4 py-[10px] text-[12px] font-bold text-primary focus:border-blue-500 outline-none transition-all shadow-inner placeholder:text-secondary/60"
+              />
+              {isResolving && <span className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />}
+              {startCoords && !startLink && <button onClick={() => setStartCoords(null)} className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 font-bold active:scale-90">✕</button>}
+            </div>
+          </div>
+
+          {routeStats && (
+            <div className="grid grid-cols-3 gap-2 bg-blue-50/80 dark:bg-blue-900/20 p-3 rounded-2xl">
+              <div className="text-center">
+                <p className="text-[9px] font-black uppercase tracking-tighter text-blue-500">{t("map.distance")}</p>
+                <p className="text-[14px] font-black text-blue-700 dark:text-blue-300">{(routeStats.distance / 1000).toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km</p>
+              </div>
+              <div className="text-center border-x border-blue-100/50 dark:border-blue-800/50">
+                <p className="text-[9px] font-black uppercase tracking-tighter text-blue-500">{t("map.duration")}</p>
+                <p className="text-[14px] font-black text-blue-700 dark:text-blue-300">{formatDuration(routeStats.duration)}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-[9px] font-black uppercase tracking-tighter text-emerald-500">{t("map.etc")}</p>
+                <p className="text-[14px] font-black text-emerald-600 dark:text-emerald-400">{routeStats.completionTime}</p>
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={calculateBestRoute}
+            disabled={selectedCustomers.length === 0 || isOptimizing}
+            className="btn-primary w-full py-[11px] text-[13px] shadow-blue-600/30 disabled:bg-gray-200 dark:disabled:bg-slate-800 disabled:text-secondary disabled:shadow-none"
+          >
+            {isOptimizing ? t("map.calculating") : `🚀 ${t("map.calculate")} (${selectedIds.size})`}
+          </button>
+
+          {optimizedRoute.length > 0 && (
+            <div className="flex gap-2">
+              <button onClick={() => setShowSaveModal(true)} className="flex-1 rounded-full bg-purple-600 py-[10px] text-[12px] font-bold text-white shadow-sm transition hover:bg-purple-700 active:scale-90">
+                💾 {t("map.save_route")}
+              </button>
+              <button onClick={() => { setOptimizedRoute([]); setRouteStats(null); }} className="flex-1 text-center text-[11px] font-bold text-red-600 hover:text-red-700 transition-colors active:scale-90 border border-red-200 dark:border-red-900/50 rounded-full py-[10px]">
+                {t("map.clear")}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

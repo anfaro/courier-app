@@ -123,8 +123,8 @@ export default function HomePage() {
               <li className="flex items-start gap-4">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20 text-[15px] font-black">3</span>
                 <div>
-                  <p className="text-[16px] font-bold">Plan your route</p>
-                  <p className="text-[13px] text-blue-200 mt-0.5">Open the Route Map, select customers to visit, and generate an optimized route.</p>
+                    <p className="text-[16px] font-bold">Start a delivery session</p>
+                    <p className="text-[13px] text-blue-200 mt-0.5">Create a new session, log incoming packages, and track delivery progress on the map.</p>
                 </div>
               </li>
             </ol>
@@ -156,21 +156,21 @@ export default function HomePage() {
               </div>
             </Link>
 
-            {/* ACTION 2: ROUTE MAP */}
-            <Link href="/map" className="block group">
+            {/* ACTION 2: PROGRESS */}
+            <Link href="/progress" className="block group">
               <div className="relative overflow-hidden rounded-[32px] bg-[#059669] p-8 shadow-xl shadow-emerald-600/20 transition-all active:scale-[0.98]">
                 <div className="absolute -left-10 -bottom-10 h-48 w-48 rounded-full bg-white/10 blur-3xl group-hover:bg-white/20 transition-all duration-500"></div>
                 <div className="relative z-10 flex items-center justify-between gap-4">
                   <div>
                     <h2 className="text-[26px] leading-tight font-black text-white mb-2 tracking-tight">
-                      {t("home.live_route")}
+                      {t("session.title")}
                     </h2>
                     <p className="text-emerald-200 font-medium text-[14px] leading-snug pr-4">
                       {t("home.live_route_desc")}
                     </p>
                   </div>
                   <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white text-[#059669] shadow-md transition-transform duration-500 group-hover:-rotate-12 group-active:scale-90">
-                    <span className="text-3xl">🗺️</span>
+                    <span className="text-3xl">📋</span>
                   </div>
                 </div>
               </div>

@@ -6,6 +6,7 @@ import {
   varchar,
   timestamp,
   boolean,
+  integer,
   primaryKey,
   index,
 } from "drizzle-orm/pg-core";
@@ -16,6 +17,7 @@ export const users = pgTable("users", {
   email: varchar("email", { length: 256 }).notNull().unique(),
   password: text("password").notNull(),
   role: varchar("role", { length: 50 }).default("courier").notNull(),
+  rate: integer("rate").default(1500).notNull(),
   isActive: boolean("is_active").default(false),
   lastActiveAt: timestamp("last_active_at"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -166,6 +168,51 @@ export const errorLogsRelations = relations(errorLogs, ({ one }) => ({
   }),
 }));
 
+export const sessions = pgTable("sessions", {
+  id: varchar("id", { length: 7 }).primaryKey(),
+  userId: varchar("user_id", { length: 7 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  date: varchar("date", { length: 10 }).notNull(),
+  totalPackages: varchar("total_packages", { length: 10 }).default("0").notNull(),
+  deliveredPackages: varchar("delivered_packages", { length: 10 }).default("0").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  userIdDateIdx: index("sessions_user_id_date_idx").on(table.userId, table.date),
+}));
+
+export const incomings = pgTable("incomings", {
+  id: varchar("id", { length: 7 }).primaryKey(),
+  sessionId: varchar("session_id", { length: 7 })
+    .notNull()
+    .references(() => sessions.id, { onDelete: "cascade" }),
+  time: timestamp("time").defaultNow().notNull(),
+  packages: varchar("packages", { length: 10 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  sessionIdIdx: index("incomings_session_id_idx").on(table.sessionId),
+}));
+
+export const sessionDeliveries = pgTable("session_deliveries", {
+  id: varchar("id", { length: 7 }).primaryKey(),
+  sessionId: varchar("session_id", { length: 7 })
+    .notNull()
+    .references(() => sessions.id, { onDelete: "cascade" }),
+  incomingId: varchar("incoming_id", { length: 7 })
+    .notNull()
+    .references(() => incomings.id, { onDelete: "cascade" }),
+  customerId: varchar("customer_id", { length: 7 })
+    .notNull()
+    .references(() => customers.id, { onDelete: "cascade" }),
+  packages: varchar("packages", { length: 10 }).default("1").notNull(),
+  status: varchar("status", { length: 20 }).default("pending").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  sessionIdIdx: index("deliveries_session_id_idx").on(table.sessionId),
+  statusIdx: index("deliveries_status_idx").on(table.status),
+}));
+
 export const savedRoutes = pgTable("saved_routes", {
   id: varchar("id", { length: 7 }).primaryKey(),
   userId: varchar("user_id", { length: 7 })
@@ -184,6 +231,38 @@ export const savedRoutesRelations = relations(savedRoutes, ({ one }) => ({
   user: one(users, {
     fields: [savedRoutes.userId],
     references: [users.id],
+  }),
+}));
+
+export const sessionsRelations = relations(sessions, ({ one, many }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
+  incomings: many(incomings),
+  deliveries: many(sessionDeliveries),
+}));
+
+export const incomingsRelations = relations(incomings, ({ one, many }) => ({
+  session: one(sessions, {
+    fields: [incomings.sessionId],
+    references: [sessions.id],
+  }),
+  deliveries: many(sessionDeliveries),
+}));
+
+export const sessionDeliveriesRelations = relations(sessionDeliveries, ({ one }) => ({
+  session: one(sessions, {
+    fields: [sessionDeliveries.sessionId],
+    references: [sessions.id],
+  }),
+  incoming: one(incomings, {
+    fields: [sessionDeliveries.incomingId],
+    references: [incomings.id],
+  }),
+  customer: one(customers, {
+    fields: [sessionDeliveries.customerId],
+    references: [customers.id],
   }),
 }));
 

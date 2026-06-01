@@ -8,7 +8,11 @@ export const runtime = "nodejs";
 export async function POST(req: NextRequest) {
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-    if (token) await logServerAccess(req, token);
+    if (!token) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    await logServerAccess(req, token);
 
     const formData = await req.formData();
     const file = formData.get("file") as File;

@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     await logActivity({
       userId: token.id as string,
       userName: token.name as string,
-      action: "USER_LOGIN",
+      action: "SEARCH_QUERIED",
       details: `Global search query: "${q}"${type ? ` (filter: ${type})` : ""}`,
     });
 

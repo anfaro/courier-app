@@ -46,17 +46,6 @@ export async function GET(req: NextRequest) {
         createdAt: true,
       },
       ...(customerIds ? { where: (c: any, { inArray: ia }: any) => ia(c.id, customerIds) } : {}),
-      limit: limit + 1,
-      offset,
-      orderBy: (customers, { desc }) => [desc(customers.createdAt)],
-      columns: {
-        id: true,
-        name: true,
-        phoneNumber: true,
-        address: true,
-        housePictureUrl: true,
-        createdAt: true,
-      },
     });
 
     const hasMore = allCustomers.length > limit;

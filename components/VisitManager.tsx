@@ -132,7 +132,7 @@ export default function VisitManager({ customerId }: { customerId: string }) {
     <>
     <div className="rounded-[2.5rem] bg-card p-6 sm:p-8 border border-card-border shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-[11px] font-black uppercase tracking-widest text-secondary tracking-[0.2em]">
+        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-secondary">
           {t("customer.visit_history")}
         </p>
         {!activeVisit && (
