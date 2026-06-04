@@ -9,6 +9,7 @@ import { useSession } from "next-auth/react";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 const MapClientWrapper = dynamic(
   () => import("@/components/MapClientWrapper"),
@@ -72,6 +73,7 @@ export default function SessionDetailPage() {
   const [showIncomingModal, setShowIncomingModal] = useState(false);
   const [packagesCount, setPackagesCount] = useState("");
   const [customerAssignments, setCustomerAssignments] = useState<Record<string, number>>({});
+  const [lockPackagesCount, setLockPackagesCount] = useState(false);
   const [savingIncoming, setSavingIncoming] = useState(false);
   const [customerSearch, setCustomerSearch] = useState("");
   const [deliverySearch, setDeliverySearch] = useState("");
@@ -85,6 +87,8 @@ export default function SessionDetailPage() {
     targetStatus: string;
     splitCount: number;
   } | null>(null);
+  const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
+  useScrollLock(showIncomingModal || selectedDelivery !== null || splitModal !== null);
 
   const dateLocale = locale === "id" ? "id-ID" : "en-GB";
 
@@ -126,6 +130,7 @@ export default function SessionDetailPage() {
       setPackagesCount("");
       setCustomerAssignments({});
       setCustomerSearch("");
+      setLockPackagesCount(false);
     }
   }, [showIncomingModal]);
 
@@ -263,6 +268,35 @@ export default function SessionDetailPage() {
   const delivered = Number(sessionData.deliveredPackages) || 0;
   const progress = total > 0 ? Math.round((delivered / total) * 100) : 0;
 
+  // Target metrics
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const incomingTimeMap: Record<string, string> = {};
+  sessionData.incomings.forEach((inc) => {
+    incomingTimeMap[inc.id] = inc.time;
+  });
+
+  const earlyCutoff = new Date(sessionData.date + "T09:00:00");
+  const earlyDeliveries = sessionData.deliveries.filter((d) => {
+    const t = incomingTimeMap[d.incomingId];
+    return t && new Date(t) < earlyCutoff;
+  });
+
+  const earlyTotal = earlyDeliveries.reduce((s, d) => s + (Number(d.packages) || 1), 0);
+  const earlyDelivered = earlyDeliveries
+    .filter((d) => d.status === "delivered")
+    .reduce((s, d) => s + (Number(d.packages) || 1), 0);
+  const earlyPct = earlyTotal > 0 ? Math.round((earlyDelivered / earlyTotal) * 100) : 100;
+
+  const isEarlyTarget = currentMinutes < 12 * 60;
+  const activeTarget = isEarlyTarget ? 50 : currentMinutes < 20 * 60 ? 93 : 97;
+  const activeSafe = isEarlyTarget ? null : 90;
+  const activeLabel = isEarlyTarget ? "09:00" : currentMinutes < 20 * 60 ? "12:00" : "Closing";
+  const activeMetric = isEarlyTarget ? earlyPct : progress;
+  const targetMet = activeMetric >= activeTarget;
+  const inSafe = activeSafe !== null && activeMetric >= activeSafe;
+
   const filterBySearch = (d: Delivery) => {
     if (!deliverySearch.trim()) return true;
     const q = deliverySearch.toLowerCase();
@@ -287,7 +321,7 @@ export default function SessionDetailPage() {
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-primary">
               {new Date(sessionData.date + "T00:00:00").toLocaleDateString(dateLocale, {
-                weekday: "long", day: "2-digit", month: "long", year: "numeric"
+                weekday: "long", day: "2-digit", month: "long", year: "numeric", timeZone: "Asia/Jakarta"
               })}
             </h1>
             <p className="text-[13px] font-medium text-secondary mt-1">
@@ -305,25 +339,121 @@ export default function SessionDetailPage() {
           </motion.button>
         </div>
 
-        {/* Progress Bar */}
+        {/* Progress Bar with Targets */}
         <div className="rounded-[24px] bg-card border border-card-border p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
+          {/* Header with status pill */}
+          <div className="flex items-center justify-between mb-4">
             <span className="text-[13px] font-bold text-secondary uppercase tracking-widest">
               {t("session.progress")}
             </span>
-            <span className="text-[22px] font-black text-primary">{progress}%</span>
+            <span className={`text-[11px] font-black px-3 py-1 rounded-full ${
+              targetMet
+                ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                : inSafe
+                ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+            }`}>
+              {targetMet
+                ? t("session.target_on_track")
+                : inSafe
+                ? t("session.target_safe")
+                : t("session.target_behind")}
+            </span>
           </div>
-          <div className="h-3 w-full rounded-full bg-surface-hover overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="h-full rounded-full bg-gradient-to-r from-blue-500 to-emerald-500"
-            />
+
+          {/* Main bar — Overall progress */}
+          <div className="mb-1">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[13px] font-bold text-primary">Overall</span>
+              <span className="text-[22px] font-black text-primary">{progress}%</span>
+            </div>
+            <div className="relative">
+              <div className="h-4 w-full rounded-full bg-surface-hover overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  className={`relative h-full rounded-full bg-gradient-to-r overflow-hidden ${
+                    targetMet
+                      ? 'from-emerald-400 to-emerald-500'
+                      : inSafe
+                      ? 'from-amber-400 to-amber-500'
+                      : 'from-red-400 to-red-500'
+                  }`}
+                >
+                  <div className="wave-surface" />
+                  <div className="b0" />
+                  <div className="b1" />
+                  <div className="b2" />
+                  <div className="b3" />
+                  <div className="b4" />
+                </motion.div>
+              </div>
+              {/* Target marker (after 12:00 on overall bar) */}
+              {!isEarlyTarget && (
+                <div
+                  className="absolute top-0 bottom-0 pointer-events-none"
+                  style={{ left: `${activeTarget}%` }}
+                >
+                  <div className="w-[1.5px] h-full bg-white/40 rounded-full absolute left-0 -translate-x-1/2" />
+                  <span className="absolute top-0 left-[6px] text-[9px] font-black text-secondary/60 whitespace-nowrap leading-none mt-0.5">
+                    {activeLabel}
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-between mt-1 text-[11px] font-medium text-secondary">
+              <span>0</span>
+              <span>{total}</span>
+            </div>
           </div>
-          <div className="flex justify-between mt-2 text-[11px] font-medium text-secondary">
-            <span>0</span>
-            <span>{total}</span>
+
+          {/* Secondary bar — Before 09:00 early progress */}
+          <div className="mt-5 pt-4 border-t border-card-border">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[12px] font-bold text-secondary">{t("session.target_early")}</span>
+              <span className="text-[14px] font-black text-primary">{earlyPct}%</span>
+            </div>
+            <div className="relative">
+              <div className="h-2.5 w-full rounded-full bg-surface-hover overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${earlyPct}%` }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+                  className="relative h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-500 overflow-hidden"
+                >
+                  <div className="wave-surface" />
+                  <div className="b0" />
+                  <div className="b1" />
+                  <div className="b2" />
+                  <div className="b3" />
+                  <div className="b4" />
+                </motion.div>
+              </div>
+              {/* Target marker (before 12:00 on early bar) */}
+              {isEarlyTarget && (
+                <div
+                  className="absolute top-0 bottom-0 pointer-events-none"
+                  style={{ left: `${activeTarget}%` }}
+                >
+                  <div className="w-[1.5px] h-full bg-white/40 rounded-full absolute left-0 -translate-x-1/2" />
+                  <span className="absolute top-0 left-[6px] text-[9px] font-black text-secondary/60 whitespace-nowrap leading-none mt-0.5">
+                    {activeLabel}
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-between mt-1 text-[11px] font-medium text-secondary">
+              <span>0</span>
+              <span>{earlyTotal}</span>
+            </div>
+            <p className="text-[11px] font-medium text-secondary mt-1.5">
+              {earlyTotal > 0
+                ? `${t("session.target_early")}: ${earlyDelivered}/${earlyTotal} ${t("session.packages")}`
+                : total > 0
+                ? `${t("session.target_early")}: 0 ${t("session.packages")}`
+                : `0 ${t("session.packages")}`}
+            </p>
           </div>
         </div>
 
@@ -362,7 +492,7 @@ export default function SessionDetailPage() {
                         </p>
                         <p className="text-[11px] font-medium text-secondary">
                           {new Date(inc.time).toLocaleTimeString(dateLocale, {
-                            hour: "2-digit",
+                            hour: "2-digit", timeZone: "Asia/Jakarta",
                             minute: "2-digit",
                           })}
                         </p>
@@ -396,23 +526,24 @@ export default function SessionDetailPage() {
               </svg>
             </div>
 
-            {/* Pending - scrollable */}
-            <div className="max-h-[50vh] overflow-y-auto custom-scrollbar space-y-2 pr-1">
+            {/* Pending - scrollable with glass fade */}
+            <div className="max-h-[50vh] overflow-y-auto custom-scrollbar space-y-2 pr-1 [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
               {pendingDeliveries.length > 0 ? (
                 <div>
                   <p className="text-[11px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-2 sticky top-0 bg-background py-1 z-10">
                     {t("session.pending")} ({pendingDeliveries.length})
                   </p>
                   <div className="space-y-2">
-                    {pendingDeliveries.map((d) => (
-                      <DeliveryCard
-                        key={d.id}
-                        delivery={d}
-                        locale={dateLocale}
-                        onStatusChange={handleStatusChange}
-                        t={t}
-                      />
-                    ))}
+                      {pendingDeliveries.map((d) => (
+                        <DeliveryCard
+                          key={d.id}
+                          delivery={d}
+                          locale={dateLocale}
+                          onStatusChange={handleStatusChange}
+                          onSelect={() => setSelectedDelivery(d)}
+                          t={t}
+                        />
+                      ))}
                   </div>
                 </div>
               ) : (
@@ -431,7 +562,7 @@ export default function SessionDetailPage() {
                     <p className="text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-2">
                       {t("session.delivered_section")} ({deliveredDeliveries.length})
                     </p>
-                    <div className="space-y-2">
+                    <div className="space-y-2 max-h-[60vh] overflow-y-auto custom-scrollbar">
                       {deliveredDeliveries.map((d) => (
                         <DeliveryCard
                           key={d.id}
@@ -626,17 +757,31 @@ export default function SessionDetailPage() {
                 <label className="text-[12px] font-black uppercase tracking-widest text-secondary mb-2 block">
                   {t("session.incoming_packages_label")}
                 </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={packagesCount}
-                  onChange={(e) => {
-                    setPackagesCount(e.target.value);
-                    setCustomerAssignments({});
-                  }}
-                  placeholder={t("session.incoming_packages_placeholder")}
-                  className="w-full rounded-full bg-surface-hover px-5 py-3 text-[15px] font-bold text-primary outline-none ring-1 ring-transparent focus:ring-blue-500/30 transition-all"
-                />
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="1"
+                    value={packagesCount}
+                    onChange={(e) => {
+                      setPackagesCount(e.target.value);
+                      setCustomerAssignments({});
+                    }}
+                    disabled={lockPackagesCount}
+                    placeholder={t("session.incoming_packages_placeholder")}
+                    className="w-full rounded-full bg-surface-hover px-5 py-3 text-[15px] font-bold text-primary outline-none ring-1 ring-transparent focus:ring-blue-500/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  />
+                  {lockPackagesCount && (
+                    <button
+                      onClick={() => { setCustomerAssignments({}); setLockPackagesCount(false); }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full bg-surface-hover flex items-center justify-center text-secondary hover:text-red-500 active:scale-90 border border-card-border"
+                      title="Reset assignments"
+                    >
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Customer Selection */}
@@ -663,7 +808,7 @@ export default function SessionDetailPage() {
                     </svg>
                   </div>
 
-                  <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-1">
+                  <div className="h-[400px] overflow-y-auto custom-scrollbar space-y-1">
                     {filteredCustomers.length === 0 ? (
                       <p className="text-[13px] text-secondary py-4 text-center">
                         {customerSearch ? "No customers match your search" : "No customers available"}
@@ -684,17 +829,15 @@ export default function SessionDetailPage() {
                               <p className="text-[13px] font-bold text-primary truncate">
                                 {c.name}
                               </p>
-                              {c.phoneNumber && (
-                                <p className="text-[11px] font-medium text-secondary truncate">
-                                  {c.phoneNumber}
-                                </p>
-                              )}
+                              <p className="text-[11px] font-medium text-secondary truncate">
+                                {c.address || c.phoneNumber || ""}
+                              </p>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                               <motion.button
                                 whileTap={{ scale: 0.85 }}
                                 disabled={qty === 0}
-                                onClick={() => setCustomerAssignments(prev => ({ ...prev, [c.id]: Math.max(0, qty - 1) }))}
+                                onClick={() => setCustomerAssignments(prev => ({ ...prev, [c.id]: Math.max(0, (prev[c.id] || 0) - 1) }))}
                                 className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-hover text-primary font-black text-lg disabled:opacity-30 border border-card-border active:scale-90"
                               >
                                 –
@@ -703,7 +846,7 @@ export default function SessionDetailPage() {
                               <motion.button
                                 whileTap={{ scale: 0.85 }}
                                 disabled={maxed}
-                                onClick={() => setCustomerAssignments(prev => ({ ...prev, [c.id]: qty + 1 }))}
+                                onClick={() => { setCustomerAssignments(prev => ({ ...prev, [c.id]: (prev[c.id] || 0) + 1 })); setLockPackagesCount(true); }}
                                 className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-black text-lg disabled:opacity-30 active:scale-90"
                               >
                                 +
@@ -746,6 +889,110 @@ export default function SessionDetailPage() {
                     t("action.save")
                   )}
                 </motion.button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Customer Details Popover */}
+      <AnimatePresence>
+        {selectedDelivery && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-md"
+              onClick={() => setSelectedDelivery(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.85, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.85, y: 30 }}
+              transition={{ type: "spring", stiffness: 350, damping: 28, mass: 0.9 }}
+              className="relative w-full max-w-sm bg-card rounded-[40px] overflow-hidden shadow-2xl border border-card-border"
+            >
+              {/* Hero Image */}
+              <div className="relative h-52 bg-gradient-to-br from-blue-400 via-blue-500 to-blue-700">
+                {selectedDelivery.customer.housePictureUrl ? (
+                  <img
+                    src={selectedDelivery.customer.housePictureUrl}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-[80px] font-black text-white/20 select-none">
+                      {selectedDelivery.customer.name?.charAt(0)?.toUpperCase() || "?"}
+                    </span>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[22px] font-extrabold text-white drop-shadow-sm truncate">
+                      {selectedDelivery.customer.name}
+                    </p>
+                    <p className="text-[13px] font-medium text-white/80 mt-0.5">
+                      {(Number(selectedDelivery.packages) || 1)} {(Number(selectedDelivery.packages) || 1) > 1 ? "packages" : "package"}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedDelivery(null)}
+                    className="shrink-0 ml-3 h-8 w-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white active:scale-90 hover:bg-white/30 transition-all"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Info Section */}
+              <div className="p-5 space-y-3">
+                {selectedDelivery.customer.phoneNumber && (
+                  <div className="flex items-center gap-3.5 rounded-2xl bg-surface-hover/60 px-4 py-3 border border-card-border/50">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-secondary mb-0.5">Phone</p>
+                      <p className="text-[14px] font-bold text-primary">{selectedDelivery.customer.phoneNumber}</p>
+                    </div>
+                  </div>
+                )}
+                {selectedDelivery.customer.address && (
+                  <div className="flex items-center gap-3.5 rounded-2xl bg-surface-hover/60 px-4 py-3 border border-card-border/50">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-secondary mb-0.5">Address</p>
+                      <p className="text-[14px] font-bold text-primary">{selectedDelivery.customer.address}</p>
+                    </div>
+                  </div>
+                )}
+                {selectedDelivery.incoming?.time && (
+                  <div className="flex items-center gap-3.5 rounded-2xl bg-surface-hover/60 px-4 py-3 border border-card-border/50">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-secondary mb-0.5">Incoming Time</p>
+                      <p className="text-[14px] font-bold text-primary">
+                        {new Date(selectedDelivery.incoming.time).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" })}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>
@@ -842,11 +1089,13 @@ function DeliveryCard({
   delivery,
   locale,
   onStatusChange,
+  onSelect,
   t,
 }: {
   delivery: Delivery;
   locale: string;
   onStatusChange: (id: string, status: string) => void;
+  onSelect?: () => void;
   t: (key: string) => string;
 }) {
   const pkgCount = Number(delivery.packages) || 1;
@@ -863,7 +1112,8 @@ function DeliveryCard({
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 10 }}
-      className={`rounded-[16px] bg-card border border-card-border p-4 shadow-sm ${statusColors[delivery.status] || ""}`}
+      onClick={onSelect}
+      className={`rounded-[16px] bg-card border border-card-border p-4 shadow-sm ${statusColors[delivery.status] || ""} ${onSelect ? 'cursor-pointer hover:bg-surface-hover transition-colors active:scale-[0.98]' : ''}`}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
@@ -943,7 +1193,7 @@ function StatusButton({
   return (
     <motion.button
       whileTap={{ scale: 0.85 }}
-      onClick={onClick}
+      onClick={(e) => { e.stopPropagation(); onClick(); }}
       className={`px-2.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider border transition-all active:scale-90 ${colorMap[color] || ""}`}
     >
       {label}

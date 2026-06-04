@@ -282,6 +282,10 @@ export const translations: Translations = {
   "session.split_confirm": { en: "Confirm", id: "Konfirmasi" },
   "session.total": { en: "Total", id: "Total" },
   "session.no_pending": { en: "No pending deliveries", id: "Tidak ada pengiriman menunggu" },
+  "session.target_early": { en: "Before 09:00", id: "Sebelum 09:00" },
+  "session.target_on_track": { en: "On Track", id: "Tepat Sasaran" },
+  "session.target_safe": { en: "Safe Zone", id: "Zona Aman" },
+  "session.target_behind": { en: "Behind Target", id: "Di Bawah Target" },
 
   // Image Input
   "image.gallery": { en: "From Gallery", id: "Dari Galeri" },

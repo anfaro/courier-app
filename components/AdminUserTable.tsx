@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useToast } from "@/components/ToastProvider";
 import { useConfirmation } from "@/components/ConfirmationProvider";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }) {
   const { data: session } = useSession();
@@ -44,6 +45,7 @@ export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }
   // --- ROLE MODAL STATE ---
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [userToEditRole, setUserToEditRole] = useState<{ id: string; name: string; role: string } | null>(null);
+  useScrollLock(showPasswordModal || showAddUserModal || showRoleModal);
 
   const filteredUsers = userList.filter(u => 
     u.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 

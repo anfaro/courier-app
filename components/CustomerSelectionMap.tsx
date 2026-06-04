@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useToast } from "@/components/ToastProvider";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -87,6 +88,16 @@ export default function CustomerSelectionMap({ customers, clusters }: { customer
   const [saveName, setSaveName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingTrips, setIsLoadingTrips] = useState(false);
+  const [routeOrder, setRouteOrder] = useState<string[]>([]);
+  useScrollLock(showCustomerList || showSavedRoutes || showSaveModal);
+
+  const numberedIcon = (num: number) => L.divIcon({
+    className: "",
+    html: `<div style="background:#0A2FFF;color:white;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);">${num}</div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -18],
+  });
 
   useEffect(() => {
     const validIds = customers
@@ -166,6 +177,7 @@ export default function CustomerSelectionMap({ customers, clusters }: { customer
     setRouteStats(null);
 
     const stops = selectedCustomers.map(c => ({
+      id: c.id,
       lat: parseFloat(c.latitude),
       lng: parseFloat(c.longitude),
     }));
@@ -174,6 +186,7 @@ export default function CustomerSelectionMap({ customers, clusters }: { customer
     let current = origin;
     const remaining = [...stops];
     const sequence: [number, number][] = [origin];
+    const orderedIds: string[] = [];
     while (remaining.length > 0) {
       let nearestIdx = 0;
       let minDistance = Infinity;
@@ -184,13 +197,26 @@ export default function CustomerSelectionMap({ customers, clusters }: { customer
       const next = remaining.splice(nearestIdx, 1)[0];
       current = [next.lat, next.lng];
       sequence.push(current);
+      orderedIds.push(next.id);
     }
+    setRouteOrder(orderedIds);
     if (startCoords) sequence.push(startCoords);
 
-    try {
+    const fetchOSRM = async (): Promise<Response> => {
       const coordsString = sequence.map(s => `${s[1]},${s[0]}`).join(";");
       const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordsString}?overview=full&geometries=geojson`);
       if (!res.ok) throw new Error("Routing service failed");
+      return res;
+    };
+
+    try {
+      let res: Response;
+      try {
+        res = await fetchOSRM();
+      } catch {
+        await new Promise(r => setTimeout(r, 1000));
+        res = await fetchOSRM();
+      }
       const data = await res.json();
       if (data.routes && data.routes.length > 0) {
         const route = data.routes[0];
@@ -203,7 +229,7 @@ export default function CustomerSelectionMap({ customers, clusters }: { customer
           duration: totalTimeSeconds,
           distance: route.distance,
           stopCount: selectedCustomers.length,
-          completionTime: completionDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", hour12: false }),
+          completionTime: completionDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Jakarta" }),
         });
       } else { setOptimizedRoute(sequence); }
     } catch {
@@ -366,16 +392,19 @@ export default function CustomerSelectionMap({ customers, clusters }: { customer
               const lng = parseFloat(c.longitude);
               if (isNaN(lat) || isNaN(lng)) return null;
               const isSelected = selectedIds.has(c.id);
+              const orderIndex = routeOrder.indexOf(c.id);
+              const hasOrder = orderIndex !== -1;
+              const icon = hasOrder ? numberedIcon(orderIndex + 1) : (isSelected ? selectedIcon : unselectedIcon);
               return (
                 <Marker
                   key={c.id}
                   position={[lat, lng]}
-                  icon={isSelected ? selectedIcon : unselectedIcon}
+                  icon={icon}
                   eventHandlers={{ click: () => toggleCustomer(c.id) }}
                 >
                   <Popup>
                     <div className="min-w-[160px]">
-                      <p className="text-[15px] font-bold">{c.name}</p>
+                      <p className="text-[15px] font-bold">{hasOrder ? `#${orderIndex + 1} ` : ""}{c.name}</p>
                       <p className="text-[12px] text-gray-500 mt-1">{c.address}</p>
                       <button
                         onClick={() => toggleCustomer(c.id)}
@@ -465,7 +494,7 @@ export default function CustomerSelectionMap({ customers, clusters }: { customer
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-bold text-primary truncate">{trip.name || "Untitled"}</p>
                         <p className="text-[11px] font-medium text-secondary">
-                          {trip.createdAt ? new Date(trip.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short" }) : "-"}
+                          {trip.createdAt ? new Date(trip.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", timeZone: "Asia/Jakarta" }) : "-"}
                         </p>
                       </div>
                     </button>
@@ -562,7 +591,7 @@ export default function CustomerSelectionMap({ customers, clusters }: { customer
               <button onClick={() => setShowSaveModal(true)} className="flex-1 rounded-full bg-purple-600 py-[10px] text-[12px] font-bold text-white shadow-sm transition hover:bg-purple-700 active:scale-90">
                 💾 {t("map.save_route")}
               </button>
-              <button onClick={() => { setOptimizedRoute([]); setRouteStats(null); }} className="flex-1 text-center text-[11px] font-bold text-red-600 hover:text-red-700 transition-colors active:scale-90 border border-red-200 dark:border-red-900/50 rounded-full py-[10px]">
+              <button onClick={() => { setOptimizedRoute([]); setRouteStats(null); setRouteOrder([]); }} className="flex-1 text-center text-[11px] font-bold text-red-600 hover:text-red-700 transition-colors active:scale-90 border border-red-200 dark:border-red-900/50 rounded-full py-[10px]">
                 {t("map.clear")}
               </button>
             </div>

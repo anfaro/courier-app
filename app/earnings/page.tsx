@@ -40,7 +40,7 @@ export default function EarningsPage() {
   function formatDate(dateStr: string) {
     const d = new Date(dateStr + "T00:00:00");
     return d.toLocaleDateString(dateLocale, {
-      weekday: "short", day: "2-digit", month: "short", year: "numeric"
+      weekday: "short", day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Jakarta"
     });
   }
 

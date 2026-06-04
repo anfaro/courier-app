@@ -5,6 +5,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ImageInput from "@/components/ImageInput";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 export default function EditCustomerPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -31,6 +32,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
   const [isResolving, setIsResolving] = useState(false);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  useScrollLock(showDeleteModal);
 
   const router = useRouter();
 

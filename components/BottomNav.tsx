@@ -4,21 +4,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Home01Icon, UserGroupIcon, Chart01Icon, Layers01Icon } from "@hugeicons/core-free-icons";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 export default function BottomNav() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const { t } = useLanguage();
-  const [isVisible, setIsVisible] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const lastScrollYRef = useRef(0);
 
   // Listen for modal open/close events
   useEffect(() => {
@@ -27,36 +25,6 @@ export default function BottomNav() {
     };
     window.addEventListener("modal:change", handleModalChange as EventListener);
     return () => window.removeEventListener("modal:change", handleModalChange as EventListener);
-  }, []);
-
-  // Improved Hide/Show logic with a small threshold to prevent "flickering" during scroll
-  useEffect(() => {
-    let ticking = false;
-    let lastScrollY = 0;
-    
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
-          
-          // Only change visibility if we've scrolled more than a small threshold
-          if (Math.abs(currentScrollY - lastScrollY) > 10) {
-            if (currentScrollY > lastScrollY && currentScrollY > 100) {
-              setIsVisible(false);
-            } else {
-              setIsVisible(true);
-            }
-            lastScrollY = currentScrollY;
-            lastScrollYRef.current = currentScrollY;
-          }
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   // Hide BottomNav on auth pages
@@ -88,15 +56,9 @@ export default function BottomNav() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[100] pb-safe pointer-events-none">
-      <AnimatePresence>
-        {(isVisible && !isModalOpen) && (
-          <motion.nav 
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="pointer-events-auto flex h-[64px] w-full items-center justify-between rounded-t-[24px] bg-card/80 dark:bg-slate-900/80 backdrop-blur-xl px-1 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] border-t border-card-border/50 dark:border-slate-800 transition-colors"
-          >
+      {!isModalOpen && (
+        <nav className="pointer-events-auto flex h-[64px] w-full items-center justify-between rounded-t-[24px] bg-card/80 dark:bg-slate-900/80 backdrop-blur-xl px-1 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] border-t border-card-border/50 dark:border-slate-800 transition-colors"
+        >
             {navItems.map((item) => {
               const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
 
@@ -140,9 +102,8 @@ export default function BottomNav() {
                 </Link>
               );
             })}
-          </motion.nav>
+          </nav>
         )}
-      </AnimatePresence>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ToastProvider";
 import { useConfirmation } from "@/components/ConfirmationProvider";
 import { AnimatePresence, motion } from "framer-motion";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 interface DbProfile {
   name: string;
@@ -22,6 +23,7 @@ export default function DatabaseSettings() {
     database: "",
     user: "",
     password: "",
+    ssl: "require",
   });
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -41,6 +43,7 @@ export default function DatabaseSettings() {
   // Profile state
   const [profiles, setProfiles] = useState<DbProfile[]>([]);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
+  useScrollLock(showProfileDialog);
   const [profileName, setProfileName] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
@@ -57,8 +60,11 @@ export default function DatabaseSettings() {
             host: d.host || "",
             database: d.database || "",
             user: d.user || "",
+            ssl: d.ssl || "require",
           }));
           setUseUrl(false);
+        } else {
+          setForm((p) => ({ ...p, ssl: d.ssl || "require" }));
         }
         if (d.usingConfigFile) {
           setForm((p) => ({ ...p, databaseUrl: "" }));
@@ -70,13 +76,14 @@ export default function DatabaseSettings() {
 
   const buildPayload = () => {
     if (useUrl) {
-      return { databaseUrl: form.databaseUrl };
+      return { databaseUrl: form.databaseUrl, ssl: form.ssl };
     }
     const payload: Record<string, string> = {
       host: form.host,
       port: form.port,
       database: form.database,
       user: form.user,
+      ssl: form.ssl,
     };
     if (form.password) payload.password = form.password;
     return payload;
@@ -283,9 +290,23 @@ export default function DatabaseSettings() {
         </div>
 
         {useUrl ? (
-          <div>
-            <label className="mb-1.5 block text-[11px] font-bold text-secondary">DATABASE_URL</label>
-            <input value={form.databaseUrl} onChange={(e) => setForm((p) => ({ ...p, databaseUrl: e.target.value }))} className={inputClass} placeholder="postgresql://user:pass@host:5432/db" />
+          <div className="space-y-4">
+            <div>
+              <label className="mb-1.5 block text-[11px] font-bold text-secondary">DATABASE_URL</label>
+              <input value={form.databaseUrl} onChange={(e) => setForm((p) => ({ ...p, databaseUrl: e.target.value }))} className={inputClass} placeholder="postgresql://user:pass@host:5432/db" />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[11px] font-bold text-secondary">SSL Mode</label>
+              <div className="flex gap-2">
+                {(["require", "prefer", "allow", "disable"] as const).map((mode) => (
+                  <button key={mode} onClick={() => setForm((p) => ({ ...p, ssl: mode }))}
+                    className={`rounded-full px-4 py-1.5 text-[11px] font-bold transition-all active:scale-90 ${form.ssl === mode ? "bg-gray-900 text-white dark:bg-slate-100 dark:text-slate-900" : "bg-surface-hover text-secondary"}`}
+                  >
+                    {mode}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -308,6 +329,18 @@ export default function DatabaseSettings() {
             <div>
               <label className="mb-1.5 block text-[11px] font-bold text-secondary">Password</label>
               <input type="password" value={form.password} onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))} className={inputClass} placeholder={hasPassword ? "•••••• (leave blank to keep)" : "Enter password"} />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="mb-1.5 block text-[11px] font-bold text-secondary">SSL Mode</label>
+              <div className="flex gap-2">
+                {(["require", "prefer", "allow", "disable"] as const).map((mode) => (
+                  <button key={mode} onClick={() => setForm((p) => ({ ...p, ssl: mode }))}
+                    className={`rounded-full px-4 py-1.5 text-[11px] font-bold transition-all active:scale-90 ${form.ssl === mode ? "bg-gray-900 text-white dark:bg-slate-100 dark:text-slate-900" : "bg-surface-hover text-secondary"}`}
+                  >
+                    {mode}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}

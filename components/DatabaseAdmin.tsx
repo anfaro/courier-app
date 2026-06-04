@@ -7,6 +7,7 @@ import { useToast } from "@/components/ToastProvider";
 import { useConfirmation } from "@/components/ConfirmationProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 interface RestoreLog {
   text: string;
@@ -47,6 +48,8 @@ export default function DatabaseAdmin() {
   const [restoreLogs, setRestoreLogs] = useState<RestoreLog[]>([]);
   const [restoreProgress, setRestoreProgress] = useState(0);
   const [restoreRunning, setRestoreRunning] = useState(false);
+  const [clearBeforeRestore, setClearBeforeRestore] = useState(false);
+  useScrollLock(showCodeStep || showBackupModal || showRestoreModal);
   const logEndRef = useRef<HTMLDivElement>(null);
 
   const fetchStats = useCallback(async () => {
@@ -294,83 +297,35 @@ export default function DatabaseAdmin() {
 
       addLog("Parsing backup data...", "step");
       setRestoreProgress(15);
-      await new Promise(r => setTimeout(r, 100));
 
       if (!data?.data) throw new Error("Invalid backup file: missing .data field");
 
-      const tableNames = ["users", "customers", "clusters", "customerClusters", "logs", "errorLogs", "accessLogs"];
+      const tableNames = ["users", "customers", "clusters", "customerClusters", "customerVisits", "sessions", "incomings", "sessionDeliveries", "savedRoutes", "passwordResetTokens"];
       const activeTables = tableNames.filter(t => Array.isArray(data.data[t]) && data.data[t].length > 0);
-      const totalSteps = activeTables.length;
-      addLog(`  ✓ found ${totalSteps} tables with data`, "success");
+      addLog(`  ✓ found ${activeTables.length} tables with data`, "success");
       addLog("");
 
-      const CHUNK_CLIENT = 5;
-      const CHUNK_DELAY_CLIENT = 300;
-      const TABLE_DELAY_CLIENT = 1500;
-
-      let tablesDone = 0;
-      for (const table of activeTables) {
-        if (tablesDone > 0) {
-          addLog(`  ⏳ waiting ${TABLE_DELAY_CLIENT}ms before next table...`, "step");
-          await new Promise(r => setTimeout(r, TABLE_DELAY_CLIENT));
-        }
-
-        const rows = data.data[table];
-        const totalChunks = Math.ceil(rows.length / CHUNK_CLIENT);
-        addLog(`$ ${table}: ${rows.length} records in ${totalChunks} chunks`, "step");
-
-        let restored = 0;
-        for (let ci = 0; ci < totalChunks; ci++) {
-          const start = ci * CHUNK_CLIENT;
-          const chunk = rows.slice(start, start + CHUNK_CLIENT);
-          const chunkLabel = `chunk ${ci + 1}/${totalChunks} (rows ${start + 1}-${Math.min(start + CHUNK_CLIENT, rows.length)})`;
-
-          let chunkOk = false;
-          for (let attempt = 0; attempt < 3; attempt++) {
-            if (attempt > 0) {
-              const backoff = [1000, 3000][attempt - 1];
-              addLog(`  ⏳ ${chunkLabel} — retry ${attempt + 1}/3 in ${backoff}ms`, "step");
-              await new Promise(r => setTimeout(r, backoff));
-            }
-            try {
-              const res = await fetch("/api/admin/system/backup", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ table, rows: chunk }),
-              });
-              const result = await res.json();
-              if (res.ok) {
-                restored += result.restored || chunk.length;
-                addLog(`  ✓ ${chunkLabel} — ${result.restored} rows`, "success");
-                chunkOk = true;
-                break;
-              } else {
-                addLog(`  ✗ ${chunkLabel} — ${result.error || "server error"}`, "error");
-              }
-            } catch (e: any) {
-              addLog(`  ✗ ${chunkLabel} — ${e.message || "network error"}`, "error");
-            }
-          }
-
-          if (!chunkOk) {
-            addLog(`  ✗ ${chunkLabel} — giving up after 3 attempts`, "error");
-          }
-
-          if (ci < totalChunks - 1) {
-            addLog(`  · waiting ${CHUNK_DELAY_CLIENT}ms...`, "info");
-            await new Promise(r => setTimeout(r, CHUNK_DELAY_CLIENT));
-          }
-
-          const overallPct = 15 + Math.round(((tablesDone + (ci + 1) / totalChunks) / activeTables.length) * 80);
-          setRestoreProgress(Math.min(overallPct, 98));
-        }
-
-        addLog(`  ✓ ${table} done (${restored}/${rows.length} restored)`, "success");
-        tablesDone++;
+      if (clearBeforeRestore) {
+        addLog("Clear existing data: ON", "step");
       }
 
+      addLog("Sending to server for atomic restore...", "step");
+      setRestoreProgress(20);
+
+      const res = await fetch("/api/admin/system/backup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: data.data, truncate: clearBeforeRestore }),
+      });
+
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Server returned " + res.status);
+
+      addLog("  ✓ server restore completed", "success");
       addLog("");
-      addLog("Restore complete! Refreshing stats...", "success");
+
+      const restored = result.message || `Restored successfully.`;
+      addLog(restored, "success");
       setRestoreProgress(100);
       fetchStats();
       showToast("Backup restored successfully.", "success");
@@ -671,9 +626,17 @@ export default function DatabaseAdmin() {
       {/* Backup / Restore */}
       <div className="rounded-[24px] bg-card border border-card-border p-5 shadow-sm">
         <h3 className="font-black text-primary text-[15px] mb-4">Backup / Restore</h3>
-        <p className="text-[12px] text-secondary mb-4">Full backup exports all 8 tables as portable JSON. Image URLs are included; actual image files are not. Log tables are limited to the most recent rows (10k logs, 5k errors, 5k access logs) to prevent timeout.</p>
+        <p className="text-[12px] text-secondary mb-4">Full backup exports all 10 data tables as portable JSON. Image URLs are included; actual image files are not. Activity, error, and access logs are excluded to keep backups lean.</p>
 
         <button onClick={handleBackup} disabled={backupRunning} className="btn-primary w-full py-3.5 text-[13px] disabled:opacity-40 mb-4">📥 Download Full Backup</button>
+
+        <label className="flex items-center gap-3 mb-4 px-1 cursor-pointer">
+          <div className={`relative w-[44px] h-[24px] rounded-full transition-colors ${clearBeforeRestore ? 'bg-red-500' : 'bg-surface-hover'}`}>
+            <div className={`absolute top-[2px] left-[2px] w-[20px] h-[20px] rounded-full bg-white shadow-sm transition-transform ${clearBeforeRestore ? 'translate-x-[20px]' : ''}`} />
+            <input type="checkbox" checked={clearBeforeRestore} onChange={(e) => setClearBeforeRestore(e.target.checked)} className="hidden" />
+          </div>
+          <span className="text-[12px] font-bold text-secondary">Clear existing data before restore</span>
+        </label>
 
         <div className="relative rounded-2xl border-2 border-dashed border-card-border p-6 text-center hover:border-blue-400 transition-colors">
           <label className="block cursor-pointer">

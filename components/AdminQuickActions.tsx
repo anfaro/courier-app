@@ -4,11 +4,13 @@
 import { useState } from "react";
 import { useLanguage } from "./LanguageProvider";
 import { useToast } from "./ToastProvider";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 export default function AdminQuickActions() {
   const { t } = useLanguage();
   const { showToast } = useToast();
   const [showModal, setShowModal] = useState(false);
+  useScrollLock(showModal);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [geocoding, setGeocoding] = useState(false);

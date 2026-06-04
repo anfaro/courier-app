@@ -18,7 +18,7 @@ export default function HomePage() {
 
   const dateLocale = locale === "id" ? "id-ID" : "en-GB";
   const today = new Date().toLocaleDateString(dateLocale, {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta'
   });
 
   useEffect(() => {
@@ -193,7 +193,7 @@ export default function HomePage() {
                     <p className="text-[13px] font-bold text-primary truncate">{v.customerName}</p>
                     <p className="text-[11px] text-secondary">
                       {new Date(v.visited_at || v.visitedAt).toLocaleDateString(dateLocale, {
-                        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta'
                       })}
                     </p>
                   </div>

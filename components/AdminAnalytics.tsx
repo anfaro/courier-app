@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "./LanguageProvider";
 import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 type LogType = "activity" | "errors" | "access";
 
@@ -16,6 +17,7 @@ export default function AdminAnalytics() {
   const [fetchError, setFetchError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
   const [selectedLog, setSelectedLog] = useState<any | null>(null);
+  useScrollLock(selectedLog !== null);
 
   useEffect(() => {
     async function fetchLogs() {
@@ -110,7 +112,7 @@ export default function AdminAnalytics() {
                   >
                     {activeTab === 'access' ? (
                         <div className="flex items-center gap-2 py-1.5 w-full text-[11px] font-mono">
-                            <span className="text-slate-500 w-[90px] shrink-0">[{new Date(log.createdAt).toLocaleTimeString('id-ID', { hour12: false })}]</span>
+                            <span className="text-slate-500 w-[90px] shrink-0">[{new Date(log.createdAt).toLocaleTimeString('id-ID', { hour12: false, timeZone: 'Asia/Jakarta' })}]</span>
                             <span className="text-slate-400 w-[130px] shrink-0 truncate">{log.ipAddress || "N/A"}</span>
                             <span className="text-emerald-400 font-black w-[50px] shrink-0">{log.method}</span>
                             <span className="text-slate-100 font-bold flex-1 shrink-0">{log.pathname}</span>
@@ -131,7 +133,7 @@ export default function AdminAnalytics() {
                                 {activeTab === 'errors' && <span className="text-red-600">{log.errorName}</span>}
                                 </p>
                                 <p className="text-[11px] font-medium text-secondary whitespace-nowrap">
-                                {new Date(log.createdAt).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                                {new Date(log.createdAt).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' })}
                                 </p>
                             </div>
                             
@@ -206,7 +208,7 @@ export default function AdminAnalytics() {
                 {/* Timestamp — common to all */}
                 <div>
                   <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">Timestamp</p>
-                  <p className="text-[14px] font-bold text-primary">{new Date(selectedLog.createdAt).toLocaleString("id-ID", { dateStyle: "long", timeStyle: "medium" })}</p>
+                  <p className="text-[14px] font-bold text-primary">{new Date(selectedLog.createdAt).toLocaleString("id-ID", { dateStyle: "long", timeStyle: "medium", timeZone: "Asia/Jakarta" })}</p>
                 </div>
 
                 {/* Log ID */}
@@ -250,7 +252,7 @@ export default function AdminAnalytics() {
                     </div>
                     <div>
                       <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">Error Message</p>
-                      <p className="text-[14px] font-medium text-primary bg-red-50 dark:bg-red-950/30 rounded-2xl p-4 border border-red-100 dark:border-red-900/50">{selectedLog.errorMessage}</p>
+                      <p className="text-[14px] font-medium text-primary bg-red-50 dark:bg-red-950/30 rounded-2xl p-4 border border-red-100 dark:border-red-900/50 break-all">{selectedLog.errorMessage}</p>
                     </div>
                     {selectedLog.stackTrace && (
                       <div>

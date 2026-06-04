@@ -73,7 +73,7 @@ export default async function SharePage({
           {createdAt && (
             <div className="mt-3 flex items-center gap-2">
               <span className="rounded-full bg-white/15 backdrop-blur-md px-3 py-1 text-[10px] font-bold text-white/80 uppercase tracking-wider">
-                Customer since {createdAt.toLocaleDateString("id-ID", { month: "long", year: "numeric" })}
+                Customer since {createdAt.toLocaleDateString("id-ID", { month: "long", year: "numeric", timeZone: "Asia/Jakarta" })}
               </span>
             </div>
           )}
@@ -214,7 +214,7 @@ export default async function SharePage({
               </p>
               {lastVisit && (
                 <p className="text-[12px] font-medium text-secondary mt-0.5">
-                  Last visited {new Date(lastVisit.visitedAt).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
+                  Last visited {new Date(lastVisit.visitedAt).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" })}
                   {lastVisit.userName && ` by ${lastVisit.userName}`}
                 </p>
               )}

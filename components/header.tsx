@@ -8,6 +8,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/components/LanguageProvider";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 // --- CUSTOM COURIER LOGO SVG ---
 const AppLogo = () => (
@@ -61,6 +62,7 @@ export default function Header() {
   const { data: session } = useSession();
   const { t } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  useScrollLock(isMenuOpen);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResults>({ customers: [], clusters: [], users: [] });
   const [isSearching, setIsSearching] = useState(false);

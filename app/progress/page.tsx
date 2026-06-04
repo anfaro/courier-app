@@ -73,7 +73,7 @@ export default function ProgressDashboard() {
   function formatDate(dateStr: string) {
     const d = new Date(dateStr + "T00:00:00");
     return d.toLocaleDateString(dateLocale, {
-      weekday: "long", day: "2-digit", month: "2-digit", year: "numeric"
+      weekday: "long", day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Asia/Jakarta"
     });
   }
 

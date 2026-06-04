@@ -4,6 +4,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { Html5Qrcode } from "html5-qrcode";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 interface ScannerModalProps {
   onScanSuccess: (decodedText: string) => void;
@@ -11,6 +12,7 @@ interface ScannerModalProps {
 }
 
 export default function ScannerModal({ onScanSuccess, onClose }: ScannerModalProps) {
+  useScrollLock(true);
   const [error, setError] = useState<string>("");
   const scannerRef = useRef<Html5Qrcode | null>(null);
 

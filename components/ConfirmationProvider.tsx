@@ -4,6 +4,7 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "./LanguageProvider";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 interface ConfirmationOptions {
   title: string;
@@ -30,6 +31,8 @@ export function ConfirmationProvider({ children }: { children: React.ReactNode }
       setResolveCallback(() => resolve);
     });
   }, []);
+
+  useScrollLock(dialogConfig !== null);
 
   const handleCancel = () => {
     if (resolveCallback) resolveCallback(false);

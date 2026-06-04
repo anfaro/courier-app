@@ -254,14 +254,13 @@ function CustomersListContent() {
           </div>
         )}
 
-        <div className="flex items-center gap-3">
+        <div className="w-full mb-3">
           {allClusters.length > 0 && (
-            <div className="relative shrink-0">
+            <div className="relative w-full">
               <select
                 value={clusterFilter}
                 onChange={(e) => setClusterFilter(e.target.value)}
-                className="rounded-2xl border border-card-border bg-background px-4 py-3 text-[13px] font-medium text-primary focus:border-blue-500 outline-none transition-all shadow-inner appearance-none cursor-pointer pr-8"
-                style={{ minWidth: 120 }}
+                className="w-full rounded-2xl border border-card-border bg-background px-4 py-3 text-[13px] font-medium text-primary focus:border-blue-500 outline-none transition-all shadow-inner appearance-none cursor-pointer pr-8"
               >
                 <option value="all">All Clusters</option>
                 {allClusters.map((c: any) => (
@@ -379,11 +378,11 @@ function CustomersListContent() {
                       </p>
                       <div className="mt-1 flex items-center gap-2">
                         <p className="text-[10px] font-medium text-secondary/50">
-                          📅 {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : "-"}
+                          📅 {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' }) : "-"}
                         </p>
                         {visitsMap[customer.id] && (
                           <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 text-[9px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-tight">
-                            ✅ {new Date(visitsMap[customer.id]).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                            ✅ {new Date(visitsMap[customer.id]).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', timeZone: 'Asia/Jakarta' })}
                           </span>
                         )}
                       </div>

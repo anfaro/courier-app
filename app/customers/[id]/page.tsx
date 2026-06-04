@@ -124,7 +124,7 @@ export default async function CustomerDetailsPage({
                   <p className="text-[14px] font-black text-primary leading-none mb-1">Customer Profile Created</p>
                   <p className="text-[12px] font-medium text-secondary">
                     {customerData.createdAt ? new Date(customerData.createdAt).toLocaleString('id-ID', {
-                        day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                        day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta'
                     }) : '-'}
                   </p>
                 </div>
@@ -136,7 +136,7 @@ export default async function CustomerDetailsPage({
                   <p className="text-[14px] font-black text-primary leading-none mb-1">Last Information Update</p>
                   <p className="text-[12px] font-medium text-secondary">
                     {customerData.updatedAt ? new Date(customerData.updatedAt).toLocaleString('id-ID', {
-                        day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                        day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta'
                     }) : '-'}
                   </p>
                 </div>
@@ -144,7 +144,7 @@ export default async function CustomerDetailsPage({
            </div>
         </div>
 
-        <VisitManager customerId={customerId} />
+        <VisitManager customerId={customerId} hideCheckIn={true} />
 
       </main>
     </div>

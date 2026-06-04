@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useToast } from "@/components/ToastProvider";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 export default function ShareButton({ customerId }: { customerId: string }) {
   const { t } = useLanguage();
@@ -11,6 +12,7 @@ export default function ShareButton({ customerId }: { customerId: string }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [showModal, setShowModal] = useState(false);
+  useScrollLock(showModal);
 
   const handleShare = async () => {
     setIsGenerating(true);

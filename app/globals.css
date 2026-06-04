@@ -143,3 +143,46 @@ path {
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
 }
+
+/* Water wave animation for progress bars */
+.wave-surface {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0.25;
+}
+.wave-surface::before {
+  content: '';
+  position: absolute;
+  left: -5%;
+  width: 110%;
+  top: -70%;
+  height: 200%;
+  background: radial-gradient(ellipse at 50% 20%, rgba(255,255,255,0.35) 0%, transparent 60%);
+  animation: wave 4s ease-in-out infinite alternate;
+}
+
+@keyframes wave {
+  0% { transform: translateX(-4%) scaleY(0.8); }
+  100% { transform: translateX(4%) scaleY(1.2); }
+}
+
+/* Bubble rising animations */
+.b0, .b1, .b2, .b3, .b4 {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.22);
+  animation: rise 2.8s ease-in-out infinite;
+}
+.b0 { width: 8px; height: 8px; left: 10%; animation-delay: 0s; }
+.b1 { width: 5px; height: 5px; left: 28%; animation-delay: 0.7s; }
+.b2 { width: 10px; height: 10px; left: 48%; animation-delay: 1.5s; }
+.b3 { width: 6px; height: 6px; left: 68%; animation-delay: 2.3s; }
+.b4 { width: 7px; height: 7px; left: 86%; animation-delay: 1.1s; }
+
+@keyframes rise {
+  0% { bottom: -6px; opacity: 0; transform: scale(0.5); }
+  15% { opacity: 0.6; }
+  80% { opacity: 0.35; }
+  100% { bottom: calc(100% + 8px); opacity: 0; transform: scale(1.15); }
+}

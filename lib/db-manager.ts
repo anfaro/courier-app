@@ -24,6 +24,14 @@ function buildConnectionString(config: Record<string, string>): string {
   return `postgresql://${user}@${host}:${port}/${database}`;
 }
 
+function parseSslOption(ssl?: string): postgres.Options<any>["ssl"] {
+  if (!ssl || ssl === "require") return "require";
+  if (ssl === "disable") return false;
+  if (ssl === "prefer") return "prefer";
+  if (ssl === "allow") return "allow";
+  return "require";
+}
+
 async function readConfig(): Promise<Record<string, string>> {
   try {
     const data = await fs.readFile(CONFIG_PATH, "utf-8");
@@ -45,20 +53,24 @@ async function getConnectionString(): Promise<string> {
   return envUrl;
 }
 
-function createClient(connectionString: string) {
+function createClient(connectionString: string, ssl?: string) {
   return postgres(connectionString, {
     prepare: false,
     max: 2,
     idle_timeout: 300,
     connect_timeout: 30,
     max_lifetime: 3600,
-    ssl: "require",
+    ssl: parseSslOption(ssl),
   });
 }
 
 export async function initializeDb() {
-  const connectionString = await getConnectionString();
-  currentClient = createClient(connectionString);
+  const config = await readConfig();
+  const connectionString = buildConnectionString(config);
+  const envUrl = process.env.DATABASE_URL;
+  const useConfig = config.databaseUrl || config.host;
+  const url = useConfig ? connectionString : (envUrl || "");
+  currentClient = createClient(url, useConfig ? config.ssl : undefined);
   await currentClient`SELECT 1`.catch(() => {});
   currentDb = drizzle(currentClient, { schema });
   return currentDb;
@@ -80,7 +92,7 @@ export async function updateDbConfig(config: Record<string, string>) {
   }
 
   const connectionString = buildConnectionString(config);
-  currentClient = createClient(connectionString);
+  currentClient = createClient(connectionString, config.ssl);
   await currentClient`SELECT 1`.catch(() => {});
   currentDb = drizzle(currentClient, { schema });
   return currentDb;
@@ -100,7 +112,7 @@ export async function resetToEnvVar() {
     try { await currentClient.end({ timeout: 5 }); } catch {}
   }
 
-  currentClient = createClient(envUrl);
+  currentClient = createClient(envUrl, "require");
   await currentClient`SELECT 1`.catch(() => {});
   currentDb = drizzle(currentClient, { schema });
   return currentDb;
@@ -137,6 +149,7 @@ export async function getDbStatus() {
     database,
     user,
     hasPassword,
+    ssl: config.ssl || "require",
     profiles,
   };
 }

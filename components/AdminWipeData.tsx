@@ -6,6 +6,7 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { useToast } from "@/components/ToastProvider";
 import { useConfirmation } from "@/components/ConfirmationProvider";
 import { motion, AnimatePresence } from "framer-motion";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 export default function AdminWipeData() {
   const { t } = useLanguage();
@@ -14,6 +15,7 @@ export default function AdminWipeData() {
   
   const [isWiping, setIsWiping] = useState(false);
   const [showCodeStep, setShowCodeStep] = useState(false);
+  useScrollLock(showCodeStep);
   const [userInput, setUserInput] = useState("");
 
   const handleInitialClick = async () => {

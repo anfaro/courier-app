@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useToast } from "@/components/ToastProvider";
 import ScannerModal from "@/components/ScannerModal";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 interface Visit {
   id: string;
@@ -36,13 +37,14 @@ function formatDuration(visitedAt: string, checkedOutAt: string) {
   return `${m}m`;
 }
 
-export default function VisitManager({ customerId }: { customerId: string }) {
+export default function VisitManager({ customerId, hideCheckIn }: { customerId: string; hideCheckIn?: boolean }) {
   const { t } = useLanguage();
   const { showToast } = useToast();
   const [visits, setVisits] = useState<Visit[]>([]);
   const [activeVisit, setActiveVisit] = useState<Visit | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  useScrollLock(showModal);
   const [notes, setNotes] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
@@ -122,7 +124,7 @@ export default function VisitManager({ customerId }: { customerId: string }) {
     const d = new Date(dateStr);
     return d.toLocaleDateString("id-ID", {
       day: "numeric", month: "short", year: "numeric",
-      hour: "2-digit", minute: "2-digit",
+      hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta",
     });
   };
 
@@ -135,7 +137,7 @@ export default function VisitManager({ customerId }: { customerId: string }) {
         <p className="text-[11px] font-black uppercase tracking-[0.2em] text-secondary">
           {t("customer.visit_history")}
         </p>
-        {!activeVisit && (
+        {!activeVisit && !hideCheckIn && (
           <button
             onClick={() => setShowModal(true)}
             className="rounded-full bg-blue-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-sm hover:bg-blue-700 transition-all active:scale-90"
@@ -250,7 +252,7 @@ export default function VisitManager({ customerId }: { customerId: string }) {
       )}
 
       {/* Check-In Modal */}
-      {showModal && (
+      {showModal && !hideCheckIn && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="relative w-full max-w-sm rounded-[32px] bg-card p-6 shadow-2xl border border-card-border animate-in zoom-in-95 duration-200">
             <h3 className="text-xl font-black text-primary mb-1">{t("customer.check_in")}</h3>

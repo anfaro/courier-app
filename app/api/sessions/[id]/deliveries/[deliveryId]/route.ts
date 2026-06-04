@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
-import { sessions, sessionDeliveries } from "@/lib/schema";
+import { sessions, sessionDeliveries, customerVisits } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { generateId } from "@/lib/utils";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
@@ -75,6 +75,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           updatedAt: new Date(),
         })
         .where(eq(sessions.id, sessionId));
+    }
+
+    if (status === "delivered") {
+      await db.insert(customerVisits).values({
+        id: generateId(),
+        customerId: d.customerId,
+        userId: token.id as string,
+        userName: token.name as string,
+        visitedAt: new Date(),
+        checkedOutAt: new Date(),
+      }).onConflictDoNothing();
     }
 
     await logActivity({
