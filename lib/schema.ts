@@ -18,6 +18,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   role: varchar("role", { length: 50 }).default("courier").notNull(),
   rate: integer("rate").default(1500).notNull(),
+  targetSystem: boolean("target_system").default(true).notNull(),
   isActive: boolean("is_active").default(false),
   lastActiveAt: timestamp("last_active_at"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -176,6 +177,7 @@ export const sessions = pgTable("sessions", {
   date: varchar("date", { length: 10 }).notNull(),
   totalPackages: varchar("total_packages", { length: 10 }).default("0").notNull(),
   deliveredPackages: varchar("delivered_packages", { length: 10 }).default("0").notNull(),
+  finalized: boolean("finalized").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({

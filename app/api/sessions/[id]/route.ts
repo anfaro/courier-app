@@ -63,6 +63,45 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (!existing.length) return NextResponse.json({ message: "Session not found" }, { status: 404 });
     if (existing[0].userId !== token.id) return NextResponse.json({ message: "Forbidden" }, { status: 403 });
 
+    const isSuperAdmin = (token as any)?.role === "superadmin";
+    if (body.finalized !== undefined) {
+      if (body.finalized === true) {
+        await db.update(sessions)
+          .set({ finalized: true, updatedAt: new Date() })
+          .where(eq(sessions.id, id));
+
+        await logActivity({
+          userId: token.id as string,
+          userName: token.name as string,
+          action: "SESSION_FINALIZED",
+          details: `Finalized session ${id}`,
+          targetId: id,
+        });
+
+        return NextResponse.json({ message: "Session finalized" }, { status: 200 });
+      } else if (!isSuperAdmin) {
+        return NextResponse.json({ message: "Only superadmin can unfinalize" }, { status: 403 });
+      } else {
+        await db.update(sessions)
+          .set({ finalized: false, updatedAt: new Date() })
+          .where(eq(sessions.id, id));
+
+        await logActivity({
+          userId: token.id as string,
+          userName: token.name as string,
+          action: "SESSION_UNFINALIZED",
+          details: `Unfinalized session ${id}`,
+          targetId: id,
+        });
+
+        return NextResponse.json({ message: "Session unfinalized" }, { status: 200 });
+      }
+    }
+
+    if (existing[0].finalized && !isSuperAdmin) {
+      return NextResponse.json({ message: "Session is finalized" }, { status: 403 });
+    }
+
     const updateData: Record<string, unknown> = { updatedAt: new Date() };
 
     if (body.totalPackages !== undefined) {
@@ -115,6 +154,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const existing = await db.select().from(sessions).where(eq(sessions.id, id)).limit(1);
     if (!existing.length) return NextResponse.json({ message: "Session not found" }, { status: 404 });
     if (existing[0].userId !== token.id) return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+
+    const isSuperAdmin = (token as any)?.role === "superadmin";
+    if (existing[0].finalized && !isSuperAdmin) {
+      return NextResponse.json({ message: "Session is finalized" }, { status: 403 });
+    }
 
     await db.delete(sessions).where(eq(sessions.id, id));
 

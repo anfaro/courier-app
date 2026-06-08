@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useLanguage } from "@/components/LanguageProvider";
+import { motion } from "framer-motion";
 
 export default function HomePage() {
   const { data: session } = useSession();
@@ -15,6 +16,8 @@ export default function HomePage() {
   const [statsLoaded, setStatsLoaded] = useState(false);
   const [recentVisits, setRecentVisits] = useState<any[]>([]);
   const [showAllVisits, setShowAllVisits] = useState(false);
+  const [earningsData, setEarningsData] = useState<{ totalEarnings: number; totalDelivered: number } | null>(null);
+  const [earningsLoading, setEarningsLoading] = useState(true);
 
   const dateLocale = locale === "id" ? "id-ID" : "en-GB";
   const today = new Date().toLocaleDateString(dateLocale, {
@@ -53,10 +56,16 @@ export default function HomePage() {
             }
           }
         }
+        const earnRes = await fetch("/api/earnings");
+        if (earnRes.ok) {
+          const earnData = await earnRes.json();
+          setEarningsData({ totalEarnings: earnData.totalEarnings, totalDelivered: earnData.totalDelivered });
+        }
       } catch (err) {
         console.warn("Failed to fetch home stats", err);
       } finally {
         setStatsLoaded(true);
+        setEarningsLoading(false);
       }
     }
     fetchStats();
@@ -100,6 +109,43 @@ export default function HomePage() {
 
           </div>
         </div>
+
+        {/* --- EARNINGS WIDGET --- */}
+        {!earningsLoading && earningsData && earningsData.totalDelivered > 0 && (
+          <Link href="/earnings" className="block group">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-[24px] bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 p-5 shadow-sm group-hover:shadow-md group-hover:border-emerald-300 dark:group-hover:border-emerald-700 transition-all active:scale-[0.98]"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-1">
+                    {t("home.current_earnings")}
+                  </p>
+                  <p className="text-[26px] font-black text-emerald-800 dark:text-emerald-300 leading-none tracking-tight">
+                    {new Intl.NumberFormat("id-ID", {
+                      style: "currency", currency: "IDR",
+                      minimumFractionDigits: 0, maximumFractionDigits: 0,
+                    }).format(earningsData.totalEarnings)}
+                  </p>
+                  <p className="text-[12px] font-medium text-emerald-600/70 dark:text-emerald-400/70 mt-1">
+                    {earningsData.totalDelivered} {t("session.packages")} {t("session.delivered")}
+                  </p>
+                </div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-200 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-300 text-xl group-hover:scale-110 transition-transform">
+                  💰
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-1 text-[12px] font-bold text-emerald-600 dark:text-emerald-400">
+                {t("home.view_earnings")}
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </motion.div>
+          </Link>
+        )}
 
         {/* --- GET STARTED (empty state) --- */}
         {statsLoaded && stats.totalCustomers === 0 && (

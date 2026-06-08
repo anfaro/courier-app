@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     await logServerAccess(req, token);
 
     const user = await db
-      .select({ name: users.name, email: users.email, rate: users.rate })
+      .select({ name: users.name, email: users.email, rate: users.rate, targetSystem: users.targetSystem })
       .from(users)
       .where(eq(users.id, token.id as string))
       .limit(1);
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     }
 
     await logServerAccess(req, token);
-    const { newName, rate } = await req.json();
+    const { newName, rate, targetSystem } = await req.json();
 
     const updateData: Record<string, unknown> = { updatedAt: new Date() };
 
@@ -60,6 +60,10 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: "Invalid rate value" }, { status: 400 });
       }
       updateData.rate = parsed;
+    }
+
+    if (targetSystem !== undefined) {
+      updateData.targetSystem = Boolean(targetSystem);
     }
 
     await db.update(users)

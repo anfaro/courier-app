@@ -1,4 +1,6 @@
-export const APP_VERSION = "1.3.1";
+import pkg from "../package.json";
+
+export const APP_VERSION = pkg.version;
 
 export function getCommitHash(): string {
   if (process.env.VERCEL_GIT_COMMIT_SHA) {

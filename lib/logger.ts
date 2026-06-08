@@ -31,9 +31,12 @@ export type LogAction =
   | "SESSION_UPDATED"
   | "SESSION_DELETED"
   | "INCOMING_ADDED"
+  | "INCOMING_UPDATED"
   | "DELIVERY_STATUS_CHANGED"
   | "IMAGE_UPLOADED"
-  | "SEARCH_QUERIED";
+  | "SEARCH_QUERIED"
+  | "SESSION_FINALIZED"
+  | "SESSION_UNFINALIZED";
 
 export async function logActivity({
   userId,

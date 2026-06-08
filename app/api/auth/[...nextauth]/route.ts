@@ -49,7 +49,8 @@ const handler = NextAuth({
             id: user.id.toString(),
             name: user.name,
             email: user.email,
-            role: user.role // <-- NEW: Grab the role from Drizzle
+            role: user.role,
+            targetSystem: user.targetSystem,
           };
         }
 
@@ -69,11 +70,15 @@ const handler = NextAuth({
         token.id = user.id;
         token.name = user.name;
         // @ts-expect-error: role is not in the default user type
-        token.role = user.role; // <-- NEW: Attach role to token
+        token.role = user.role;
+        // @ts-expect-error: targetSystem is not in the default user type
+        token.targetSystem = user.targetSystem;
       }
 
-      if (trigger === "update" && session?.name) {
-        token.name = session.name;
+      if (trigger === "update") {
+        if (session?.name) token.name = session.name;
+        // @ts-expect-error: targetSystem
+        if (session?.targetSystem !== undefined) token.targetSystem = session.targetSystem;
       }
 
       return token;
@@ -85,7 +90,9 @@ const handler = NextAuth({
         session.user.id = token.id;
         session.user.name = token.name;
         // @ts-expect-error: role is not in the default session user type
-        session.user.role = token.role; // <-- NEW: Attach token role to session
+        session.user.role = token.role;
+        // @ts-expect-error: targetSystem is not in the default session user type
+        session.user.targetSystem = token.targetSystem;
       }
 
       return session;

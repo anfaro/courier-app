@@ -4,29 +4,7 @@ import { db } from "@/lib/db";
 import { users, sessions } from "@/lib/schema";
 import { eq, desc, between, and } from "drizzle-orm";
 import { logError } from "@/lib/logger";
-
-function getCutoffPeriod(date: Date = new Date()): { start: string; end: string } {
-  const day = date.getDate();
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  if (day >= 6 && day < 20) {
-    const start = `${year}-${String(month + 1).padStart(2, "0")}-06`;
-    const end = `${year}-${String(month + 1).padStart(2, "0")}-20`;
-    return { start, end };
-  } else if (day >= 20) {
-    const start = `${year}-${String(month + 1).padStart(2, "0")}-20`;
-    const nextMonth = month + 1 > 11 ? 0 : month + 1;
-    const nextYear = month + 1 > 11 ? year + 1 : year;
-    const end = `${nextYear}-${String(nextMonth + 1).padStart(2, "0")}-06`;
-    return { start, end };
-  } else {
-    const prevMonth = month - 1 < 0 ? 11 : month - 1;
-    const prevYear = month - 1 < 0 ? year - 1 : year;
-    const start = `${prevYear}-${String(prevMonth + 1).padStart(2, "0")}-20`;
-    const end = `${year}-${String(month + 1).padStart(2, "0")}-06`;
-    return { start, end };
-  }
-}
+import { getCutoffPeriod } from "@/lib/earnings";
 
 export async function GET(req: NextRequest) {
   try {

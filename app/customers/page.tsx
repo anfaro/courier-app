@@ -25,6 +25,7 @@ function CustomersListContent() {
   const [visitsMap, setVisitsMap] = useState<Record<string, string>>({});
   const [allClusters, setAllClusters] = useState<any[]>([]);
   const [clusterFilter, setClusterFilter] = useState("all");
+  const [quickFilter, setQuickFilter] = useState<"all" | "hasPin" | "noPin" | "visited">("all");
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(5);
@@ -87,6 +88,28 @@ function CustomersListContent() {
       setIsLoading(false);
     }
   };
+
+  function timeAgo(dateStr: string) {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return t("customer.relative_just_now");
+    if (mins < 60) return t("customer.relative_min_ago").replace("[N]", String(mins));
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return t("customer.relative_hour_ago").replace("[N]", String(hrs));
+    const days = Math.floor(hrs / 24);
+    if (days === 1) return t("customer.relative_yesterday");
+    if (days < 7) return t("customer.relative_day_ago").replace("[N]", String(days));
+    return new Date(dateStr).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+  }
+
+  const displayCustomers = allCustomers.filter((c) => {
+    if (quickFilter === "hasPin") return c.latitude && c.longitude;
+    if (quickFilter === "noPin") return !c.latitude || !c.longitude;
+    if (quickFilter === "visited") return visitsMap[c.id];
+    return true;
+  });
+  const totalPinned = allCustomers.filter((c) => c.latitude && c.longitude).length;
+  const totalVisited = Object.keys(visitsMap).length;
 
   useEffect(() => {
     fetchCustomers(query, page);
@@ -214,7 +237,7 @@ function CustomersListContent() {
         </div>
 
         {isManagementMode && selectedIds.length > 0 && (
-          <div className="mb-6 space-y-3 rounded-[24px] bg-red-50 dark:bg-red-950/20 p-4 border border-red-100 dark:border-red-900/50 animate-in fade-in slide-in-from-top-2">
+          <div className="mb-6 space-y-3 rounded-[24px] bg-red-50 dark:bg-red-950/20 p-4 border border-red-100 dark:border-red-900/50">
             <div className="flex items-center justify-between">
               <span className="font-bold text-red-700 dark:text-red-400">{selectedIds.length} selected</span>
               <button
@@ -254,6 +277,15 @@ function CustomersListContent() {
           </div>
         )}
 
+        {/* Stat Header */}
+        <div className="mb-4 flex items-center gap-2 text-[12px] font-medium text-secondary">
+          <span className="font-bold text-primary">{allCustomers.length}</span> total
+          <span className="text-secondary/40">·</span>
+          <span className="font-bold text-blue-600 dark:text-blue-400">{totalPinned}</span> with 📍
+          <span className="text-secondary/40">·</span>
+          <span className="font-bold text-emerald-600 dark:text-emerald-400">{totalVisited}</span> visited
+        </div>
+
         <div className="w-full mb-3">
           {allClusters.length > 0 && (
             <div className="relative w-full">
@@ -270,6 +302,23 @@ function CustomersListContent() {
               <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-secondary text-[10px]">▼</span>
             </div>
           )}
+        </div>
+
+        {/* Quick Filters */}
+        <div className="flex gap-2 mb-4 overflow-x-auto custom-scrollbar pb-1">
+          {(["all", "hasPin", "noPin", "visited"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => { setQuickFilter(f); setPage(0); }}
+              className={`shrink-0 rounded-full px-3.5 py-1.5 text-[11px] font-black uppercase tracking-wider transition-all active:scale-90 ${
+                quickFilter === f
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "bg-surface-hover text-secondary border border-card-border hover:bg-blue-50 dark:hover:bg-blue-900/20"
+              }`}
+            >
+              {f === "all" ? t("customer.filter_all") : f === "hasPin" ? t("customer.filter_has_pin") : f === "noPin" ? t("customer.filter_no_pin") : t("customer.filter_visited")}
+            </button>
+          ))}
         </div>
 
         {fetchError && (
@@ -306,7 +355,7 @@ function CustomersListContent() {
           </div>
           ) : (
           /* M3 List Container */
-          <div className="relative overflow-hidden rounded-[2rem] bg-card shadow-sm border border-card-border">
+          <div className="relative overflow-hidden rounded-[2rem] bg-card shadow-sm border border-card-border min-h-[500px]">
             {isLoading && (
               <div className="absolute inset-0 z-20 flex items-center justify-center bg-card/60 backdrop-blur-sm rounded-[2rem]">
                 <div className="flex h-12 w-12 animate-spin items-center justify-center rounded-full bg-surface-hover text-2xl border border-card-border">
@@ -314,9 +363,9 @@ function CustomersListContent() {
                 </div>
               </div>
             )}
-            {allCustomers.length > 0 && (
-            <ul className="divide-y divide-card-border">
-              {allCustomers.map((customer) => (
+            {displayCustomers.length > 0 && (
+            <ul className="divide-y divide-card-border min-h-[500px] overflow-y-auto">
+              {displayCustomers.map((customer) => (
                 <li
                   key={customer.id}
                   onClick={() => isManagementMode && toggleSelection(customer.id)}
@@ -376,15 +425,20 @@ function CustomersListContent() {
                       <p className="mt-0.5 truncate text-[13px] text-secondary/80">
                         {customer.address}
                       </p>
-                      <div className="mt-1 flex items-center gap-2">
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
                         <p className="text-[10px] font-medium text-secondary/50">
                           📅 {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' }) : "-"}
                         </p>
                         {visitsMap[customer.id] && (
                           <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 text-[9px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-tight">
-                            ✅ {new Date(visitsMap[customer.id]).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', timeZone: 'Asia/Jakarta' })}
+                            ✅ {timeAgo(visitsMap[customer.id])}
                           </span>
                         )}
+                        {customer.clusters?.map((cc: any) => (
+                          <span key={cc.cluster.id} className="inline-flex items-center rounded-full bg-purple-100 dark:bg-purple-900/30 px-2 py-0.5 text-[9px] font-black text-purple-700 dark:text-purple-400 uppercase tracking-tight">
+                            {cc.cluster.name}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   </div>

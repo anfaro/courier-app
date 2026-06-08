@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import { useToast } from "@/components/ToastProvider";
 import { useConfirmation } from "@/components/ConfirmationProvider";
 import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
+import { motion } from "framer-motion";
 
 const clustersCache = new Map<string, { data: any[]; hasMore: boolean; ts: number }>();
 const CL_CACHE_TTL = 60000;
@@ -30,8 +31,28 @@ function ClustersListContent() {
   const [isManagementMode, setIsManagementMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [editingCluster, setEditingCluster] = useState<any | null>(null);
+  const [editingName, setEditingName] = useState("");
+  const [editingNotes, setEditingNotes] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const isSuperAdmin = (session?.user as any)?.role === "superadmin";
+
+  function timeAgo(dateStr: string | null) {
+    if (!dateStr) return null;
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return t("customer.relative_just_now");
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    if (days === 1) return t("customer.relative_yesterday");
+    if (days < 7) return `${days}d ago`;
+    return new Date(dateStr).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+  }
+
+  const totalCustomers = allClusters.reduce((sum: number, c: any) => sum + (c.customerCount || 0), 0);
 
   const fetchClusters = async (p: number) => {
     const cacheKey = `clusters:${p}:${pageSize}`;
@@ -106,6 +127,29 @@ function ClustersListContent() {
     }
   };
 
+  async function handleEditSave() {
+    if (!editingCluster || !editingName.trim()) return;
+    setSavingEdit(true);
+    try {
+      const res = await fetch(`/api/clusters/${editingCluster.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editingName.trim(), notes: editingNotes || null }),
+      });
+      if (res.ok) {
+        showToast("Cluster updated", "success");
+        setEditingCluster(null);
+        fetchClusters(page);
+      } else {
+        showToast("Failed to update", "error");
+      }
+    } catch {
+      showToast("Network error", "error");
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background pb-24">
       
@@ -113,7 +157,9 @@ function ClustersListContent() {
 
       <main className="mx-auto max-w-3xl p-4 sm:p-6">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-3xl font-extrabold tracking-tight text-primary">Clusters</h1>
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-primary">{t("cluster.title")}</h1>
+          </div>
           <div className="flex items-center gap-2">
             {isSuperAdmin && (
               <button
@@ -130,10 +176,28 @@ function ClustersListContent() {
               href="/clusters/new"
               className="btn-primary !py-2.5 !px-5"
             >
-              <span className="mr-2 text-lg leading-none">+</span> Add
+              <span className="mr-2 text-lg leading-none">+</span> {t("cluster.add")}
             </Link>
           </div>
         </div>
+
+        {/* Stat Cards */}
+        {allClusters.length > 0 && (
+          <div className="flex gap-3 mb-5">
+            <div className="flex-1 rounded-[20px] bg-card border border-card-border p-4 shadow-sm">
+              <p className="text-[10px] font-black uppercase tracking-widest text-secondary mb-1">{t("cluster.total_clusters")}</p>
+              <p className="text-[22px] font-black text-primary leading-none">{allClusters.length}</p>
+            </div>
+            <div className="flex-1 rounded-[20px] bg-card border border-card-border p-4 shadow-sm">
+              <p className="text-[10px] font-black uppercase tracking-widest text-secondary mb-1">{t("cluster.total_customers")}</p>
+              <p className="text-[22px] font-black text-primary leading-none">{totalCustomers}</p>
+            </div>
+            <div className="flex-1 rounded-[20px] bg-card border border-card-border p-4 shadow-sm">
+              <p className="text-[10px] font-black uppercase tracking-widest text-secondary mb-1">{t("cluster.avg_customers")}</p>
+              <p className="text-[22px] font-black text-primary leading-none">{allClusters.length > 0 ? Math.round(totalCustomers / allClusters.length) : 0}</p>
+            </div>
+          </div>
+        )}
 
         {fetchError && (
           <div className="mb-4 flex items-center justify-between rounded-2xl bg-red-50 dark:bg-red-950/20 p-4 border border-red-100 dark:border-red-900/50">
@@ -148,7 +212,7 @@ function ClustersListContent() {
         )}
 
         {isManagementMode && selectedIds.length > 0 && (
-          <div className="mb-6 flex items-center justify-between rounded-[24px] bg-red-50 dark:bg-red-950/20 p-4 border border-red-100 dark:border-red-900/50 animate-in fade-in slide-in-from-top-2">
+          <div className="mb-6 flex items-center justify-between rounded-[24px] bg-red-50 dark:bg-red-950/20 p-4 border border-red-100 dark:border-red-900/50">
             <span className="font-bold text-red-700 dark:text-red-400">{selectedIds.length} selected</span>
             <button
               onClick={handleBulkDelete}
@@ -162,7 +226,7 @@ function ClustersListContent() {
 
         {allClusters.length === 0 && !isLoading ? (
           <div className="rounded-[2.5rem] bg-card p-10 text-center shadow-sm border border-card-border">
-            <p className="text-secondary font-medium">No clusters created yet.</p>
+            <p className="text-secondary font-medium">{t("cluster.empty")}</p>
           </div>
         ) : (
           <div className="relative overflow-hidden rounded-[2rem] bg-card shadow-sm border border-card-border">
@@ -208,7 +272,24 @@ function ClustersListContent() {
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] bg-purple-100 dark:bg-purple-900/30 text-xl text-purple-700 dark:text-purple-300 shadow-sm border border-purple-200 dark:border-purple-800">📦</div>
                     <div className="min-w-0 flex-1">
                       <h2 className="text-[17px] font-bold tracking-tight text-primary truncate">{cluster.name}</h2>
-                      <p className="text-sm font-medium text-secondary">{cluster.customerCount} Customers</p>
+                      <p className="text-sm font-medium text-secondary">
+                        <Link
+                          href={`/customers?clusterId=${cluster.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-blue-600 dark:text-blue-400 hover:underline pointer-events-auto"
+                        >
+                          {t("cluster.customers").replace("[N]", String(cluster.customerCount || 0))}
+                        </Link>
+                      </p>
+                      {cluster.lastActivity ? (
+                        <p className="text-[11px] text-secondary/60 mt-0.5">
+                          {t("cluster.last_activity").replace("[DATE]", timeAgo(cluster.lastActivity) || "")}
+                        </p>
+                      ) : cluster.createdAt ? (
+                        <p className="text-[11px] text-secondary/60 mt-0.5">
+                          {t("cluster.no_activity")}
+                        </p>
+                      ) : null}
                       {cluster.notes && (
                         <p className="text-[12px] text-secondary/60 truncate mt-1">{cluster.notes}</p>
                       )}
@@ -216,8 +297,25 @@ function ClustersListContent() {
                   </div>
 
                   {!isManagementMode && (
-                    <div className="relative z-10 text-secondary group-hover:text-purple-600 transition">
-                      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    <div className="relative z-10 flex items-center gap-1 pointer-events-auto">
+                      <motion.button
+                        whileTap={{ scale: 0.85 }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setEditingCluster(cluster);
+                          setEditingName(cluster.name || "");
+                          setEditingNotes(cluster.notes || "");
+                        }}
+                        className="h-8 w-8 flex items-center justify-center rounded-full bg-surface-hover text-secondary border border-card-border active:scale-90 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                      >
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </motion.button>
+                      <div className="text-secondary group-hover:text-purple-600 transition pointer-events-auto">
+                        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                      </div>
                     </div>
                   )}
                 </li>
@@ -265,6 +363,65 @@ function ClustersListContent() {
                 <option value={50}>50</option>
               </select>
             </div>
+          </div>
+        )}
+
+        {/* Edit Modal */}
+        {editingCluster && (
+          <div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm"
+            onClick={() => setEditingCluster(null)}
+          >
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md rounded-t-[32px] sm:rounded-[32px] bg-card p-6 shadow-2xl border border-card-border"
+            >
+              <h3 className="text-[17px] font-extrabold text-primary mb-5">{t("cluster.edit")}</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1.5 block">{t("cluster.name")}</label>
+                  <input
+                    value={editingName}
+                    onChange={(e) => setEditingName(e.target.value)}
+                    className="w-full rounded-2xl border border-card-border bg-background px-4 py-3 text-[14px] font-medium text-primary outline-none focus:border-purple-500 transition-all"
+                    placeholder={t("cluster.name")}
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1.5 block">{t("cluster.notes_placeholder")}</label>
+                  <textarea
+                    value={editingNotes}
+                    onChange={(e) => setEditingNotes(e.target.value)}
+                    rows={3}
+                    className="w-full rounded-2xl border border-card-border bg-background px-4 py-3 text-[14px] font-medium text-primary outline-none focus:border-purple-500 transition-all resize-none"
+                    placeholder={t("cluster.notes_placeholder")}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3 mt-6">
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setEditingCluster(null)}
+                  className="btn-secondary flex-1"
+                >
+                  {t("action.cancel")}
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={handleEditSave}
+                  disabled={savingEdit || !editingName.trim()}
+                  className="btn-primary flex-1"
+                >
+                  {savingEdit ? (
+                    <span className="h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                  ) : (
+                    t("action.save")
+                  )}
+                </motion.button>
+              </div>
+            </motion.div>
           </div>
         )}
       </main>

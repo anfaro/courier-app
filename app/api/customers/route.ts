@@ -44,6 +44,21 @@ export async function GET(req: NextRequest) {
         address: true,
         housePictureUrl: true,
         createdAt: true,
+        latitude: true,
+        longitude: true,
+        notes: true,
+      },
+      with: {
+        clusters: {
+          with: {
+            cluster: {
+              columns: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
       },
       ...(customerIds ? { where: (c: any, { inArray: ia }: any) => ia(c.id, customerIds) } : {}),
     });

@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import DeliveryChart from "@/components/DeliveryChart";
 
 interface Session {
   id: string;
@@ -15,8 +16,15 @@ interface Session {
   totalPackages: string;
   deliveredPackages: string;
   createdAt: string;
+  finalized: boolean;
   incomings: any[];
   deliveries: any[];
+}
+
+interface DayData {
+  date: string;
+  total: number;
+  delivered: number;
 }
 
 export default function ProgressDashboard() {
@@ -25,13 +33,14 @@ export default function ProgressDashboard() {
   const router = useRouter();
   const { data: session } = useSession();
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [chartData, setChartData] = useState<DayData[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
 
   const dateLocale = locale === "id" ? "id-ID" : "en-GB";
 
   useEffect(() => {
-    fetchSessions();
+    Promise.all([fetchSessions(), fetchAnalytics()]);
   }, []);
 
   async function fetchSessions() {
@@ -45,6 +54,18 @@ export default function ProgressDashboard() {
       console.warn("Failed to fetch sessions", err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fetchAnalytics() {
+    try {
+      const res = await fetch("/api/sessions/analytics");
+      if (res.ok) {
+        const data = await res.json();
+        setChartData(data.data || []);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch analytics", err);
     }
   }
 
@@ -142,6 +163,7 @@ export default function ProgressDashboard() {
           </div>
         ) : (
           <div className="space-y-4">
+            {chartData.length > 0 && <DeliveryChart data={chartData} />}
             {sessions.map((s, i) => {
               const progress = calcProgress(s);
               const total = Number(s.totalPackages) || 0;
@@ -161,6 +183,11 @@ export default function ProgressDashboard() {
                       <div>
                         <p className="text-[15px] font-bold text-primary">
                           {formatDate(s.date)}
+                          {s.finalized && (
+                            <span className="ml-2 text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-2 py-1 rounded-full border border-amber-200 dark:border-amber-800/50">
+                              {t("session.finalized_badge")}
+                            </span>
+                          )}
                         </p>
                         <p className="text-[12px] font-medium text-secondary mt-1">
                           {total} {t("session.packages")} · {delivered} {t("session.delivered")}

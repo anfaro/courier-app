@@ -18,6 +18,8 @@ export default function SettingsPage() {
   const [lastSessionName, setLastSessionName] = useState(session?.user?.name);
   const [rate, setRate] = useState("1500");
   const [savedRate, setSavedRate] = useState("1500");
+  const [targetSystem, setTargetSystem] = useState(true);
+  const [savedTargetSystem, setSavedTargetSystem] = useState(true);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [commitHash, setCommitHash] = useState("...");
@@ -32,7 +34,7 @@ export default function SettingsPage() {
   useEffect(() => {
     fetch("/api/settings")
       .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d?.rate != null) { setRate(String(d.rate)); setSavedRate(String(d.rate)); } })
+      .then((d) => { if (d?.rate != null) { setRate(String(d.rate)); setSavedRate(String(d.rate)); } if (d?.targetSystem != null) { setTargetSystem(d.targetSystem); setSavedTargetSystem(d.targetSystem); } })
       .catch(() => {});
   }, []);
 
@@ -87,12 +89,15 @@ export default function SettingsPage() {
         body: JSON.stringify({
           newName: name,
           rate: Number(rate),
+          targetSystem,
         }),
       });
 
       if (res.ok) {
         showToast(t("settings.success"), "success");
-        await update({ name: name });
+        setSavedRate(rate);
+        setSavedTargetSystem(targetSystem);
+        await update({ name: name, targetSystem });
       } else {
         const data = await res.json();
         setError(data.message || "Failed to update profile.");
@@ -177,6 +182,24 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+
+          {/* Target System Toggle */}
+          <div className="mt-5 flex items-center justify-between rounded-2xl bg-surface-hover p-4 border border-card-border">
+            <div>
+              <p className="text-[13px] font-bold text-primary">{t("settings.target_system")}</p>
+              <p className="text-[11px] font-medium text-secondary mt-0.5">{t("settings.target_system_desc")}</p>
+            </div>
+            <button
+              onClick={() => setTargetSystem(!targetSystem)}
+              className={`relative h-7 w-12 shrink-0 rounded-full transition-all active:scale-90 ${
+                targetSystem ? 'bg-blue-600' : 'bg-surface-hover border border-card-border'
+              }`}
+            >
+              <div className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-all ${
+                targetSystem ? 'left-[22px]' : 'left-[3px]'
+              }`} />
+            </button>
+          </div>
         </div>
 
         {/* ===== Profile Information ===== */}
@@ -227,7 +250,7 @@ export default function SettingsPage() {
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={isLoading || (name === session.user?.name && rate === savedRate)}
+                disabled={isLoading || (name === session.user?.name && rate === savedRate && targetSystem === savedTargetSystem)}
                 className="btn-primary w-full sm:w-auto disabled:opacity-50 disabled:active:scale-100 !rounded-full !px-8"
               >
                 {isLoading ? t("settings.saving") : t("settings.save")}

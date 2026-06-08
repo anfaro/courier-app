@@ -2,7 +2,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
-import { clusters, customerClusters } from "@/lib/schema";
+import { clusters, customerClusters, customerVisits } from "@/lib/schema";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
 import { generateId } from "@/lib/utils";
 import { eq, sql } from "drizzle-orm";
@@ -25,10 +25,13 @@ export async function GET(req: NextRequest) {
         id: clusters.id,
         name: clusters.name,
         notes: clusters.notes,
+        createdAt: clusters.createdAt,
         customerCount: sql<number>`count(${customerClusters.customerId})`.mapWith(Number),
+        lastActivity: sql<string | null>`max(${customerVisits.visitedAt})`.mapWith(String),
       })
       .from(clusters)
       .leftJoin(customerClusters, eq(clusters.id, customerClusters.clusterId))
+      .leftJoin(customerVisits, eq(customerClusters.customerId, customerVisits.customerId))
       .groupBy(clusters.id)
       .orderBy(clusters.name)
       .limit(limit + 1)

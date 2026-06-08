@@ -19,6 +19,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (!existing.length) return NextResponse.json({ message: "Session not found" }, { status: 404 });
     if (existing[0].userId !== token.id) return NextResponse.json({ message: "Forbidden" }, { status: 403 });
 
+    const isSuperAdmin = (token as any)?.role === "superadmin";
+    if (existing[0].finalized && !isSuperAdmin) {
+      return NextResponse.json({ message: "Session is finalized" }, { status: 403 });
+    }
+
     const body = await req.json();
     const { status, splitCount } = body;
 
