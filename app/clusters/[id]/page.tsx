@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { clusters } from "@/lib/schema";
 import { eq, sql } from "drizzle-orm";
-import Breadcrumbs from "@/components/Breadcrumbs";
+import PageHeader from "@/components/PageHeader";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ClusterCustomerList from "./ClusterCustomerList";
@@ -28,7 +28,7 @@ export default async function ClusterDetailsPage({
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <Breadcrumbs />
+      <PageHeader title={`${cluster.name} (${cluster.id})`} />
 
       <main className="mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
         <div className="flex justify-end">

@@ -51,6 +51,7 @@ const handler = NextAuth({
             email: user.email,
             role: user.role,
             targetSystem: user.targetSystem,
+            getGeocode: user.getGeocode,
           };
         }
 
@@ -73,12 +74,16 @@ const handler = NextAuth({
         token.role = user.role;
         // @ts-expect-error: targetSystem is not in the default user type
         token.targetSystem = user.targetSystem;
+        // @ts-expect-error: getGeocode is not in the default user type
+        token.getGeocode = user.getGeocode;
       }
 
       if (trigger === "update") {
         if (session?.name) token.name = session.name;
         // @ts-expect-error: targetSystem
         if (session?.targetSystem !== undefined) token.targetSystem = session.targetSystem;
+        // @ts-expect-error: getGeocode
+        if (session?.getGeocode !== undefined) token.getGeocode = session.getGeocode;
       }
 
       return token;
@@ -93,6 +98,8 @@ const handler = NextAuth({
         session.user.role = token.role;
         // @ts-expect-error: targetSystem is not in the default session user type
         session.user.targetSystem = token.targetSystem;
+        // @ts-expect-error: getGeocode is not in the default session user type
+        session.user.getGeocode = token.getGeocode;
       }
 
       return session;

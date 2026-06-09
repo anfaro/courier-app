@@ -2,7 +2,8 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Breadcrumbs from "@/components/Breadcrumbs";
+import { motion } from "framer-motion";
+import PageHeader from "@/components/PageHeader";
 import Link from "next/link";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useSession } from "next-auth/react";
@@ -202,7 +203,7 @@ function CustomersListContent() {
   return (
     <div className="min-h-screen bg-background pb-24">
       
-      <Breadcrumbs />
+      <PageHeader title="Customers" />
 
       <main className="mx-auto max-w-3xl p-4 sm:p-6">
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -365,9 +366,12 @@ function CustomersListContent() {
             )}
             {displayCustomers.length > 0 && (
             <ul className="divide-y divide-card-border min-h-[500px] overflow-y-auto">
-              {displayCustomers.map((customer) => (
-                <li
+              {displayCustomers.map((customer, i) => (
+                <motion.li
                   key={customer.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25, delay: i * 0.035 }}
                   onClick={() => isManagementMode && toggleSelection(customer.id)}
                   className={`group relative flex items-center justify-between p-4 transition-colors sm:p-5 ${
                     isManagementMode && selectedIds.includes(customer.id) 
@@ -472,7 +476,7 @@ function CustomersListContent() {
                       )}
                     </div>
                   )}
-                </li>
+                </motion.li>
               ))}
             </ul>
             )}

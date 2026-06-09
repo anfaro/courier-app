@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Breadcrumbs from "@/components/Breadcrumbs";
+import PageHeader from "@/components/PageHeader";
 
 type Customer = {
   id: string;
@@ -88,7 +88,7 @@ export default function NewClusterPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <Breadcrumbs />
+      <PageHeader title="New Cluster" />
 
       <main className="mx-auto max-w-2xl p-4 sm:p-6">
         <div className="mt-4 rounded-[2.5rem] bg-card p-6 sm:p-10 shadow-sm border border-card-border">

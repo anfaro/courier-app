@@ -11,7 +11,7 @@ export default function Template({ children }: { children: React.ReactNode }) {
       // The final state of the page (fully visible and in its normal position)
       animate={{ opacity: 1, y: 0 }}
       // How the animation should run
-      transition={{ ease: "easeInOut", duration: 0.3 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
     >
       {children}
     </motion.div>

@@ -1,12 +1,12 @@
 export const dynamic = "force-dynamic";
 
-import Breadcrumbs from "@/components/Breadcrumbs";
+import PageHeader from "@/components/PageHeader";
 import DatabaseAdmin from "@/components/DatabaseAdmin";
 
 export default function DatabaseAdminPage() {
   return (
     <div className="min-h-screen bg-background pb-24">
-      <Breadcrumbs />
+      <PageHeader title="Database Administration" />
 
       <main className="mx-auto max-w-3xl p-4 sm:p-6">
         <div className="mb-6">

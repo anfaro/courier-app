@@ -61,6 +61,8 @@ export const translations: Translations = {
   "settings.target_system_desc": { en: "Show time-based delivery targets on session progress", id: "Tampilkan target pengiriman berdasarkan waktu di progres sesi" },
   "settings.target_system_on": { en: "Visible", id: "Terlihat" },
   "settings.target_system_off": { en: "Hidden", id: "Tersembunyi" },
+  "settings.get_geocode": { en: "Auto Geocode", id: "Geocode Otomatis" },
+  "settings.get_geocode_desc": { en: "Capture location when marking delivery as done", id: "Ambil lokasi saat menandai pengiriman selesai" },
   
   // Home Page
   "home.good_morning": { en: "Good morning,", id: "Selamat pagi," },
@@ -262,6 +264,7 @@ export const translations: Translations = {
   "session.dashboard_subtitle": { en: "Track your daily delivery progress", id: "Lacak progres pengiriman harian Anda" },
   "session.new": { en: "New Session", id: "Sesi Baru" },
   "session.new_created": { en: "New session created for today!", id: "Sesi baru dibuat untuk hari ini!" },
+  "session.delete_session": { en: "Delete Session", id: "Hapus Sesi" },
   "session.delete_confirm_title": { en: "Delete Session", id: "Hapus Sesi" },
   "session.delete_confirm_msg": { en: "Are you sure you want to delete this session and all its data?", id: "Apakah Anda yakin ingin menghapus sesi ini dan semua datanya?" },
   "session.deleted": { en: "Session deleted", id: "Sesi dihapus" },
@@ -272,6 +275,7 @@ export const translations: Translations = {
   "session.add_incoming": { en: "Add Incoming", id: "Tambah Incoming" },
   "session.incoming_title": { en: "New Incoming Arrival", id: "Kedatangan Incoming Baru" },
   "session.incoming_desc": { en: "Select customers and enter package quantities below.", id: "Pilih pelanggan dan masukkan jumlah paket di bawah." },
+  "session.incoming_time": { en: "Arrival Time", id: "Waktu Kedatangan" },
   "session.select_customers": { en: "Select Customers", id: "Pilih Pelanggan" },
   "session.customer_selected": { en: "[N] selected", id: "[N] dipilih" },
   "session.incoming_saved": { en: "Incoming recorded with [N] customers!", id: "Incoming dicatat dengan [N] pelanggan!" },

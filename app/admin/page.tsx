@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import Breadcrumbs from "@/components/Breadcrumbs";
+import PageHeader from "@/components/PageHeader";
 import Link from "next/link";
 import AdminQuickActions from "@/components/AdminQuickActions";
 import SystemHealth from "@/components/SystemHealth";
@@ -10,7 +10,7 @@ import AdminWipeData from "@/components/AdminWipeData";
 export default function AdminHubPage() {
   return (
     <div className="min-h-screen bg-background pb-24">
-      <Breadcrumbs />
+      <PageHeader title="Admin" />
 
       <main className="mx-auto max-w-3xl p-4 sm:p-6">
         <div className="mb-6">

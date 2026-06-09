@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useToast } from "@/components/ToastProvider";
 import ScannerModal from "@/components/ScannerModal";
@@ -252,9 +252,21 @@ export default function VisitManager({ customerId, hideCheckIn }: { customerId: 
       )}
 
       {/* Check-In Modal */}
+      <AnimatePresence>
       {showModal && !hideCheckIn && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="relative w-full max-w-sm rounded-[32px] bg-card p-6 shadow-2xl border border-card-border animate-in zoom-in-95 duration-200">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            className="relative w-full max-w-sm rounded-[32px] bg-card p-6 shadow-2xl border border-card-border"
+          >
             <h3 className="text-xl font-black text-primary mb-1">{t("customer.check_in")}</h3>
             <p className="text-[13px] text-secondary mb-5">{t("customer.visit_notes")}</p>
 
@@ -292,9 +304,10 @@ export default function VisitManager({ customerId, hideCheckIn }: { customerId: 
                 {isRecording ? "..." : t("customer.check_in")}
               </button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
 
     {showScanner && (

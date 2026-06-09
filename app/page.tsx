@@ -116,6 +116,7 @@ export default function HomePage() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
               className="rounded-[24px] bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 p-5 shadow-sm group-hover:shadow-md group-hover:border-emerald-300 dark:group-hover:border-emerald-700 transition-all active:scale-90"
             >
               <div className="flex items-start justify-between">
@@ -149,7 +150,12 @@ export default function HomePage() {
 
         {/* --- GET STARTED (empty state) --- */}
         {statsLoaded && stats.totalCustomers === 0 && (
-          <div className="rounded-[2.5rem] bg-gradient-to-br from-blue-600 to-indigo-700 p-8 shadow-xl shadow-blue-600/20 text-white">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.1 }}
+            className="rounded-[2.5rem] bg-gradient-to-br from-blue-600 to-indigo-700 p-8 shadow-xl shadow-blue-600/20 text-white"
+          >
             <h2 className="text-[22px] font-black tracking-tight mb-3">🚀 Get Started</h2>
             <ol className="space-y-4">
               <li className="flex items-start gap-4">
@@ -174,7 +180,7 @@ export default function HomePage() {
                 </div>
               </li>
             </ol>
-          </div>
+          </motion.div>
         )}
 
         {/* --- QUICK ACTIONS --- */}
@@ -226,7 +232,11 @@ export default function HomePage() {
         </div>
 
         {/* --- RECENT VISITS --- */}
-        <div>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.15 }}
+        >
           <h2 className="text-[14px] font-bold tracking-tight text-primary mb-3">{t("dashboard.recent_visits")}</h2>
           {recentVisits.length > 0 ? (
             <div className="rounded-[20px] bg-card border border-card-border shadow-sm overflow-hidden">
@@ -262,10 +272,15 @@ export default function HomePage() {
               <p className="text-[13px] font-medium text-secondary">{t("dashboard.no_visits_yet")}</p>
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* --- SECONDARY LINKS --- */}
-        <div className="pt-2">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.2 }}
+          className="pt-2"
+        >
           <h2 className="text-[14px] font-bold tracking-tight text-primary mb-3">{t("home.field_tools")}</h2>
           <div className="space-y-3">
 
@@ -294,7 +309,7 @@ export default function HomePage() {
             </Link>
 
           </div>
-        </div>
+        </motion.div>
 
       </main>
     </div>

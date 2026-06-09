@@ -277,8 +277,13 @@ npm run lint
 - **Version**: Updated `package.json` from `1.0.0-bugfix1` → `1.1.0`; removed `--webpack` flag from dev/build scripts.
 - **Branch**: Created `with-deliveries` branch at commit `2d72b43` preserving the old deliveries system.
 
-### 2026-05-30 — Settings redesign + global version
-- **Settings redesign**: Rewrote `app/settings/page.tsx` with 4 sections (Profile Card, Preferences, Profile Information, About) following MD3 expressive patterns (larger radii, glassmorphism, badge styling, spring animations).
-- **Global version**: Created `lib/version.ts` as single source of truth (`APP_VERSION` + `getCommitHash()`); imported directly in settings page (no API call), `not-mobile` page, and `not-found` page (fixed stale `v0.1.0` hardcodes).
-- **API cleanup**: Simplified `app/api/app-info/route.ts` to reuse `APP_VERSION` + `getCommitHash()` from shared lib.
+### 2026-06-09 — Session polish, PageHeader, spring animations, build fixes
+- **Migration fix**: Patched `sessions.postgis` → `geometry`, rewrote `session_deliveries.geometry` column from scratch; SQL applied directly via postgres driver.
+- **Session page fixes**: Edit pre-population only for "pending" deliveries, `Number(d.packages)` (no `+1`); incoming time editing for superadmin via `datetime-local`; `canEdit` changed to finalize-gated (`!isFinalized` for all roles); Finalize + Delete Session buttons with confirmation; `earlyPct` fallback `0` not `100`.
+- **Auto-geocode toggle**: Added `getGeocode` column to `users` table (SQL migration); plumbed through settings API, NextAuth JWT, session; `handleStatusChange`/`confirmSplit` skip geolocation when disabled.
+- **DeliveryCard fix**: Moved package count badge outside `truncate` so long names don't hide it.
+- **Rescheduled items**: Added "Delivery" (emerald) button for rescheduled sessions; removed "rescheduled" status label.
+- **PageHeader**: Created `components/PageHeader.tsx` (compact back button + title); replaced `<Breadcrumbs />` in all 16 page files; `Breadcrumbs.tsx` preserved but unused.
+- **Spring animations**: Added Framer Motion spring entrances to `template.tsx` (page transition), `page.tsx` (earnings/widgets), `customers/page.tsx` (staggered `motion.li`), `clusters/page.tsx` (staggered list), `customers/[id]/page.tsx` (section delays), `customers/[id]/edit/page.tsx` (form card), `customers/new/page.tsx` (tabs/content), `settings/page.tsx` (4 sections), `progress/page.tsx` (`whileTap`), `VisitManager.tsx` (AnimatePresence modal).
+- **Build fixes**: Fixed mismatched `</div>`/`</motion.div>` and missing `>` in settings & customer detail pages; build now succeeds.
 

@@ -19,6 +19,7 @@ export const users = pgTable("users", {
   role: varchar("role", { length: 50 }).default("courier").notNull(),
   rate: integer("rate").default(1500).notNull(),
   targetSystem: boolean("target_system").default(true).notNull(),
+  getGeocode: boolean("get_geocode").default(true).notNull(),
   isActive: boolean("is_active").default(false),
   lastActiveAt: timestamp("last_active_at"),
   createdAt: timestamp("created_at").defaultNow(),

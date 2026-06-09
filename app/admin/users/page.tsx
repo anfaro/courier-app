@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic";
 
 import { db } from "@/lib/db";
-import Breadcrumbs from "@/components/Breadcrumbs";
+import PageHeader from "@/components/PageHeader";
 import AdminUserTable from "@/components/AdminUserTable";
 
 export default async function AdminUsersPage() {
@@ -12,7 +12,7 @@ export default async function AdminUsersPage() {
   return (
     <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
       <div className="shrink-0 z-30 bg-background">
-        <Breadcrumbs />
+        <PageHeader title="Fleet Management" />
       </div>
 
       <main className="flex-1 overflow-y-auto custom-scrollbar pb-32">

@@ -5,7 +5,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export default function Breadcrumbs() {
+type BreadcrumbsProps = {
+  segmentLabels?: Record<string, string>;
+  title?: string;
+};
+
+export default function Breadcrumbs({ segmentLabels, title }: BreadcrumbsProps = {}) {
   const pathname = usePathname();
   const paths = pathname.split("/").filter((path) => path);
 
@@ -32,25 +37,28 @@ export default function Breadcrumbs() {
           const href = `/${paths.slice(0, index + 1).join("/")}`;
           const isLast = index === paths.length - 1;
 
-          // Format text cleanly
           const formattedPath = path
             .split("-")
             .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
             .join(" ");
+
+          const displayLabel = isLast && title
+            ? title
+            : segmentLabels?.[path] ?? formattedPath;
 
           return (
             <li key={path} className="flex items-center gap-1.5">
               <span className="text-gray-300 dark:text-slate-700 font-bold">/</span>
               {isLast ? (
                 <span className="rounded-full bg-blue-600 dark:bg-blue-600 px-4 py-1.5 text-[13px] font-black tracking-wide text-white shadow-md shadow-blue-600/20">
-                  {formattedPath}
+                  {displayLabel}
                 </span>
               ) : (
                 <Link
                   href={href}
                   className="rounded-full bg-card/80 dark:bg-slate-900/80 px-4 py-1.5 text-[13px] font-bold text-secondary dark:text-slate-300 shadow-sm ring-1 ring-gray-200/50 dark:ring-slate-800 transition-all hover:text-blue-600 dark:hover:text-blue-400 active:scale-90 backdrop-blur-md"
                 >
-                  {formattedPath}
+                  {displayLabel}
                 </Link>
               )}
             </li>
@@ -60,4 +68,3 @@ export default function Breadcrumbs() {
     </nav>
   );
 }
-

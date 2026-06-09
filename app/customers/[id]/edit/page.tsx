@@ -3,7 +3,8 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import Breadcrumbs from "@/components/Breadcrumbs";
+import { motion } from "framer-motion";
+import PageHeader from "@/components/PageHeader";
 import ImageInput from "@/components/ImageInput";
 import { useScrollLock } from "@/lib/useScrollLock";
 
@@ -196,7 +197,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
     <>
       <div className="min-h-screen bg-background pb-20">
         
-        <Breadcrumbs />
+        <PageHeader title={name ? `Edit ${name}` : "Edit Customer"} />
 
         {isFetching ? (
           <main className="mx-auto max-w-2xl p-4 sm:p-6">
@@ -210,7 +211,12 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
         ) : (
 
         <main className="mx-auto max-w-2xl p-4 sm:p-6">
-          <div className="mt-4 rounded-[2.5rem] bg-card p-6 sm:p-10 shadow-sm border border-card-border">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            className="mt-4 rounded-[2.5rem] bg-card p-6 sm:p-10 shadow-sm border border-card-border"
+          >
             <h1 className="text-3xl font-bold text-primary mb-8">Edit Customer</h1>
 
             {error && <p className="mb-6 rounded-2xl bg-red-50 dark:bg-red-950/30 p-4 text-[15px] font-medium text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900">{error}</p>}
@@ -307,7 +313,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
                 </button>
               </div>
             </form>
-          </div>
+          </motion.div>
         </main>
         )}
       </div>

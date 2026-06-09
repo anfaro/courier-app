@@ -2,7 +2,8 @@
 import { db } from "@/lib/db";
 import { customers } from "@/lib/schema";
 import { eq } from "drizzle-orm";
-import Breadcrumbs from "@/components/Breadcrumbs";
+import { motion } from "framer-motion";
+import PageHeader from "@/components/PageHeader";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ImageModal from "@/components/ImageModal";
@@ -34,11 +35,15 @@ export default async function CustomerDetailsPage({
   return (
     <div className="min-h-screen bg-background pb-24">
       
-      <Breadcrumbs />
+      <PageHeader title={`${customerData.name} (${customerId})`} />
 
       <main className="mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
-        {/* Header Section with Edit, Share & WhatsApp Buttons */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          className="flex flex-wrap items-center justify-between gap-4"
+        >
           <h1 className="text-3xl font-extrabold tracking-tight text-primary">{customerData.name}</h1>
 
           <div className="flex items-center gap-3">
@@ -65,10 +70,15 @@ export default async function CustomerDetailsPage({
               </a>
             )}
           </div>
-        </div>
+        </motion.div>
 
         {/* Customer Info Card */}
-        <div className="flex flex-col gap-6 rounded-[2.5rem] border border-card-border bg-card p-6 shadow-sm sm:flex-row sm:p-8">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.05 }}
+          className="flex flex-col gap-6 rounded-[2.5rem] border border-card-border bg-card p-6 shadow-sm sm:flex-row sm:p-8"
+        >
           {customerData.housePictureUrl ? (
             <ImageModal src={customerData.housePictureUrl} alt="House" thumbnailClassName="h-32 w-full sm:w-32 rounded-[1.5rem] object-cover shrink-0" />
           ) : (
@@ -111,10 +121,15 @@ export default async function CustomerDetailsPage({
               )}
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* --- RECORD HISTORY TIMELINE --- */}
-        <div className="rounded-[2.5rem] bg-card p-6 sm:p-8 border border-card-border shadow-sm">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.1 }}
+          className="rounded-[2.5rem] bg-card p-6 sm:p-8 border border-card-border shadow-sm"
+        >
             <p className="text-[11px] font-black uppercase tracking-[0.2em] text-secondary mb-6 ml-1">Record Timeline</p>
            <div className="relative pl-6 space-y-8 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-card-border">
               {/* Created At */}
@@ -142,9 +157,15 @@ export default async function CustomerDetailsPage({
                 </div>
               </div>
            </div>
-        </div>
+        </motion.div>
 
-        <VisitManager customerId={customerId} hideCheckIn={true} />
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.15 }}
+        >
+          <VisitManager customerId={customerId} hideCheckIn={true} />
+        </motion.div>
 
       </main>
     </div>

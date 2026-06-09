@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import Breadcrumbs from "@/components/Breadcrumbs";
+import PageHeader from "@/components/PageHeader";
 import Link from "next/link";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useSession } from "next-auth/react";
@@ -153,7 +153,7 @@ function ClustersListContent() {
   return (
     <div className="min-h-screen bg-background pb-24">
       
-      <Breadcrumbs />
+      <PageHeader title="Clusters" />
 
       <main className="mx-auto max-w-3xl p-4 sm:p-6">
         <div className="mb-6 flex items-center justify-between">
@@ -242,9 +242,12 @@ function ClustersListContent() {
             )}
             {allClusters.length > 0 && (
             <ul className="divide-y divide-card-border">
-              {allClusters.map((cluster) => (
-                <li 
-                  key={cluster.id} 
+              {allClusters.map((cluster, i) => (
+                <motion.li
+                  key={cluster.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25, delay: i * 0.035 }}
                   onClick={() => isManagementMode && toggleSelection(cluster.id)}
                   className={`group relative flex items-center justify-between p-5 transition-colors ${
                     isManagementMode && selectedIds.includes(cluster.id)
@@ -318,7 +321,7 @@ function ClustersListContent() {
                       </div>
                     </div>
                   )}
-                </li>
+                </motion.li>
               ))}
             </ul>
             )}

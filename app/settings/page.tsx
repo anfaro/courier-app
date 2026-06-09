@@ -2,7 +2,8 @@
 
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
-import Breadcrumbs from "@/components/Breadcrumbs";
+import { motion } from "framer-motion";
+import PageHeader from "@/components/PageHeader";
 import { useTheme } from "@/components/ThemeProvider";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useToast } from "@/components/ToastProvider";
@@ -20,6 +21,8 @@ export default function SettingsPage() {
   const [savedRate, setSavedRate] = useState("1500");
   const [targetSystem, setTargetSystem] = useState(true);
   const [savedTargetSystem, setSavedTargetSystem] = useState(true);
+  const [getGeocode, setGetGeocode] = useState(true);
+  const [savedGetGeocode, setSavedGetGeocode] = useState(true);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [commitHash, setCommitHash] = useState("...");
@@ -34,7 +37,7 @@ export default function SettingsPage() {
   useEffect(() => {
     fetch("/api/settings")
       .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d?.rate != null) { setRate(String(d.rate)); setSavedRate(String(d.rate)); } if (d?.targetSystem != null) { setTargetSystem(d.targetSystem); setSavedTargetSystem(d.targetSystem); } })
+      .then((d) => { if (d?.rate != null) { setRate(String(d.rate)); setSavedRate(String(d.rate)); } if (d?.targetSystem != null) { setTargetSystem(d.targetSystem); setSavedTargetSystem(d.targetSystem); } if (d?.getGeocode != null) { setGetGeocode(d.getGeocode); setSavedGetGeocode(d.getGeocode); } })
       .catch(() => {});
   }, []);
 
@@ -52,7 +55,7 @@ export default function SettingsPage() {
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-background pb-24">
-        <Breadcrumbs />
+        <PageHeader title="Settings" />
         <main className="mx-auto max-w-2xl p-4 sm:p-6">
           <div className="flex min-h-[50vh] flex-col items-center justify-center rounded-[2.5rem] bg-card p-6 shadow-sm border border-card-border">
             <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-[1.5rem] bg-surface-hover text-3xl border border-card-border mb-4">⏳</div>
@@ -66,7 +69,7 @@ export default function SettingsPage() {
   if (status === "unauthenticated" || !session) {
     return (
       <div className="min-h-screen bg-background pb-24">
-        <Breadcrumbs />
+        <PageHeader title="Settings" />
         <main className="mx-auto max-w-2xl p-4 sm:p-6">
           <div className="flex flex-col items-center justify-center rounded-[2.5rem] bg-card p-10 text-center shadow-sm border border-card-border">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 dark:bg-red-950 text-2xl">🔒</div>
@@ -90,6 +93,7 @@ export default function SettingsPage() {
           newName: name,
           rate: Number(rate),
           targetSystem,
+          getGeocode,
         }),
       });
 
@@ -97,7 +101,8 @@ export default function SettingsPage() {
         showToast(t("settings.success"), "success");
         setSavedRate(rate);
         setSavedTargetSystem(targetSystem);
-        await update({ name: name, targetSystem });
+        setSavedGetGeocode(getGeocode);
+        await update({ name: name, targetSystem, getGeocode });
       } else {
         const data = await res.json();
         setError(data.message || "Failed to update profile.");
@@ -111,12 +116,17 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <Breadcrumbs />
+      <PageHeader title="Settings" />
 
       <main className="mx-auto max-w-2xl p-4 sm:p-6 space-y-5">
 
         {/* ===== Profile Card ===== */}
-        <div className="relative overflow-hidden rounded-[2.5rem] bg-card border border-card-border shadow-sm">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          className="relative overflow-hidden rounded-[2.5rem] bg-card border border-card-border shadow-sm"
+        >
           <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
           <div className="relative p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6">
             <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[1.5rem] bg-blue-100 dark:bg-blue-900/60 text-3xl font-extrabold text-blue-700 dark:text-blue-300 shadow-sm border border-blue-200/50 dark:border-blue-800/50">
@@ -133,7 +143,7 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {error && (
           <div className="rounded-2xl border border-red-100 dark:border-red-900/50 bg-red-50 dark:bg-red-950/20 p-4 text-[14px] font-bold text-red-600 dark:text-red-400">
@@ -142,7 +152,12 @@ export default function SettingsPage() {
         )}
 
         {/* ===== Preferences ===== */}
-        <div className="rounded-[2.5rem] bg-card border border-card-border shadow-sm p-6 sm:p-8">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.05 }}
+          className="rounded-[2.5rem] bg-card border border-card-border shadow-sm p-6 sm:p-8"
+        >
           <h2 className="text-[14px] font-black uppercase tracking-widest text-secondary mb-6 flex items-center gap-2">
             <span className="text-base">🎨</span> {t("settings.appearance")}
           </h2>
@@ -200,10 +215,33 @@ export default function SettingsPage() {
               }`} />
             </button>
           </div>
-        </div>
+
+          {/* Auto Geocode Toggle */}
+          <div className="mt-3 flex items-center justify-between rounded-2xl bg-surface-hover p-4 border border-card-border">
+            <div>
+              <p className="text-[13px] font-bold text-primary">{t("settings.get_geocode")}</p>
+              <p className="text-[11px] font-medium text-secondary mt-0.5">{t("settings.get_geocode_desc")}</p>
+            </div>
+            <button
+              onClick={() => setGetGeocode(!getGeocode)}
+              className={`relative h-7 w-12 shrink-0 rounded-full transition-all active:scale-90 ${
+                getGeocode ? 'bg-blue-600' : 'bg-surface-hover border border-card-border'
+              }`}
+            >
+              <div className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-all ${
+                getGeocode ? 'left-[22px]' : 'left-[3px]'
+              }`} />
+            </button>
+          </div>
+        </motion.div>
 
         {/* ===== Profile Information ===== */}
-        <div className="rounded-[2.5rem] bg-card border border-card-border shadow-sm p-6 sm:p-8">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.1 }}
+          className="rounded-[2.5rem] bg-card border border-card-border shadow-sm p-6 sm:p-8"
+        >
           <h2 className="text-[14px] font-black uppercase tracking-widest text-secondary mb-6 flex items-center gap-2">
             <span className="text-base">👤</span> {t("settings.title")}
           </h2>
@@ -250,17 +288,22 @@ export default function SettingsPage() {
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={isLoading || (name === session.user?.name && rate === savedRate && targetSystem === savedTargetSystem)}
+                disabled={isLoading || (name === session.user?.name && rate === savedRate && targetSystem === savedTargetSystem && getGeocode === savedGetGeocode)}
                 className="btn-primary w-full sm:w-auto disabled:opacity-50 disabled:active:scale-100 !rounded-full !px-8"
               >
                 {isLoading ? t("settings.saving") : t("settings.save")}
               </button>
             </div>
           </form>
-        </div>
+        </motion.div>
 
         {/* ===== About ===== */}
-        <div className="rounded-[2.5rem] bg-card border border-card-border shadow-sm p-6 sm:p-8">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.15 }}
+          className="rounded-[2.5rem] bg-card border border-card-border shadow-sm p-6 sm:p-8"
+        >
           <h2 className="text-[14px] font-black uppercase tracking-widest text-secondary mb-6 flex items-center gap-2">
             <span className="text-base">ℹ️</span> About
           </h2>
@@ -275,7 +318,7 @@ export default function SettingsPage() {
           <p className="mt-4 text-[11px] font-bold text-secondary/40 uppercase tracking-widest">
             Courier SuperApp &middot; 2026
           </p>
-        </div>
+        </motion.div>
 
       </main>
     </div>

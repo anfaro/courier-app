@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useSession } from "next-auth/react";
-import Breadcrumbs from "@/components/Breadcrumbs";
+import PageHeader from "@/components/PageHeader";
 import { motion } from "framer-motion";
 import { shiftPeriod, isCurrentPeriod, isAfterToday } from "@/lib/earnings";
 
@@ -136,7 +136,7 @@ export default function EarningsPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <Breadcrumbs />
+      <PageHeader title="Earnings" />
       <main className="mx-auto max-w-3xl p-4 sm:p-6 space-y-6">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-primary">

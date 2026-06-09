@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     await logServerAccess(req, token);
 
     const user = await db
-      .select({ name: users.name, email: users.email, rate: users.rate, targetSystem: users.targetSystem })
+      .select({ name: users.name, email: users.email, rate: users.rate, targetSystem: users.targetSystem, getGeocode: users.getGeocode })
       .from(users)
       .where(eq(users.id, token.id as string))
       .limit(1);
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     }
 
     await logServerAccess(req, token);
-    const { newName, rate, targetSystem } = await req.json();
+    const { newName, rate, targetSystem, getGeocode } = await req.json();
 
     const updateData: Record<string, unknown> = { updatedAt: new Date() };
 
@@ -64,6 +64,10 @@ export async function POST(req: NextRequest) {
 
     if (targetSystem !== undefined) {
       updateData.targetSystem = Boolean(targetSystem);
+    }
+
+    if (getGeocode !== undefined) {
+      updateData.getGeocode = Boolean(getGeocode);
     }
 
     await db.update(users)

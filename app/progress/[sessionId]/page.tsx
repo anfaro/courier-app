@@ -6,7 +6,7 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { useToast } from "@/components/ToastProvider";
 import { useConfirmation } from "@/components/ConfirmationProvider";
 import { useSession } from "next-auth/react";
-import Breadcrumbs from "@/components/Breadcrumbs";
+import PageHeader from "@/components/PageHeader";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 import { useScrollLock } from "@/lib/useScrollLock";
@@ -97,6 +97,7 @@ export default function SessionDetailPage() {
   const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
   const [showDateEdit, setShowDateEdit] = useState(false);
   const [editDate, setEditDate] = useState("");
+  const [incomingTime, setIncomingTime] = useState("");
   const [savingDate, setSavingDate] = useState(false);
   useScrollLock(showIncomingModal || selectedDelivery !== null || splitModal !== null || showDateEdit);
 
@@ -139,13 +140,7 @@ export default function SessionDetailPage() {
   useEffect(() => {
     if (!showIncomingModal) {
       setCustomerAssignments({});
-      setCustomerSearch("");
-      setShowQuickAdd(false);
-      setQuickName("");
-      setQuickPhone("");
-      setQuickAddress("");
-      setQuickAddError("");
-      setEditingIncoming(null);
+      setIncomingTime("");
     }
   }, [showIncomingModal]);
 
@@ -203,7 +198,11 @@ export default function SessionDetailPage() {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packages: count, customerAssignments: assignments }),
+        body: JSON.stringify({
+          packages: count,
+          customerAssignments: assignments,
+          ...(isEdit && incomingTime ? { time: new Date(incomingTime).toISOString() } : {}),
+        }),
       });
       if (res.ok) {
         showToast(
@@ -239,7 +238,7 @@ export default function SessionDetailPage() {
     }
     let lat: string | undefined;
     let lng: string | undefined;
-    if (newStatus === "delivered" && !delivery.customer.latitude && !delivery.customer.longitude) {
+    if (getGeocodeEnabled && newStatus === "delivered" && !delivery.customer.latitude && !delivery.customer.longitude) {
       try {
         const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000, enableHighAccuracy: true });
@@ -276,6 +275,32 @@ export default function SessionDetailPage() {
     }
   }
 
+  async function handleFinalize() {
+    const confirmed = await askConfirmation({
+      title: t("session.finalize_confirm_title"),
+      message: t("session.finalize_confirm_msg"),
+      type: "warning",
+      confirmText: t("session.finalize"),
+    });
+    if (!confirmed) return;
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ finalized: true }),
+      });
+      if (res.ok) {
+        showToast("Session finalized", "success");
+        fetchSession();
+      } else {
+        const err = await res.json();
+        showToast(err.message || "Failed to finalize", "error");
+      }
+    } catch {
+      showToast("Failed to finalize", "error");
+    }
+  }
+
   async function handleUnfinalize() {
     try {
       const res = await fetch(`/api/sessions/${sessionId}`, {
@@ -300,7 +325,7 @@ export default function SessionDetailPage() {
     const delivery = sessionData?.deliveries.find(d => d.id === splitModal.deliveryId);
     let lat: string | undefined;
     let lng: string | undefined;
-    if (splitModal.targetStatus === "delivered" && delivery && !delivery.customer.latitude && !delivery.customer.longitude) {
+    if (getGeocodeEnabled && splitModal.targetStatus === "delivered" && delivery && !delivery.customer.latitude && !delivery.customer.longitude) {
       try {
         const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000, enableHighAccuracy: true });
@@ -318,7 +343,7 @@ export default function SessionDetailPage() {
   if (loading || !sessionData) {
     return (
       <div className="min-h-screen bg-background pb-24">
-        <Breadcrumbs />
+        <PageHeader title={sessionId} />
         <main className="mx-auto max-w-3xl p-4 sm:p-6">
           <div className="animate-pulse space-y-4">
             <div className="h-8 w-48 bg-surface-hover rounded-full" />
@@ -355,7 +380,7 @@ export default function SessionDetailPage() {
   const earlyDelivered = earlyDeliveries
     .filter((d) => d.status === "delivered")
     .reduce((s, d) => s + (Number(d.packages) || 1), 0);
-  const earlyPct = earlyTotal > 0 ? Math.round((earlyDelivered / earlyTotal) * 100) : 100;
+  const earlyPct = earlyTotal > 0 ? Math.round((earlyDelivered / earlyTotal) * 100) : 0;
 
   const isEarlyTarget = currentMinutes < 12 * 60;
   const activeTarget = isEarlyTarget ? 50 : currentMinutes < 20 * 60 ? 93 : 97;
@@ -384,13 +409,14 @@ export default function SessionDetailPage() {
 
   const finalized = sessionData?.finalized ?? false;
   const isSuperAdmin = (authSession?.user as any)?.role === "superadmin";
-  const canEdit = !isFinalized || isSuperAdmin;
+  const canEdit = !isFinalized;
   const showFinalized = finalized || isFinalized;
   const showTargetSystem = (authSession?.user as any)?.targetSystem !== false;
+  const getGeocodeEnabled = (authSession?.user as any)?.getGeocode !== false;
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <Breadcrumbs />
+      <PageHeader title={`${sessionData.date} (${sessionId})`} />
       <main className="mx-auto max-w-3xl p-4 sm:p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -420,21 +446,34 @@ export default function SessionDetailPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {showFinalized && (
-              <span className="text-[11px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-3 py-1.5 rounded-full border border-amber-200 dark:border-amber-800/50">
-                {t("session.finalized_badge")}
-              </span>
-            )}
-            {showFinalized && isSuperAdmin && (
+            {showFinalized ? (
+              <>
+                <span className="text-[11px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-3 py-1.5 rounded-full border border-amber-200 dark:border-amber-800/50">
+                  {t("session.finalized_badge")}
+                </span>
+                {isSuperAdmin && (
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={handleUnfinalize}
+                    className="flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 px-3 py-1.5 text-[11px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-widest active:scale-90"
+                  >
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+                    </svg>
+                    {t("session.unfinalize")}
+                  </motion.button>
+                )}
+              </>
+            ) : (
               <motion.button
                 whileTap={{ scale: 0.9 }}
-                onClick={handleUnfinalize}
-                className="flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 px-3 py-1.5 text-[11px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-widest active:scale-90"
+                onClick={handleFinalize}
+                className="flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 px-3 py-1.5 text-[11px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-widest active:scale-90"
               >
                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
-                {t("session.unfinalize")}
+                {t("session.finalize")}
               </motion.button>
             )}
           </div>
@@ -577,7 +616,7 @@ export default function SessionDetailPage() {
             setShowIncomingModal(true);
           }}
           className="btn-primary w-full"
-          style={{ display: isFinalized && !isSuperAdmin ? 'none' : '' }}
+          style={{ display: isFinalized ? 'none' : '' }}
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -614,17 +653,22 @@ export default function SessionDetailPage() {
                         </p>
                       </div>
                     </div>
-                    <div style={{ display: isFinalized && !isSuperAdmin ? 'none' : '' }}>
+                    <div style={{ display: isFinalized ? 'none' : '' }}>
                       <motion.button
                         whileTap={{ scale: 0.85 }}
                         onClick={() => {
                           if (isFinalized && !isSuperAdmin) return;
                           const assignments: Record<string, number> = {};
-                          (inc.deliveries || []).forEach((d: any) => {
-                            assignments[d.customerId] = (assignments[d.customerId] || 0) + 1;
-                          });
+                          (inc.deliveries || [])
+                            .filter((d: any) => d.status === "pending")
+                            .forEach((d: any) => {
+                              assignments[d.customerId] = (assignments[d.customerId] || 0) + Number(d.packages);
+                            });
                           setCustomerAssignments(assignments);
                           setEditingIncoming(inc);
+                          const d = new Date(inc.time);
+                          const localVal = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                          setIncomingTime(localVal);
                           setShowIncomingModal(true);
                         }}
                         className="h-8 w-8 flex items-center justify-center rounded-full bg-surface-hover text-secondary border border-card-border active:scale-90"
@@ -871,6 +915,21 @@ export default function SessionDetailPage() {
             </p>
           </div>
         ) : null}
+
+        {/* Delete Session */}
+        <div className="pt-4">
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={handleDelete}
+            disabled={!canEdit}
+            className="w-full rounded-full border-2 border-red-200 dark:border-red-900/50 px-5 py-3 text-[13px] font-black text-red-500 dark:text-red-400 uppercase tracking-widest disabled:opacity-30 disabled:active:scale-100 active:scale-90"
+          >
+            <svg className="h-4 w-4 inline mr-2 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            {t("session.delete_session")}
+          </motion.button>
+        </div>
       </main>
 
       {/* Add Incoming Modal */}
@@ -897,6 +956,20 @@ export default function SessionDetailPage() {
               <p className="text-[13px] font-medium text-secondary mb-6">
                 {t("session.incoming_desc")}
               </p>
+
+              {editingIncoming && isSuperAdmin && (
+                <div className="mb-5">
+                  <label className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1.5 block">
+                    {t("session.incoming_time")}
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={incomingTime}
+                    onChange={e => setIncomingTime(e.target.value)}
+                    className="w-full rounded-full bg-surface-hover px-4 py-2.5 text-[13px] font-bold text-primary outline-none ring-1 ring-transparent focus:ring-blue-500/30 transition-all [color-scheme:dark]"
+                  />
+                </div>
+              )}
 
               {/* Customer Selection */}
               <div className="mb-4">
@@ -1487,14 +1560,16 @@ function DeliveryCard({
             {delivery.customer.name?.charAt(0)?.toUpperCase() || "?"}
           </div>
           <div className="min-w-0">
-            <p className="text-[13px] font-bold text-primary truncate">
-              {delivery.customer.name}
+            <div className="flex items-center gap-1.5">
+              <p className="text-[13px] font-bold text-primary truncate">
+                {delivery.customer.name}
+              </p>
               {pkgCount > 1 && (
-                <span className="ml-1.5 rounded-full bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 text-[10px] font-black text-blue-700 dark:text-blue-300">
+                <span className="shrink-0 rounded-full bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 text-[10px] font-black text-blue-700 dark:text-blue-300">
                   ×{pkgCount}
                 </span>
               )}
-            </p>
+            </div>
             {delivery.customer.address && (
               <p className="text-[11px] text-secondary truncate">
                 {delivery.customer.address}
@@ -1528,11 +1603,21 @@ function DeliveryCard({
             />
           </div>
         )}
-        {delivery.status !== "pending" && (
+        {delivery.status === "rescheduled" && (
+          <div className="flex shrink-0">
+            <StatusButton
+              label={t("session.done")}
+              status="delivered"
+              color="emerald"
+              onClick={() => onStatusChange(delivery.id, "delivered")}
+              disabled={disabled}
+            />
+          </div>
+        )}
+        {delivery.status !== "pending" && delivery.status !== "rescheduled" && (
           <span className={`text-[10px] font-black uppercase tracking-wider shrink-0 ${
             delivery.status === "delivered" ? "text-emerald-600 dark:text-emerald-400" :
-            delivery.status === "returned" ? "text-orange-600 dark:text-orange-400" :
-            "text-purple-600 dark:text-purple-400"
+            "text-orange-600 dark:text-orange-400"
           }`}>
             {delivery.status}
           </span>

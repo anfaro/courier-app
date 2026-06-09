@@ -1,3 +1,28 @@
+# Fix: Incoming Edit Resets Delivery Statuses
+
+## Bug Summary
+
+Editing an incoming delivery causes non-pending deliveries (delivered/returned/rescheduled) to be deleted and re-inserted with `status: "pending"`, causing them to reappear in the pending list and breaking the progress bar.
+
+## Files to Change
+
+### 1. `app/api/sessions/[id]/incomings/[incomingId]/route.ts`
+
+**Import change** (line 5):
+```typescript
+import { eq, and } from "drizzle-orm";
+```
+
+**Logic change** (lines 49-76): Replace the wholesale delete + insert with:
+1. Fetch only existing **pending** deliveries for this incoming
+2. Calculate package count from preserved non-pending deliveries
+3. Delete only pending deliveries
+4. Insert new deliveries from the form
+5. Recalculate session totals by scanning all sessionDeliveries
+
+Full new handler code:
+
+```typescript
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
@@ -29,7 +54,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (!existingIncoming.length) return NextResponse.json({ message: "Incoming not found" }, { status: 404 });
 
     const body = await req.json();
-    const { packages: packagesCount, customerAssignments, time } = body;
+    const { packages: packagesCount, customerAssignments } = body;
 
     if (!packagesCount || !customerAssignments || !Array.isArray(customerAssignments) || customerAssignments.length === 0) {
       return NextResponse.json({ message: "Packages count and customer assignments are required" }, { status: 400 });
@@ -46,15 +71,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       }
     }
 
-    // Fetch all existing deliveries for this incoming
+    // Fetch only pending deliveries for this incoming (preserve non-pending)
     const allOldDeliveries = await db.select().from(sessionDeliveries)
       .where(eq(sessionDeliveries.incomingId, incomingId));
 
-    // Separate non-pending (preserved) and pending (to be replaced)
     const nonPendingDeliveries = allOldDeliveries.filter(d => d.status !== "pending");
     const preservedPackages = nonPendingDeliveries.reduce((sum, d) => sum + Number(d.packages), 0);
 
-    // Delete only pending deliveries (preserve delivered/returned/rescheduled)
+    // Delete only pending deliveries
     await db.delete(sessionDeliveries)
       .where(and(
         eq(sessionDeliveries.incomingId, incomingId),
@@ -75,12 +99,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     // Update incoming's total packages (preserved non-pending + new pending)
     const newIncomingTotal = preservedPackages + Number(packagesCount);
-    const incomingUpdate: Record<string, any> = { packages: String(newIncomingTotal) };
-    if (time && isSuperAdmin) {
-      incomingUpdate.time = new Date(time);
-    }
     await db.update(incomings)
-      .set(incomingUpdate)
+      .set({ packages: String(newIncomingTotal) })
       .where(eq(incomings.id, incomingId));
 
     // Recalculate session totals by scanning ALL deliveries in this session
@@ -120,3 +140,23 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ message: "Failed to update incoming" }, { status: 500 });
   }
 }
+```
+
+### 2. `app/progress/[sessionId]/page.tsx` (lines 622-625)
+
+Change the edit pre-population to filter only pending deliveries and use actual package counts:
+
+```typescript
+onClick={() => {
+  if (isFinalized && !isSuperAdmin) return;
+  const assignments: Record<string, number> = {};
+  (inc.deliveries || [])
+    .filter((d: any) => d.status === "pending")
+    .forEach((d: any) => {
+      assignments[d.customerId] = (assignments[d.customerId] || 0) + Number(d.packages);
+    });
+  setCustomerAssignments(assignments);
+  setEditingIncoming(inc);
+  setShowIncomingModal(true);
+}}
+```

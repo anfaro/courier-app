@@ -3,7 +3,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Breadcrumbs from "@/components/Breadcrumbs";
+import { motion } from "framer-motion";
+import PageHeader from "@/components/PageHeader";
 import ImageInput from "@/components/ImageInput";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useToast } from "@/components/ToastProvider";
@@ -159,10 +160,15 @@ export default function NewCustomerPage() {
   return (
     <div className="min-h-screen bg-background pb-20">
       
-      <Breadcrumbs />
+      <PageHeader title="New Customer" />
 
       <main className="mx-auto max-w-2xl p-4 sm:p-6">
 
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        >
         {/* TABS - Standardized MD3 Pill Design */}
         <div className="mb-8 flex rounded-full bg-surface-hover p-1 shadow-inner ring-1 ring-black/5 dark:ring-white/5">
           <button 
@@ -338,6 +344,7 @@ export default function NewCustomerPage() {
             </div>
           )}
         </div>
+      </motion.div>
       </main>
     </div>
   );

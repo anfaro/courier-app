@@ -1,10 +1,10 @@
 // app/admin/loading.tsx
-import Breadcrumbs from "@/components/Breadcrumbs";
+import PageHeader from "@/components/PageHeader";
 
 export default function AdminLoading() {
   return (
     <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
-      <div className="shrink-0 z-30 bg-background"><Breadcrumbs /></div>
+      <div className="shrink-0 z-30 bg-background"><PageHeader title="Admin" /></div>
       <main className="flex-1 overflow-y-auto p-6">
         <div className="h-9 w-48 rounded-full bg-surface-hover animate-pulse mb-2" />
         <div className="h-5 w-72 rounded-full bg-surface-hover animate-pulse mb-8" />

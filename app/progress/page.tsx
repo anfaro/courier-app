@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useToast } from "@/components/ToastProvider";
 import { useSession } from "next-auth/react";
-import Breadcrumbs from "@/components/Breadcrumbs";
+import PageHeader from "@/components/PageHeader";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import DeliveryChart from "@/components/DeliveryChart";
@@ -109,7 +109,7 @@ export default function ProgressDashboard() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <Breadcrumbs />
+      <PageHeader title="Sessions" />
       <main className="mx-auto max-w-3xl p-4 sm:p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -174,6 +174,7 @@ export default function ProgressDashboard() {
                   key={s.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
+                  whileTap={{ scale: 0.97 }}
                   transition={{ delay: i * 0.05, type: "spring", stiffness: 400, damping: 25 }}
                 >
                   <Link
