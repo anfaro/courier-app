@@ -314,7 +314,7 @@ export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }
                     <button 
                         disabled={isWorking || isMe}
                         onClick={() => handleOpenRoleModal({ id: user.id, name: user.name, role: user.role })}
-                        className="flex-1 min-w-[160px] flex items-center justify-between rounded-2xl bg-surface-hover px-5 py-3.5 text-[14px] font-bold text-primary border border-card-border outline-none hover:bg-gray-100 dark:hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50"
+                        className="flex-1 min-w-[160px] flex items-center justify-between rounded-2xl bg-surface-hover px-5 py-3.5 text-[14px] font-bold text-primary border border-card-border outline-none hover:bg-gray-100 dark:hover:bg-slate-800 transition-all active:scale-90 disabled:opacity-50"
                     >
                         <div className="flex items-center gap-2">
                             <span className="text-lg">{roles.find(r => r.value === user.role)?.icon || "👤"}</span>
@@ -381,7 +381,7 @@ export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }
                             <button
                                 key={role.value}
                                 onClick={() => handleUpdateRole(userToEditRole!.id, role.value)}
-                                className={`w-full group flex items-start gap-5 rounded-[32px] p-5 text-left transition-all active:scale-[0.98] border-2 ${
+                                className={`w-full group flex items-start gap-5 rounded-[32px] p-5 text-left transition-all active:scale-90 border-2 ${
                                     isCurrent 
                                     ? "bg-blue-50/50 dark:bg-blue-900/20 border-blue-600" 
                                     : "bg-surface-hover border-transparent hover:border-gray-200 dark:hover:border-slate-700"

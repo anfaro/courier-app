@@ -79,6 +79,7 @@ export default function MapModal({ latitude, longitude, address }: MapModalProps
               <button
                 onClick={() => setIsOpen(false)}
                 className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-secondary transition hover:bg-gray-200 active:scale-90"
+                aria-label="Close map"
               >
                 ✕
               </button>

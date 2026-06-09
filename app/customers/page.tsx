@@ -378,7 +378,7 @@ function CustomersListContent() {
                   {!isManagementMode && (
                     <Link
                       href={`/customers/${customer.id}`}
-                      className="absolute inset-0 z-0 rounded-[2rem] transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-inset focus:ring-blue-500/20"
+                      className="absolute inset-0 z-0 rounded-[2rem] transition-all duration-200 active:scale-90 focus:outline-none focus:ring-4 focus:ring-inset focus:ring-blue-500/20"
                       aria-label={`View details for ${customer.name}`}
                     />
                   )}

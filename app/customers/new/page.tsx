@@ -167,13 +167,13 @@ export default function NewCustomerPage() {
         <div className="mb-8 flex rounded-full bg-surface-hover p-1 shadow-inner ring-1 ring-black/5 dark:ring-white/5">
           <button 
             onClick={() => setActiveTab("single")} 
-            className={`flex-1 rounded-full py-3 text-[14px] font-black transition-all active:scale-95 ${activeTab === "single" ? "bg-card text-blue-700 dark:text-blue-400 shadow-sm" : "text-secondary hover:text-primary"}`}
+            className={`flex-1 rounded-full py-3 text-[14px] font-black transition-all active:scale-90 ${activeTab === "single" ? "bg-card text-blue-700 dark:text-blue-400 shadow-sm" : "text-secondary hover:text-primary"}`}
           >
             Single
           </button>
           <button 
             onClick={() => setActiveTab("bulk")} 
-            className={`flex-1 rounded-full py-3 text-[14px] font-black transition-all active:scale-95 ${activeTab === "bulk" ? "bg-card text-blue-700 dark:text-blue-400 shadow-sm" : "text-secondary hover:text-primary"}`}
+            className={`flex-1 rounded-full py-3 text-[14px] font-black transition-all active:scale-90 ${activeTab === "bulk" ? "bg-card text-blue-700 dark:text-blue-400 shadow-sm" : "text-secondary hover:text-primary"}`}
           >
             Bulk
           </button>

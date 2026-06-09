@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
-import { sessions, sessionDeliveries, customerVisits } from "@/lib/schema";
+import { sessions, sessionDeliveries, customerVisits, customers } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { generateId } from "@/lib/utils";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
@@ -25,7 +25,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     const body = await req.json();
-    const { status, splitCount } = body;
+    const { status, splitCount, latitude, longitude } = body;
 
     if (!["delivered", "returned", "rescheduled"].includes(status)) {
       return NextResponse.json({ message: "Invalid status" }, { status: 400 });
@@ -91,6 +91,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         visitedAt: new Date(),
         checkedOutAt: new Date(),
       }).onConflictDoNothing();
+
+      // Save location to customer if provided and customer doesn't already have coordinates
+      if (latitude && longitude) {
+        const cust = await db.select({ latitude: customers.latitude, longitude: customers.longitude })
+          .from(customers)
+          .where(eq(customers.id, d.customerId))
+          .limit(1);
+        if (cust.length && !cust[0].latitude && !cust[0].longitude) {
+          await db.update(customers)
+            .set({ latitude: latitude.toString(), longitude: longitude.toString() })
+            .where(eq(customers.id, d.customerId));
+        }
+      }
     }
 
     await logActivity({

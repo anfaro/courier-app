@@ -33,38 +33,49 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const allCustomers = await db.query.customers.findMany({
-      limit: limit + 1,
-      offset,
-      orderBy: (customers, { desc }) => [desc(customers.createdAt)],
-      columns: {
-        id: true,
-        name: true,
-        phoneNumber: true,
-        address: true,
-        housePictureUrl: true,
-        createdAt: true,
-        latitude: true,
-        longitude: true,
-        notes: true,
-      },
-      with: {
-        clusters: {
-          with: {
-            cluster: {
-              columns: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-      },
-      ...(customerIds ? { where: (c: any, { inArray: ia }: any) => ia(c.id, customerIds) } : {}),
-    });
+    const where = customerIds ? inArray(customers.id, customerIds) : undefined;
+
+    const allCustomers = await db.select({
+      id: customers.id,
+      name: customers.name,
+      phoneNumber: customers.phoneNumber,
+      address: customers.address,
+      housePictureUrl: customers.housePictureUrl,
+      createdAt: customers.createdAt,
+      latitude: customers.latitude,
+      longitude: customers.longitude,
+      notes: customers.notes,
+    })
+      .from(customers)
+      .where(where)
+      .orderBy(sql`${customers.createdAt} DESC`)
+      .limit(limit + 1)
+      .offset(offset);
 
     const hasMore = allCustomers.length > limit;
     if (hasMore) allCustomers.pop();
+
+    // Batch-load cluster relations to avoid N+1
+    const customerIdList = allCustomers.map(c => c.id);
+    const clusterRows = customerIdList.length > 0 ? await db.select({
+      customerId: customerClusters.customerId,
+      clusterId: customerClusters.clusterId,
+      clusterName: sql<string>`cluster_rel.name`,
+    })
+      .from(customerClusters)
+      .innerJoin(sql`clusters cluster_rel`, sql`cluster_rel.id = ${customerClusters.clusterId}`)
+      .where(inArray(customerClusters.customerId, customerIdList)) : [];
+
+    const clustersByCustomer: Record<string, { cluster: { id: string; name: string } }[]> = {};
+    for (const row of clusterRows) {
+      if (!clustersByCustomer[row.customerId]) clustersByCustomer[row.customerId] = [];
+      clustersByCustomer[row.customerId].push({ cluster: { id: row.clusterId, name: row.clusterName } });
+    }
+
+    const customersWithClusters = allCustomers.map(c => ({
+      ...c,
+      clusters: clustersByCustomer[c.id] || [],
+    }));
 
     let total: number;
     if (customerIds) {
@@ -74,7 +85,7 @@ export async function GET(req: NextRequest) {
       total = Number(totalResult[0]?.count ?? 0);
     }
 
-    const body = { customers: allCustomers, hasMore, limit, offset, total };
+    const body = { customers: customersWithClusters, hasMore, limit, offset, total };
     setCache(cacheKey, body, 15000);
 
     return NextResponse.json(body, { status: 200 });

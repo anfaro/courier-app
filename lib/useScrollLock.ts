@@ -10,9 +10,11 @@ export function useScrollLock(locked: boolean) {
       if (scrollbarWidth > 0) {
         document.body.style.paddingRight = `${scrollbarWidth}px`;
       }
+      window.dispatchEvent(new CustomEvent("modal:change", { detail: { isOpen: true } }));
       return () => {
         document.body.style.overflow = prev;
         document.body.style.paddingRight = prevPadding;
+        window.dispatchEvent(new CustomEvent("modal:change", { detail: { isOpen: false } }));
       };
     }
   }, [locked]);

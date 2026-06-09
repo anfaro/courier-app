@@ -77,7 +77,7 @@ export default function AdminQuickActions() {
       <div className="flex gap-3">
         <button 
           onClick={() => setShowModal(true)}
-          className="flex-1 flex items-center gap-3 rounded-[24px] bg-blue-600 p-4 text-white shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all hover:bg-blue-700"
+          className="flex-1 flex items-center gap-3 rounded-[24px] bg-blue-600 p-4 text-white shadow-lg shadow-blue-500/20 active:scale-90 transition-all hover:bg-blue-700"
         >
           <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center text-xl">👤</div>
           <div className="flex flex-col items-start">
@@ -89,7 +89,7 @@ export default function AdminQuickActions() {
         <button
           onClick={handleGeocode}
           disabled={geocoding}
-          className="flex-1 flex items-center gap-3 rounded-[24px] bg-emerald-600 p-4 text-white shadow-lg shadow-emerald-500/20 active:scale-[0.98] transition-all hover:bg-emerald-700 disabled:opacity-50"
+          className="flex-1 flex items-center gap-3 rounded-[24px] bg-emerald-600 p-4 text-white shadow-lg shadow-emerald-500/20 active:scale-90 transition-all hover:bg-emerald-700 disabled:opacity-50"
         >
           <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center text-xl">🌍</div>
           <div className="flex flex-col items-start">

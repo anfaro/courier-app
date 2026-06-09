@@ -249,6 +249,13 @@ export const translations: Translations = {
   "visit.visit_completed": { en: "Visit Completed", id: "Kunjungan Selesai" },
   "visit.visit_in_progress": { en: "In Progress", id: "Sedang Berlangsung" },
 
+  // Relative time
+  "customer.relative_just_now": { en: "just now", id: "baru saja" },
+  "customer.relative_min_ago": { en: "[N] min ago", id: "[N] menit lalu" },
+  "customer.relative_hour_ago": { en: "[N] hour ago", id: "[N] jam lalu" },
+  "customer.relative_yesterday": { en: "Yesterday", id: "Kemarin" },
+  "customer.relative_day_ago": { en: "[N] days ago", id: "[N] hari lalu" },
+
   // Session / Progress
   "session.title": { en: "Progress", id: "Progres" },
   "session.dashboard_title": { en: "Sessions", id: "Sesi" },
@@ -321,6 +328,9 @@ export const translations: Translations = {
   "session.finalize_confirm_msg": { en: "This will lock the session from further edits. Continue?", id: "Ini akan mengunci sesi dari pengeditan lebih lanjut. Lanjutkan?" },
   "session.finalized_badge": { en: "Finalized", id: "Difinalisasi" },
   "session.finalized_blocked": { en: "Session is finalized", id: "Sesi sudah difinalisasi" },
+  "session.unfinalize": { en: "Unfinalize", id: "Batalkan Finalisasi" },
+  "session.edit_date": { en: "Edit Date", id: "Ubah Tanggal" },
+  "session.date_updated": { en: "Session date updated!", id: "Tanggal sesi diperbarui!" },
   "session.edit_incoming": { en: "Edit", id: "Edit" },
 
   // Image Input

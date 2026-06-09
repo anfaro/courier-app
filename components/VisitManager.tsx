@@ -109,7 +109,7 @@ export default function VisitManager({ customerId, hideCheckIn }: { customerId: 
         headers: { "Content-Type": "application/json" },
       });
       if (res.ok) {
-        showToast(t("customer.checked_out"), "success");
+        showToast(t("visit.checked_out"), "success");
         setActiveVisit(null);
         fetchVisits();
       } else {
@@ -142,7 +142,7 @@ export default function VisitManager({ customerId, hideCheckIn }: { customerId: 
             onClick={() => setShowModal(true)}
             className="rounded-full bg-blue-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-sm hover:bg-blue-700 transition-all active:scale-90"
           >
-            {t("customer.check_in")}
+            {t("visit.check_in")}
           </button>
         )}
       </div>
@@ -153,7 +153,7 @@ export default function VisitManager({ customerId, hideCheckIn }: { customerId: 
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-amber-500 animate-pulse" />
               <p className="text-[14px] font-bold text-amber-800 dark:text-amber-300">
-                {t("customer.checked_in")}
+                {t("visit.checked_in")}
               </p>
             </div>
             <p className="text-[18px] font-black tabular-nums text-amber-700 dark:text-amber-400">
@@ -172,7 +172,7 @@ export default function VisitManager({ customerId, hideCheckIn }: { customerId: 
             onClick={checkOut}
             className="w-full rounded-full bg-red-600 py-3 text-[13px] font-bold text-white shadow-sm hover:bg-red-700 transition-all active:scale-90"
           >
-            {t("customer.check_out")}
+            {t("visit.check_out")}
           </button>
         </div>
       )}

@@ -153,7 +153,7 @@ export default function NewClusterPage() {
                             <button
                               type="button"
                               onClick={() => toggleCustomer(customer.id)}
-                              className={`flex w-full items-center rounded-[1.5rem] p-4 text-left transition-all border-2 active:scale-[0.98] ${isSelected
+                              className={`flex w-full items-center rounded-[1.5rem] p-4 text-left transition-all border-2 active:scale-90 ${isSelected
                                 ? "bg-blue-50 dark:bg-blue-900/20 border-blue-600"
                                 : "bg-card border-card-border hover:border-blue-400 dark:hover:border-blue-600 hover:bg-surface-hover"
                                 }`}

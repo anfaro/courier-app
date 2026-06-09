@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const { date } = body;
-    const sessionDate = date || new Date().toISOString().split("T")[0];
+    const sessionDate = date || new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" });
 
     const [session] = await db.insert(sessions).values({
       id: generateId(),

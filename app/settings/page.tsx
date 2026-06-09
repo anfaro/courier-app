@@ -152,13 +152,13 @@ export default function SettingsPage() {
               <div className="flex rounded-2xl bg-surface-hover p-1.5 border border-card-border">
                 <button
                   onClick={(e) => setTheme("light", { x: e.clientX, y: e.clientY })}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[13px] font-black transition-all active:scale-95 ${theme === 'light' ? 'bg-card text-blue-600 shadow-sm border border-card-border' : 'text-secondary hover:text-primary'}`}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[13px] font-black transition-all active:scale-90 ${theme === 'light' ? 'bg-card text-blue-600 shadow-sm border border-card-border' : 'text-secondary hover:text-primary'}`}
                 >
                   ☀️ Light
                 </button>
                 <button
                   onClick={(e) => setTheme("dark", { x: e.clientX, y: e.clientY })}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[13px] font-black transition-all active:scale-95 ${theme === 'dark' ? 'bg-card text-blue-400 shadow-sm border border-card-border' : 'text-secondary hover:text-primary'}`}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[13px] font-black transition-all active:scale-90 ${theme === 'dark' ? 'bg-card text-blue-400 shadow-sm border border-card-border' : 'text-secondary hover:text-primary'}`}
                 >
                   🌙 Dark
                 </button>
@@ -169,13 +169,13 @@ export default function SettingsPage() {
               <div className="flex rounded-2xl bg-surface-hover p-1.5 border border-card-border">
                 <button
                   onClick={() => setLocale("en")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[13px] font-black transition-all active:scale-95 ${locale === 'en' ? 'bg-card text-blue-600 shadow-sm border border-card-border' : 'text-secondary hover:text-primary'}`}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[13px] font-black transition-all active:scale-90 ${locale === 'en' ? 'bg-card text-blue-600 shadow-sm border border-card-border' : 'text-secondary hover:text-primary'}`}
                 >
                   🇬🇧 English
                 </button>
                 <button
                   onClick={() => setLocale("id")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[13px] font-black transition-all active:scale-95 ${locale === 'id' ? 'bg-card text-blue-600 shadow-sm border border-card-border' : 'text-secondary hover:text-primary'}`}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[13px] font-black transition-all active:scale-90 ${locale === 'id' ? 'bg-card text-blue-600 shadow-sm border border-card-border' : 'text-secondary hover:text-primary'}`}
                 >
                   🇮🇩 Indonesia
                 </button>

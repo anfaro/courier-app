@@ -95,7 +95,10 @@ export default function SessionDetailPage() {
     splitCount: number;
   } | null>(null);
   const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
-  useScrollLock(showIncomingModal || selectedDelivery !== null || splitModal !== null);
+  const [showDateEdit, setShowDateEdit] = useState(false);
+  const [editDate, setEditDate] = useState("");
+  const [savingDate, setSavingDate] = useState(false);
+  useScrollLock(showIncomingModal || selectedDelivery !== null || splitModal !== null || showDateEdit);
 
   const dateLocale = locale === "id" ? "id-ID" : "en-GB";
 
@@ -234,14 +237,31 @@ export default function SessionDetailPage() {
       });
       return;
     }
-    await doStatusChange(deliveryId, newStatus);
+    let lat: string | undefined;
+    let lng: string | undefined;
+    if (newStatus === "delivered" && !delivery.customer.latitude && !delivery.customer.longitude) {
+      try {
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000, enableHighAccuracy: true });
+        });
+        lat = pos.coords.latitude.toString();
+        lng = pos.coords.longitude.toString();
+      } catch {
+        // Location unavailable or denied — proceed without it
+      }
+    }
+    await doStatusChange(deliveryId, newStatus, undefined, lat, lng);
   }
 
-  async function doStatusChange(deliveryId: string, newStatus: string, splitCount?: number) {
+  async function doStatusChange(deliveryId: string, newStatus: string, splitCount?: number, latitude?: string, longitude?: string) {
     if (!canEdit) { showToast(t("session.finalized_blocked"), "warning"); return; }
     try {
       const body: any = { status: newStatus };
       if (splitCount) body.splitCount = splitCount;
+      if (latitude && longitude) {
+        body.latitude = latitude;
+        body.longitude = longitude;
+      }
       const res = await fetch(`/api/sessions/${sessionId}/deliveries/${deliveryId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -256,9 +276,42 @@ export default function SessionDetailPage() {
     }
   }
 
+  async function handleUnfinalize() {
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ finalized: false }),
+      });
+      if (res.ok) {
+        showToast("Session unfinalized", "success");
+        fetchSession();
+      } else {
+        const err = await res.json();
+        showToast(err.message || "Failed to unfinalize", "error");
+      }
+    } catch {
+      showToast("Failed to unfinalize", "error");
+    }
+  }
+
   async function confirmSplit() {
     if (!splitModal) return;
-    await doStatusChange(splitModal.deliveryId, splitModal.targetStatus, splitModal.splitCount);
+    const delivery = sessionData?.deliveries.find(d => d.id === splitModal.deliveryId);
+    let lat: string | undefined;
+    let lng: string | undefined;
+    if (splitModal.targetStatus === "delivered" && delivery && !delivery.customer.latitude && !delivery.customer.longitude) {
+      try {
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000, enableHighAccuracy: true });
+        });
+        lat = pos.coords.latitude.toString();
+        lng = pos.coords.longitude.toString();
+      } catch {
+        // Location unavailable — proceed without it
+      }
+    }
+    await doStatusChange(splitModal.deliveryId, splitModal.targetStatus, splitModal.splitCount, lat, lng);
     setSplitModal(null);
   }
 
@@ -291,7 +344,8 @@ export default function SessionDetailPage() {
     incomingTimeMap[inc.id] = inc.time;
   });
 
-  const earlyCutoff = new Date(sessionData.date + "T09:00:00");
+  const [ey, em, ed] = sessionData.date.split("-").map(Number);
+  const earlyCutoff = new Date(Date.UTC(ey, em - 1, ed, 2, 0, 0)); // 09:00 WIB = 02:00 UTC
   const earlyDeliveries = sessionData.deliveries.filter((d) => {
     const t = incomingTimeMap[d.incomingId];
     return t && new Date(t) < earlyCutoff;
@@ -341,10 +395,25 @@ export default function SessionDetailPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-primary">
-              {new Date(sessionData.date + "T00:00:00").toLocaleDateString(dateLocale, {
-                weekday: "long", day: "2-digit", month: "long", year: "numeric", timeZone: "Asia/Jakarta"
-              })}
+            <h1 className="text-2xl font-extrabold tracking-tight text-primary flex items-center gap-2">
+              {(() => {
+                const [y, m, d] = sessionData.date.split("-").map(Number);
+                return new Date(y, m - 1, d).toLocaleDateString(dateLocale, {
+                  weekday: "long", day: "2-digit", month: "long", year: "numeric", timeZone: "Asia/Jakarta"
+                });
+              })()}
+              {canEdit && (
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  onClick={() => { setEditDate(sessionData.date); setShowDateEdit(true); }}
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-hover text-secondary hover:text-blue-600 dark:hover:text-blue-400 border border-card-border active:scale-90"
+                  aria-label={t("session.edit_date")}
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </motion.button>
+              )}
             </h1>
             <p className="text-[13px] font-medium text-secondary mt-1">
               {total} {t("session.packages")} · {delivered} {t("session.delivered")}
@@ -987,7 +1056,7 @@ export default function SessionDetailPage() {
                               setCustomerAssignments(prev => ({ ...prev, [c.id]: 1 }));
                             }
                           }}
-                          className="flex items-center gap-3 p-3 rounded-2xl bg-surface-hover active:scale-[0.98] cursor-pointer transition-transform"
+                          className="flex items-center gap-3 p-3 rounded-2xl bg-surface-hover active:scale-90 cursor-pointer transition-transform"
                         >
                           {/* Checkbox */}
                           <motion.div
@@ -1293,6 +1362,89 @@ export default function SessionDetailPage() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Date Edit Modal */}
+      <AnimatePresence>
+        {showDateEdit && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+              onClick={() => setShowDateEdit(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="relative w-full max-w-sm bg-card rounded-[32px] p-6 shadow-2xl"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-lg">
+                  📅
+                </div>
+                <div>
+                  <h3 className="text-[17px] font-extrabold text-primary">
+                    {t("session.edit_date")}
+                  </h3>
+                </div>
+              </div>
+
+              <input
+                type="date"
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+                className="w-full rounded-2xl border border-card-border bg-background px-4 py-3 text-[15px] font-bold text-primary outline-none focus:border-blue-500 transition-all"
+              />
+
+              <div className="flex gap-3 mt-6">
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowDateEdit(false)}
+                  className="btn-outline flex-1"
+                >
+                  {t("action.cancel")}
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  disabled={savingDate || !editDate || editDate === sessionData.date}
+                  onClick={async () => {
+                    setSavingDate(true);
+                    try {
+                      const res = await fetch(`/api/sessions/${sessionId}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ date: editDate }),
+                      });
+                      if (res.ok) {
+                        showToast(t("session.date_updated"), "success");
+                        setShowDateEdit(false);
+                        fetchSession();
+                      } else {
+                        const err = await res.json();
+                        showToast(err.message || "Failed to update date", "error");
+                      }
+                    } catch {
+                      showToast("Failed to update date", "error");
+                    } finally {
+                      setSavingDate(false);
+                    }
+                  }}
+                  className="btn-primary flex-1"
+                >
+                  {savingDate ? (
+                    <span className="h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                  ) : (
+                    t("action.save")
+                  )}
+                </motion.button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -1327,7 +1479,7 @@ function DeliveryCard({
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 10 }}
       onClick={onSelect}
-      className={`rounded-[16px] bg-card border border-card-border p-4 shadow-sm ${statusColors[delivery.status] || ""} ${onSelect ? 'cursor-pointer hover:bg-surface-hover transition-colors active:scale-[0.98]' : ''}`}
+      className={`rounded-[16px] bg-card border border-card-border p-4 shadow-sm ${statusColors[delivery.status] || ""} ${onSelect ? 'cursor-pointer hover:bg-surface-hover transition-colors active:scale-90' : ''}`}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">

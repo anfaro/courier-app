@@ -214,7 +214,7 @@ export default function EditClusterPage({ params }: { params: Promise<{ id: stri
                           key={customer.id}
                           type="button"
                           onClick={() => toggleCustomer(customer.id)}
-                          className={`flex w-full items-center gap-3 rounded-2xl p-3 text-left transition-all active:scale-[0.98] ${isSelected
+                          className={`flex w-full items-center gap-3 rounded-2xl p-3 text-left transition-all active:scale-90 ${isSelected
                             ? "bg-purple-600 text-white shadow-md"
                             : "bg-card text-primary hover:bg-surface-hover border border-card-border"
                             }`}

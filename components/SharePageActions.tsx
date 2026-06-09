@@ -22,7 +22,7 @@ export default function SharePageActions({ shareToken }: { shareToken: string })
   return (
     <button
       onClick={handleCopy}
-      className="w-full rounded-[1.75rem] border border-card-border bg-card p-5 shadow-sm hover:bg-surface-hover transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+      className="w-full rounded-[1.75rem] border border-card-border bg-card p-5 shadow-sm hover:bg-surface-hover transition-all active:scale-90 flex items-center justify-center gap-3"
     >
       <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

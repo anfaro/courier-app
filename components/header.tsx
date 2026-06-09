@@ -357,7 +357,7 @@ export default function Header() {
                       <Link
                         href="/earnings"
                         onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center gap-3 px-5 py-3.5 text-[14px] font-bold text-primary dark:text-slate-200 transition-all hover:bg-surface-hover/50 dark:hover:bg-slate-800/50 active:scale-[0.97] rounded-2xl group"
+                        className="flex items-center gap-3 px-5 py-3.5 text-[14px] font-bold text-primary dark:text-slate-200 transition-all hover:bg-surface-hover/50 dark:hover:bg-slate-800/50 active:scale-90 rounded-2xl group"
                       >
                         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">💰</span>
                         {t("earnings.title")}
@@ -367,7 +367,7 @@ export default function Header() {
                         <Link
                           href="/admin"
                           onClick={() => setIsMenuOpen(false)}
-                          className="flex items-center gap-3 px-5 py-3.5 text-[14px] font-bold text-primary dark:text-slate-200 transition-all hover:bg-surface-hover/50 dark:hover:bg-slate-800/50 active:scale-[0.97] rounded-2xl group"
+                          className="flex items-center gap-3 px-5 py-3.5 text-[14px] font-bold text-primary dark:text-slate-200 transition-all hover:bg-surface-hover/50 dark:hover:bg-slate-800/50 active:scale-90 rounded-2xl group"
                         >
                           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">🛡️</span>
                           {t("nav.admin")}
@@ -377,7 +377,7 @@ export default function Header() {
                       <Link
                         href="/settings"
                         onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center gap-3 px-5 py-3.5 text-[14px] font-bold text-primary dark:text-slate-200 transition-all hover:bg-surface-hover/50 dark:hover:bg-slate-800/50 active:scale-[0.97] rounded-2xl group"
+                        className="flex items-center gap-3 px-5 py-3.5 text-[14px] font-bold text-primary dark:text-slate-200 transition-all hover:bg-surface-hover/50 dark:hover:bg-slate-800/50 active:scale-90 rounded-2xl group"
                       >
                         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">⚙️</span>
                         {t("nav.settings")}
@@ -385,7 +385,7 @@ export default function Header() {
 
                       <button
                         onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); signOut({ redirect: false }).then(() => { window.location.href = "/login"; }); }}
-                        className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-[14px] font-bold text-red-600 dark:text-red-400 transition-all hover:bg-red-50/50 dark:hover:bg-red-950/30 active:scale-[0.97] rounded-2xl group"
+                        className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-[14px] font-bold text-red-600 dark:text-red-400 transition-all hover:bg-red-50/50 dark:hover:bg-red-950/30 active:scale-90 rounded-2xl group"
                       >
                         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 group-hover:scale-110 transition-transform">🚪</span>
                         Log Out

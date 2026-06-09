@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
       errorName: "FetchClustersError",
       errorMessage: error instanceof Error ? error.message : String(error),
     });
-    return NextResponse.json({ error: "Failed to fetch clusters" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to fetch clusters" }, { status: 500 });
   }
 }
 

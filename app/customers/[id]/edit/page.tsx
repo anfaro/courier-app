@@ -239,7 +239,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
                   <label className="mb-3 block text-[15px] font-semibold text-secondary">Clusters</label>
                   <div className="flex flex-wrap gap-2">
                     {availableClusters.map((cluster) => (
-                      <button key={cluster.id} type="button" onClick={() => toggleCluster(cluster.id)} className={`rounded-full px-4 py-2 text-[14px] font-semibold transition-all active:scale-95 ${selectedClusters.includes(cluster.id) ? "bg-purple-600 text-white shadow-md" : "bg-surface-hover text-secondary hover:bg-gray-200 dark:hover:bg-slate-700 border border-card-border"}`}>
+                      <button key={cluster.id} type="button" onClick={() => toggleCluster(cluster.id)} className={`rounded-full px-4 py-2 text-[14px] font-semibold transition-all active:scale-90 ${selectedClusters.includes(cluster.id) ? "bg-purple-600 text-white shadow-md" : "bg-surface-hover text-secondary hover:bg-gray-200 dark:hover:bg-slate-700 border border-card-border"}`}>
                         📦 {cluster.name}
                       </button>
                     ))}
@@ -255,7 +255,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
               <div className="rounded-[2rem] bg-blue-50/50 dark:bg-blue-900/10 p-6 border border-blue-100/50 dark:border-blue-900/30 space-y-4">
                 <div className="flex items-center justify-between">
                   <label className="block text-[15px] font-semibold text-blue-900 dark:text-blue-400">Location Data</label>
-                  <button type="button" onClick={getLocation} className="rounded-full bg-card dark:bg-slate-900 px-4 py-2 text-[13px] font-semibold text-blue-700 dark:text-blue-400 shadow-sm border border-blue-100 dark:border-blue-900/50 active:scale-95 transition-all">
+                  <button type="button" onClick={getLocation} className="rounded-full bg-card dark:bg-slate-900 px-4 py-2 text-[13px] font-semibold text-blue-700 dark:text-blue-400 shadow-sm border border-blue-100 dark:border-blue-900/50 active:scale-90 transition-all">
                     📍 Update GPS
                   </button>
                 </div>
@@ -298,11 +298,11 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
               />
 
               <div className="flex flex-wrap gap-4 pt-4">
-                <button type="submit" disabled={isLoading || isImageUploading} className="flex-1 rounded-full bg-blue-600 py-4 text-[15px] font-bold text-white shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:bg-blue-400 flex items-center justify-center gap-2">
+                <button type="submit" disabled={isLoading || isImageUploading} className="flex-1 rounded-full bg-blue-600 py-4 text-[15px] font-bold text-white shadow-lg shadow-blue-500/20 active:scale-90 transition-all disabled:bg-blue-400 flex items-center justify-center gap-2">
                   {isLoading ? <><div className="h-5 w-5 animate-spin rounded-full border-[2.5px] border-white border-t-transparent" /> Saving...</> : "Save Changes"}
                 </button>
-                <button type="button" onClick={() => router.back()} className="flex-1 rounded-full bg-surface-hover py-4 text-[15px] font-bold text-secondary active:scale-95 transition-all hover:bg-gray-200 dark:hover:bg-slate-700 border border-card-border">Cancel</button>
-                <button type="button" onClick={() => setShowDeleteModal(true)} disabled={isDeleting} className="w-full rounded-full bg-red-50 dark:bg-red-950/30 py-4 text-[15px] font-bold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all active:scale-95 border border-red-100 dark:border-red-900/30">
+                <button type="button" onClick={() => router.back()} className="flex-1 rounded-full bg-surface-hover py-4 text-[15px] font-bold text-secondary active:scale-90 transition-all hover:bg-gray-200 dark:hover:bg-slate-700 border border-card-border">Cancel</button>
+                <button type="button" onClick={() => setShowDeleteModal(true)} disabled={isDeleting} className="w-full rounded-full bg-red-50 dark:bg-red-950/30 py-4 text-[15px] font-bold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all active:scale-90 border border-red-100 dark:border-red-900/30">
                   {isDeleting ? "Deleting..." : "Delete Customer"}
                 </button>
               </div>
@@ -339,7 +339,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
                 type="button"
                 onClick={() => setShowDeleteModal(false)}
                 disabled={isDeleting}
-                className="rounded-full px-5 py-2.5 text-[14px] font-bold text-secondary transition-colors hover:bg-surface-hover active:scale-95 disabled:opacity-50"
+                className="rounded-full px-5 py-2.5 text-[14px] font-bold text-secondary transition-colors hover:bg-surface-hover active:scale-90 disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -347,7 +347,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
                 type="button"
                 onClick={executeDelete}
                 disabled={isDeleting}
-                className="rounded-full bg-red-600 px-5 py-2.5 text-[14px] font-bold text-white shadow-sm transition-all hover:bg-red-700 active:scale-95 disabled:bg-red-400"
+                className="rounded-full bg-red-600 px-5 py-2.5 text-[14px] font-bold text-white shadow-sm transition-all hover:bg-red-700 active:scale-90 disabled:bg-red-400"
               >
                 {isDeleting ? "Deleting..." : "Yes, Delete"}
               </button>

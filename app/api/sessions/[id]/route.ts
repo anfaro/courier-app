@@ -120,6 +120,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       updateData.deliveredPackages = val;
     }
 
+    if (body.date !== undefined) {
+      if (typeof body.date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(body.date)) {
+        return NextResponse.json({ message: "Invalid date format. Use YYYY-MM-DD." }, { status: 400 });
+      }
+      updateData.date = body.date;
+    }
+
     await db.update(sessions)
       .set(updateData)
       .where(eq(sessions.id, id));

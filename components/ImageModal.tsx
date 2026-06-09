@@ -54,11 +54,13 @@ export default function ImageModal({
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 opacity-0 animate-[fadeIn_0.2s_ease-out_forwards]"
           onClick={() => setIsOpen(false)}
+          role="dialog" aria-modal="true" aria-label="Image viewer"
         >
-          {/* Close Button - ADDED z-50 and darkened the background so it always pops! */}
+          {/* Close Button */}
           <button
             className="absolute right-6 top-6 z-50 rounded-full bg-black/40 p-3 text-white backdrop-blur transition hover:bg-black/60 focus:outline-none focus:ring-2 focus:ring-white"
             onClick={() => setIsOpen(false)}
+            aria-label="Close image"
           >
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />

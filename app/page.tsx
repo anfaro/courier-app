@@ -116,7 +116,7 @@ export default function HomePage() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-[24px] bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 p-5 shadow-sm group-hover:shadow-md group-hover:border-emerald-300 dark:group-hover:border-emerald-700 transition-all active:scale-[0.98]"
+              className="rounded-[24px] bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 p-5 shadow-sm group-hover:shadow-md group-hover:border-emerald-300 dark:group-hover:border-emerald-700 transition-all active:scale-90"
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -184,7 +184,7 @@ export default function HomePage() {
 
             {/* ACTION 1: CUSTOMERS DATABASE */}
             <Link href="/customers/new" className="block group">
-              <div className="relative overflow-hidden rounded-[32px] bg-[#0A2FFF] p-8 shadow-xl shadow-blue-600/20 transition-all active:scale-[0.98]">
+              <div className="relative overflow-hidden rounded-[32px] bg-[#0A2FFF] p-8 shadow-xl shadow-blue-600/20 transition-all active:scale-90">
                 <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/10 blur-3xl group-hover:bg-white/20 transition-all duration-500"></div>
                 <div className="relative z-10 flex items-center justify-between gap-4">
                   <div>
@@ -204,7 +204,7 @@ export default function HomePage() {
 
             {/* ACTION 2: PROGRESS */}
             <Link href="/progress" className="block group">
-              <div className="relative overflow-hidden rounded-[32px] bg-[#059669] p-8 shadow-xl shadow-emerald-600/20 transition-all active:scale-[0.98]">
+              <div className="relative overflow-hidden rounded-[32px] bg-[#059669] p-8 shadow-xl shadow-emerald-600/20 transition-all active:scale-90">
                 <div className="absolute -left-10 -bottom-10 h-48 w-48 rounded-full bg-white/10 blur-3xl group-hover:bg-white/20 transition-all duration-500"></div>
                 <div className="relative z-10 flex items-center justify-between gap-4">
                   <div>
@@ -270,7 +270,7 @@ export default function HomePage() {
           <div className="space-y-3">
 
             {/* Customers Link */}
-            <Link href="/customers" className="flex items-center justify-between rounded-2xl bg-card p-4 shadow-sm border border-card-border hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:border-blue-100 dark:hover:border-blue-900/50 transition-colors active:scale-[0.98] group">
+            <Link href="/customers" className="flex items-center justify-between rounded-2xl bg-card p-4 shadow-sm border border-card-border hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:border-blue-100 dark:hover:border-blue-900/50 transition-colors active:scale-90 group">
               <div className="flex items-center gap-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xl group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-colors">👥</div>
                 <div>
@@ -282,7 +282,7 @@ export default function HomePage() {
             </Link>
 
             {/* Clusters Link */}
-            <Link href="/clusters" className="flex items-center justify-between rounded-2xl bg-card p-4 shadow-sm border border-card-border hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:border-orange-100 dark:hover:border-orange-900/50 transition-colors active:scale-[0.98] group">
+            <Link href="/clusters" className="flex items-center justify-between rounded-2xl bg-card p-4 shadow-sm border border-card-border hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:border-orange-100 dark:hover:border-orange-900/50 transition-colors active:scale-90 group">
               <div className="flex items-center gap-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xl group-hover:bg-orange-100 dark:group-hover:bg-orange-900/50 transition-colors">📍</div>
                 <div>

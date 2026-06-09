@@ -10,14 +10,14 @@ export async function POST(req: NextRequest) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     
     if (!token || token.role !== "superadmin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     await logServerAccess(req, token);
 
     const body = await req.json();
     if (body.confirmCode !== "CONFIRM-WIPE") {
-      return NextResponse.json({ error: "Invalid confirmation code" }, { status: 400 });
+      return NextResponse.json({ message: "Invalid confirmation code" }, { status: 400 });
     }
 
     // Sequential deletion to respect potential (though cascading) constraints
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     await logActivity({
       userId: token.id as string,
       userName: token.name as string,
-      action: "USER_DELETED", // Reusing an existing action type for the wipe record
+      action: "DATA_WIPED",
       details: "SYSTEM DATA WIPE EXECUTED. All customers and clusters removed.",
     });
 
@@ -47,6 +47,6 @@ export async function POST(req: NextRequest) {
       errorMessage: error.message,
       stackTrace: error.stack,
     });
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
   }
 }

@@ -20,7 +20,7 @@ export default function OfflineBanner() {
   if (!offline) return null;
 
   return (
-    <div className="fixed bottom-24 left-4 right-4 z-50 mx-auto max-w-md animate-in slide-in-from-bottom-4 fade-in duration-300">
+    <div role="alert" className="fixed bottom-24 left-4 right-4 z-50 mx-auto max-w-md animate-in slide-in-from-bottom-4 fade-in duration-300">
       <div className="flex items-center gap-3 rounded-2xl bg-red-600 px-5 py-3 shadow-xl">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20 text-white text-sm font-bold">!</div>
         <p className="text-[14px] font-bold text-white">No internet connection. Data may be stale.</p>

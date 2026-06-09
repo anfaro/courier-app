@@ -92,8 +92,9 @@ export default function ProgressDashboard() {
   }
 
   function formatDate(dateStr: string) {
-    const d = new Date(dateStr + "T00:00:00");
-    return d.toLocaleDateString(dateLocale, {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const date = new Date(y, m - 1, d);
+    return date.toLocaleDateString(dateLocale, {
       weekday: "long", day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Asia/Jakarta"
     });
   }
@@ -177,7 +178,7 @@ export default function ProgressDashboard() {
                 >
                   <Link
                     href={`/progress/${s.id}`}
-                    className="block rounded-[24px] bg-card border border-card-border p-6 shadow-sm hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800 transition-all active:scale-[0.98]"
+                    className="block rounded-[24px] bg-card border border-card-border p-6 shadow-sm hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800 transition-all active:scale-90"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div>

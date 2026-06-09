@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     // Log the request (anonymized/targeted by email)
     await logActivity({
-      action: "USER_UPDATED", // We'll use USER_UPDATED for security logs
+      action: "PASSWORD_RESET_REQUESTED",
       details: `Password reset requested for ${email}`,
     });
 
