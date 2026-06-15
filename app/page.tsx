@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useLanguage } from "@/components/LanguageProvider";
 import { motion } from "framer-motion";
+import Icon from "@/components/Icon";
 
 export default function HomePage() {
   const { data: session } = useSession();
@@ -30,7 +31,7 @@ export default function HomePage() {
         const [custRes, clustRes, nameRes] = await Promise.all([
           fetch("/api/customers?limit=1&offset=0"),
           fetch("/api/clusters?limit=1&offset=0"),
-          fetch("/api/customers?limit=200&offset=0"),
+          fetch("/api/customers?limit=1000&offset=0"),
         ]);
         if (custRes.ok) {
           const custData = await custRes.json();
@@ -51,7 +52,10 @@ export default function HomePage() {
               const enriched = (visitList as any[])
                 .sort((a, b) => new Date(b.visited_at || b.visitedAt).getTime() - new Date(a.visited_at || a.visitedAt).getTime())
                 .slice(0, 5)
-                .map((v: any) => ({ ...v, customerName: customerMap.get(v.customer_id || v.customerId) || "Unknown" }));
+                .map((v: any) => ({
+                  ...v,
+                  customerName: v.customer_name || customerMap.get(v.customer_id || v.customerId) || "Unknown",
+                }));
               setRecentVisits(enriched);
             }
           }
@@ -93,7 +97,7 @@ export default function HomePage() {
 
             <Link href="/customers" className="flex-1 rounded-[24px] bg-card p-5 shadow-sm border border-card-border hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-md transition-all active:scale-90 flex flex-col justify-center relative overflow-hidden group">
               <div className="absolute right-0 top-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity text-blue-500">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
+                <Icon name="chevron-right" size={20} />
               </div>
               <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">{t("home.total_customers")}</p>
               <p className="text-[28px] leading-none font-black text-primary">{stats.totalCustomers}</p>
@@ -101,7 +105,7 @@ export default function HomePage() {
 
             <Link href="/clusters" className="flex-1 rounded-[24px] bg-orange-50 dark:bg-orange-950/20 p-5 shadow-sm border border-orange-100 dark:border-orange-900/50 hover:border-orange-200 dark:hover:border-orange-800 hover:shadow-md transition-all active:scale-90 flex flex-col justify-center relative overflow-hidden group">
               <div className="absolute right-0 top-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity text-orange-500">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
+                <Icon name="chevron-right" size={20} />
               </div>
               <p className="text-[11px] font-black uppercase tracking-widest text-orange-400 dark:text-orange-500 mb-1">{t("home.total_clusters")}</p>
               <p className="text-[28px] leading-none font-black text-primary">{stats.totalClusters}</p>
@@ -140,9 +144,7 @@ export default function HomePage() {
               </div>
               <div className="mt-3 flex items-center gap-1 text-[12px] font-bold text-emerald-600 dark:text-emerald-400">
                 {t("home.view_earnings")}
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+<Icon name="chevron-right" size={14} />
               </div>
             </motion.div>
           </Link>
@@ -293,7 +295,7 @@ export default function HomePage() {
                   <span className="text-[12px] font-medium text-secondary">{t("home.manage_db_desc")}</span>
                 </div>
               </div>
-              <svg className="h-5 w-5 text-gray-300 dark:text-slate-600 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
+              <Icon name="chevron-right" size={20} className="text-gray-300 dark:text-slate-600 group-hover:text-blue-500" />
             </Link>
 
             {/* Clusters Link */}
@@ -305,7 +307,7 @@ export default function HomePage() {
                   <span className="text-[12px] font-medium text-secondary">{t("home.clusters_desc")}</span>
                 </div>
               </div>
-              <svg className="h-5 w-5 text-gray-300 dark:text-slate-600 group-hover:text-orange-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
+              <Icon name="chevron-right" size={20} className="text-gray-300 dark:text-slate-600 group-hover:text-orange-500" />
             </Link>
 
           </div>

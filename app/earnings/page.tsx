@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import PageHeader from "@/components/PageHeader";
 import { motion } from "framer-motion";
 import { shiftPeriod, isCurrentPeriod, isAfterToday } from "@/lib/earnings";
+import Icon from "@/components/Icon";
 
 interface DailyBreakdown {
   date: string;
@@ -197,9 +198,7 @@ export default function EarningsPage() {
                     onClick={handlePrev}
                     className="h-8 w-8 flex items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition-colors"
                   >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                    </svg>
+                    <Icon name="chevron-left" size={16} />
                   </motion.button>
                   <motion.button
                     whileTap={{ scale: 0.85 }}
@@ -211,9 +210,7 @@ export default function EarningsPage() {
                         : "bg-white/15 text-white hover:bg-white/25"
                     }`}
                   >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
+                    <Icon name="chevron-right" size={16} />
                   </motion.button>
                 </div>
               </div>

@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import ImageInput from "@/components/ImageInput";
 import { useScrollLock } from "@/lib/useScrollLock";
+import Icon from "@/components/Icon";
 
 export default function EditCustomerPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -276,9 +277,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
                   />
                   {isResolving && (
                     <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 rounded-full bg-blue-100 dark:bg-blue-900 px-3 py-1.5 text-[11px] font-bold text-blue-700 dark:text-blue-300 shadow-sm animate-pulse">
-                      <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
+                      <Icon name="refresh" size={12} className="animate-spin" />
                       Resolving
                     </div>
                   )}
@@ -328,9 +327,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
           <div className="relative w-full max-w-sm rounded-[28px] bg-card p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 flex flex-col gap-4 border border-card-border">
 
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 mb-1">
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
+              <Icon name="trash" size={24} />
             </div>
 
             <div>

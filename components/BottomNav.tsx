@@ -7,10 +7,8 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useLanguage } from "@/components/LanguageProvider";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Home01Icon, UserGroupIcon, Chart01Icon, Layers01Icon } from "@hugeicons/core-free-icons";
-
 import { motion } from "framer-motion";
+import Icon from "@/components/Icon";
 
 export default function BottomNav() {
   const pathname = usePathname();
@@ -35,22 +33,22 @@ export default function BottomNav() {
     {
       name: t("nav.dashboard"),
       href: "/",
-      icon: <HugeiconsIcon icon={Home01Icon} size={22} strokeWidth={2} color="currentColor" />,
+      icon: <Icon name="home" size={22} strokeWidth={2} />,
     },
     {
       name: t("nav.customers"),
       href: "/customers",
-      icon: <HugeiconsIcon icon={UserGroupIcon} size={22} strokeWidth={2} color="currentColor" />,
+      icon: <Icon name="person-group" size={22} strokeWidth={2} />,
     },
     {
       name: t("session.title"),
       href: "/progress",
-      icon: <HugeiconsIcon icon={Chart01Icon} size={22} strokeWidth={2} color="currentColor" />,
+      icon: <Icon name="route" size={22} strokeWidth={2} />,
     },
     {
       name: t("nav.clusters"),
       href: "/clusters",
-      icon: <HugeiconsIcon icon={Layers01Icon} size={22} strokeWidth={2} color="currentColor" />,
+      icon: <Icon name="layers" size={22} strokeWidth={2} />,
     },
   ];
 

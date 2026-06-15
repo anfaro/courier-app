@@ -9,6 +9,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useScrollLock } from "@/lib/useScrollLock";
+import Icon from "@/components/Icon";
 
 // --- CUSTOM COURIER LOGO SVG ---
 const AppLogo = () => (
@@ -177,9 +178,8 @@ export default function Header() {
         <div ref={searchRef} className="relative flex-1 flex justify-center min-w-0">
           <div className="flex items-center w-full max-w-[500px] transition-all duration-300 rounded-full bg-surface-hover/80 dark:bg-slate-900/80 px-3 sm:px-4 py-2 ring-1 ring-blue-500/10 dark:ring-blue-400/10 shadow-inner group focus-within:ring-blue-500/30 focus-within:bg-card">
             <div className="flex items-center justify-center shrink-0 transition-colors text-secondary group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 mr-2">
-              <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <Icon name="search" size={18} strokeWidth={2.5} className="sm:hidden" />
+              <Icon name="search" size={20} strokeWidth={2.5} className="hidden sm:block" />
             </div>
             
             <div className="flex items-center gap-1 w-full">
@@ -189,9 +189,7 @@ export default function Header() {
                   className="shrink-0 flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-900/40 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300 active:scale-90 transition-all"
                 >
                   {activeFilter}
-                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <Icon name="close" size={12} strokeWidth={3} />
                 </button>
               )}
               <input 
@@ -206,7 +204,7 @@ export default function Header() {
 
             {searchQuery && (
               <button onClick={() => { setSearchQuery(""); setActiveFilter(null); }} className="ml-2 text-secondary hover:text-primary transition-colors">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                <Icon name="close" size={16} strokeWidth={3} />
               </button>
             )}
           </div>

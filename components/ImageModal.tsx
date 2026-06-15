@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Icon from "@/components/Icon";
 
 export default function ImageModal({
   src,
@@ -62,9 +63,7 @@ export default function ImageModal({
             onClick={() => setIsOpen(false)}
             aria-label="Close image"
           >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <Icon name="close" size={24} strokeWidth={2.5} />
           </button>
 
           {/* The Expanding Image */}

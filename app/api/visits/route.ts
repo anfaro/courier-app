@@ -20,11 +20,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ visits });
     }
 
-    // Return the most recent visit per customer (for map markers)
+    // Return the most recent visit per customer (for map markers & dashboard)
     const recentVisits = await db.execute(sql`
-      SELECT DISTINCT ON (customer_id) id, customer_id, user_id, user_name, visited_at, checked_out_at, notes
-      FROM customer_visits
-      ORDER BY customer_id, visited_at DESC
+      SELECT DISTINCT ON (cv.customer_id)
+        cv.id, cv.customer_id, cv.user_id, cv.user_name,
+        cv.visited_at, cv.checked_out_at, cv.notes,
+        c.name AS customer_name, c.address AS customer_address
+      FROM customer_visits cv
+      LEFT JOIN customers c ON c.id = cv.customer_id
+      ORDER BY cv.customer_id, cv.visited_at DESC
     `);
 
     const rows = Array.isArray(recentVisits) ? recentVisits : (recentVisits as any)?.rows || [];

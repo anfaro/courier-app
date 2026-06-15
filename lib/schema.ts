@@ -79,8 +79,8 @@ export const customerVisits = pgTable("customer_visits", {
     .references(() => customers.id, { onDelete: "cascade" }),
   userId: varchar("user_id", { length: 7 }).references(() => users.id, { onDelete: "set null" }),
   userName: varchar("user_name", { length: 256 }),
-  visitedAt: timestamp("visited_at").defaultNow().notNull(),
-  checkedOutAt: timestamp("checked_out_at"),
+  visitedAt: timestamp("visited_at", { withTimezone: true }).defaultNow().notNull(),
+  checkedOutAt: timestamp("checked_out_at", { withTimezone: true }),
   notes: text("notes"),
 }, (table) => ({
   customerIdIdx: index("visits_customer_id_idx").on(table.customerId),
@@ -214,6 +214,7 @@ export const sessionDeliveries = pgTable("session_deliveries", {
 }, (table) => ({
   sessionIdIdx: index("deliveries_session_id_idx").on(table.sessionId),
   statusIdx: index("deliveries_status_idx").on(table.status),
+  incomingIdIdx: index("deliveries_incoming_id_idx").on(table.incomingId),
 }));
 
 export const savedRoutes = pgTable("saved_routes", {

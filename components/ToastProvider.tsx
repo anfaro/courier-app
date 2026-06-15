@@ -3,6 +3,7 @@
 
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Icon from "@/components/Icon";
 
 type ToastType = "success" | "error" | "info" | "warning";
 
@@ -53,27 +54,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             >
               <span className="shrink-0">
                 {toast.type === 'success' ? (
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <circle cx="12" cy="12" r="10" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 12l3 3 5-5" />
-                  </svg>
+                  <Icon name="success" size={24} strokeWidth={2.5} />
                 ) : toast.type === 'error' ? (
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <circle cx="12" cy="12" r="10" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 9l-6 6m0-6l6 6" />
-                  </svg>
+                  <Icon name="error" size={24} strokeWidth={2.5} />
                 ) : toast.type === 'warning' ? (
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path d="M12 3l9.5 16.5h-19L12 3z" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M12 10v4" strokeLinecap="round" strokeLinejoin="round" />
-                    <circle cx="12" cy="17" r="0.5" fill="currentColor" stroke="none" />
-                  </svg>
+                  <Icon name="warning" size={24} strokeWidth={2.5} />
                 ) : (
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <circle cx="12" cy="12" r="10" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4" />
-                    <circle cx="12" cy="8" r="0.75" fill="currentColor" stroke="none" />
-                  </svg>
+                  <Icon name="info" size={24} strokeWidth={2.5} />
                 )}
               </span>
               <p className="text-[14px] font-black tracking-tight leading-tight">{toast.message}</p>

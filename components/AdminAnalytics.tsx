@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "./LanguageProvider";
 import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
 import { useScrollLock } from "@/lib/useScrollLock";
+import Icon from "@/components/Icon";
 
 type LogType = "activity" | "errors" | "access";
 
@@ -198,9 +199,7 @@ export default function AdminAnalytics() {
                   onClick={() => setSelectedLog(null)}
                   className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-hover hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors active:scale-90"
                 >
-                  <svg className="h-4 w-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <Icon name="close" size={16} strokeWidth={3} className="text-secondary" />
                 </button>
               </div>
 

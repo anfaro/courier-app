@@ -5,6 +5,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import { useConfirmation } from "@/components/ConfirmationProvider";
+import Icon from "@/components/Icon";
 
 export default function EditClusterPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -334,9 +335,7 @@ export default function EditClusterPage({ params }: { params: Promise<{ id: stri
                 disabled={isLoading || isDeleting}
                 className="flex w-full items-center justify-center gap-2 rounded-[32px] bg-red-50 px-8 py-4 text-[15px] font-bold text-red-700 transition hover:bg-red-100 active:scale-90 disabled:opacity-50"
               >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
+                <Icon name="trash" size={20} />
                 {isDeleting ? "Deleting..." : "Delete Cluster"}
               </button>
             </div>

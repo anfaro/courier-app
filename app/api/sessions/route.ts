@@ -11,14 +11,24 @@ export async function GET(req: NextRequest) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-    const allSessions = await db.query.sessions.findMany({
-      where: eq(sessions.userId, token.id as string),
-      orderBy: [desc(sessions.date)],
-      with: {
-        incomings: true,
-        deliveries: true,
-      },
-    });
+    const { searchParams } = new URL(req.url);
+    const limit = Math.min(Number(searchParams.get("limit")) || 50, 200);
+    const offset = Number(searchParams.get("offset")) || 0;
+
+    const allSessions = await db
+      .select({
+        id: sessions.id,
+        date: sessions.date,
+        totalPackages: sessions.totalPackages,
+        deliveredPackages: sessions.deliveredPackages,
+        finalized: sessions.finalized,
+        createdAt: sessions.createdAt,
+      })
+      .from(sessions)
+      .where(eq(sessions.userId, token.id as string))
+      .orderBy(desc(sessions.date))
+      .limit(limit)
+      .offset(offset);
 
     return NextResponse.json({ sessions: allSessions }, { status: 200 });
   } catch (error) {

@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import PageHeader from "@/components/PageHeader";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import Icon from "@/components/Icon";
 import DeliveryChart from "@/components/DeliveryChart";
 
 interface Session {
@@ -17,8 +18,6 @@ interface Session {
   deliveredPackages: string;
   createdAt: string;
   finalized: boolean;
-  incomings: any[];
-  deliveries: any[];
 }
 
 interface DayData {
@@ -129,9 +128,7 @@ export default function ProgressDashboard() {
             {creating ? (
               <span className="h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
             ) : (
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
+              <Icon name="plus" size={20} />
             )}
             {t("session.new")}
           </motion.button>

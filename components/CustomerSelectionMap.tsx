@@ -7,6 +7,7 @@ import L from "leaflet";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useToast } from "@/components/ToastProvider";
 import { useScrollLock } from "@/lib/useScrollLock";
+import Icon from "@/components/Icon";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -343,18 +344,14 @@ export default function CustomerSelectionMap({ customers, clusters }: { customer
             className={`shrink-0 h-9 w-9 rounded-xl flex items-center justify-center transition-colors active:scale-90 ${showCustomerList ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600' : 'text-secondary hover:bg-surface-hover'}`}
             title="Customer list"
           >
-            <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h7" />
-            </svg>
+            <Icon name="menu" size={18} strokeWidth={2.5} />
           </button>
           <button
             onClick={() => { setShowSavedRoutes(!showSavedRoutes); if (!showSavedRoutes && savedTrips.length === 0) fetchSavedTrips(); }}
             className={`shrink-0 h-9 w-9 rounded-xl flex items-center justify-center transition-colors active:scale-90 ${showSavedRoutes ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-600' : 'text-secondary hover:bg-surface-hover'}`}
             title="Saved routes"
           >
-            <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-            </svg>
+            <Icon name="bookmark" size={18} strokeWidth={2.5} />
           </button>
           <button
             onClick={goToMyLocation}
@@ -365,10 +362,7 @@ export default function CustomerSelectionMap({ customers, clusters }: { customer
             {locating ? (
               <span className="h-4 w-4 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
             ) : (
-              <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+              <Icon name="map-pin" size={18} strokeWidth={2.5} />
             )}
           </button>
         </div>
@@ -444,9 +438,7 @@ export default function CustomerSelectionMap({ customers, clusters }: { customer
                 >
                   <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-all ${selectedIds.has(c.id) ? 'bg-blue-600 border-blue-600' : 'border-card-border'}`}>
                     {selectedIds.has(c.id) && (
-                      <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
+                      <Icon name="check" size={12} strokeWidth={3} className="text-white" />
                     )}
                   </div>
                   <span className="h-8 w-8 shrink-0 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-[13px] font-black text-blue-700 dark:text-blue-400">
@@ -503,9 +495,7 @@ export default function CustomerSelectionMap({ customers, clusters }: { customer
                       className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 active:scale-90"
                       title="Delete"
                     >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
+                      <Icon name="trash" size={16} strokeWidth={2.5} />
                     </button>
                   </div>
                 ))}

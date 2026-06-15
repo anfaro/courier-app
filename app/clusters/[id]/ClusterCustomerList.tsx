@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Icon from "@/components/Icon";
 
 type Customer = { id: string; name: string; address: string };
 
@@ -74,9 +75,7 @@ export default function ClusterCustomerList({
               </div>
             </div>
             <div className="z-10 text-secondary/30 transition group-hover:text-purple-500">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <Icon name="chevron-right" size={20} />
             </div>
           </li>
         ))}

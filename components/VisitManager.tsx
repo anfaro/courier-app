@@ -6,6 +6,7 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { useToast } from "@/components/ToastProvider";
 import ScannerModal from "@/components/ScannerModal";
 import { useScrollLock } from "@/lib/useScrollLock";
+import Icon from "@/components/Icon";
 
 interface Visit {
   id: string;
@@ -185,9 +186,7 @@ export default function VisitManager({ customerId, hideCheckIn }: { customerId: 
             transition={{ type: "spring", stiffness: 400, damping: 20, mass: 0.8 }}
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/30"
           >
-            <svg className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-            </svg>
+            <Icon name="check" size={28} strokeWidth={3} className="text-white" />
           </motion.div>
           <div>
             <p className="text-[14px] font-bold text-emerald-800 dark:text-emerald-300">
@@ -283,9 +282,7 @@ export default function VisitManager({ customerId, hideCheckIn }: { customerId: 
                 className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-xl bg-surface-hover hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors active:scale-90"
                 title="Scan QR Code"
               >
-                <svg className="h-5 w-5 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                </svg>
+                <Icon name="qr" size={20} strokeWidth={2} className="text-secondary" />
               </button>
             </div>
 

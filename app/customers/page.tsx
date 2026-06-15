@@ -10,9 +10,19 @@ import { useSession } from "next-auth/react";
 import { useToast } from "@/components/ToastProvider";
 import { useConfirmation } from "@/components/ConfirmationProvider";
 import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
+import Icon from "@/components/Icon";
 
 const pageCache = new Map<string, { customers: any[]; hasMore: boolean; ts: number }>();
 const PAGE_CACHE_TTL = 60000;
+
+const avatarGradients = [
+  "from-blue-600 to-indigo-700",
+  "from-emerald-600 to-teal-700",
+  "from-purple-600 to-pink-700",
+  "from-orange-500 to-rose-600",
+  "from-cyan-600 to-blue-700",
+  "from-violet-600 to-purple-700",
+];
 
 function CustomersListContent() {
   const { t } = useLanguage();
@@ -27,6 +37,7 @@ function CustomersListContent() {
   const [allClusters, setAllClusters] = useState<any[]>([]);
   const [clusterFilter, setClusterFilter] = useState("all");
   const [quickFilter, setQuickFilter] = useState<"all" | "hasPin" | "noPin" | "visited">("all");
+  const [sortBy, setSortBy] = useState("newest");
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(5);
@@ -45,7 +56,7 @@ function CustomersListContent() {
 
   const fetchCustomers = async (q: string, p: number) => {
     const cf = clusterFilter !== "all" ? clusterFilter : "";
-    const cacheKey = `${q || "__all__"}:${p}:${pageSize}:${cf}`;
+    const cacheKey = `${q || "__all__"}:${p}:${pageSize}:${cf}:${sortBy}`;
     const cached = pageCache.get(cacheKey);
     if (cached && Date.now() - cached.ts < PAGE_CACHE_TTL) {
       setAllCustomers(cached.customers);
@@ -69,7 +80,7 @@ function CustomersListContent() {
         setHasMore(false);
       } else {
         const cfParam = clusterFilter !== "all" ? `&clusterId=${clusterFilter}` : "";
-        const url = `/api/customers?limit=${pageSize}&offset=${p * pageSize}${cfParam}`;
+        const url = `/api/customers?limit=${pageSize}&offset=${p * pageSize}${cfParam}&sort=${sortBy}`;
         const res = await fetchWithTimeout(url, {}, 60000);
         if (!res.ok) throw new Error(`Server error (${res.status})`);
         const data = await res.json();
@@ -106,15 +117,18 @@ function CustomersListContent() {
   const displayCustomers = allCustomers.filter((c) => {
     if (quickFilter === "hasPin") return c.latitude && c.longitude;
     if (quickFilter === "noPin") return !c.latitude || !c.longitude;
-    if (quickFilter === "visited") return visitsMap[c.id];
+    if (quickFilter === "visited") return c.lastVisitedAt || visitsMap[c.id];
     return true;
   });
   const totalPinned = allCustomers.filter((c) => c.latitude && c.longitude).length;
   const totalVisited = Object.keys(visitsMap).length;
 
+  const itemStart = allCustomers.length > 0 ? page * pageSize + 1 : 0;
+  const itemEnd = page * pageSize + displayCustomers.length;
+
   useEffect(() => {
     fetchCustomers(query, page);
-  }, [query, page, pageSize, clusterFilter]);
+  }, [query, page, pageSize, clusterFilter, sortBy]);
 
   useEffect(() => {
     fetch("/api/clusters?limit=200&offset=0")
@@ -202,7 +216,6 @@ function CustomersListContent() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      
       <PageHeader title="Customers" />
 
       <main className="mx-auto max-w-3xl p-4 sm:p-6">
@@ -229,6 +242,12 @@ function CustomersListContent() {
               </button>
             )}
             <Link
+              href="/customers/stats"
+              className="btn-outline !py-2.5 !px-5"
+            >
+              Stats
+            </Link>
+            <Link
               href="/customers/new"
               className="btn-primary !py-2.5 !px-5"
             >
@@ -238,9 +257,17 @@ function CustomersListContent() {
         </div>
 
         {isManagementMode && selectedIds.length > 0 && (
-          <div className="mb-6 space-y-3 rounded-[24px] bg-red-50 dark:bg-red-950/20 p-4 border border-red-100 dark:border-red-900/50">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-red-700 dark:text-red-400">{selectedIds.length} selected</span>
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-6 overflow-hidden rounded-[24px] bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-950/20 dark:to-red-900/10 p-4 border border-red-200 dark:border-red-900/50 shadow-sm"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-red-600 text-white text-[11px] font-black">{selectedIds.length}</div>
+                <span className="font-bold text-red-700 dark:text-red-400 text-[13px]">selected</span>
+              </div>
               <button
                 onClick={handleBulkDelete}
                 disabled={isDeleting}
@@ -275,32 +302,63 @@ function CustomersListContent() {
                 Remove
               </button>
             </div>
-          </div>
+          </motion.div>
         )}
 
-        {/* Stat Header */}
-        <div className="mb-4 flex items-center gap-2 text-[12px] font-medium text-secondary">
-          <span className="font-bold text-primary">{allCustomers.length}</span> total
-          <span className="text-secondary/40">·</span>
-          <span className="font-bold text-blue-600 dark:text-blue-400">{totalPinned}</span> with 📍
-          <span className="text-secondary/40">·</span>
-          <span className="font-bold text-emerald-600 dark:text-emerald-400">{totalVisited}</span> visited
+        {/* Stat Badges */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          className="flex gap-2 mb-4"
+        >
+          <div className="flex items-center gap-1.5 rounded-full bg-card border border-card-border px-3.5 py-1.5 shadow-sm">
+            <span className="text-[13px] font-black text-primary">{allCustomers.length}</span>
+            <span className="text-[10px] font-medium text-secondary">total</span>
+          </div>
+          <div className="flex items-center gap-1.5 rounded-full bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/50 px-3.5 py-1.5 shadow-sm">
+            <span className="text-[13px] font-black text-blue-700 dark:text-blue-400">{totalPinned}</span>
+            <span className="text-[10px] font-medium text-blue-600/70 dark:text-blue-400/70">📍 pinned</span>
+          </div>
+          <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/50 px-3.5 py-1.5 shadow-sm">
+            <span className="text-[13px] font-black text-emerald-700 dark:text-emerald-400">{totalVisited}</span>
+            <span className="text-[10px] font-medium text-emerald-600/70 dark:text-emerald-400/70">✅ visited</span>
+          </div>
+        </motion.div>
+
+        {/* Sort */}
+        <div className="w-full mb-3">
+          <select
+            value={sortBy}
+            onChange={(e) => { setSortBy(e.target.value); setPage(0); }}
+            className="w-full rounded-2xl border border-card-border bg-card/80 backdrop-blur-xl px-4 py-3 text-[13px] font-medium text-primary focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer pr-10 shadow-sm"
+          >
+            <option value="newest">{t("customer.sort_newest")}</option>
+            <option value="oldest">{t("customer.sort_oldest")}</option>
+            <option value="recent_visit">{t("customer.sort_recent_visit")}</option>
+            <option value="oldest_visit">{t("customer.sort_oldest_visit")}</option>
+            <option value="most_visited">{t("customer.sort_most_visited")}</option>
+            <option value="least_visited">{t("customer.sort_least_visited")}</option>
+          </select>
         </div>
 
+        {/* Cluster Filter */}
         <div className="w-full mb-3">
           {allClusters.length > 0 && (
             <div className="relative w-full">
               <select
                 value={clusterFilter}
                 onChange={(e) => setClusterFilter(e.target.value)}
-                className="w-full rounded-2xl border border-card-border bg-background px-4 py-3 text-[13px] font-medium text-primary focus:border-blue-500 outline-none transition-all shadow-inner appearance-none cursor-pointer pr-8"
+                className="w-full rounded-2xl border border-card-border bg-card/80 backdrop-blur-xl px-4 py-3 text-[13px] font-medium text-primary focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer pr-10 shadow-sm"
               >
                 <option value="all">All Clusters</option>
                 {allClusters.map((c: any) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-secondary text-[10px]">▼</span>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-secondary">
+                <Icon name="chevron-down" size={16} className="text-secondary" />
+              </div>
             </div>
           )}
         </div>
@@ -311,10 +369,10 @@ function CustomersListContent() {
             <button
               key={f}
               onClick={() => { setQuickFilter(f); setPage(0); }}
-              className={`shrink-0 rounded-full px-3.5 py-1.5 text-[11px] font-black uppercase tracking-wider transition-all active:scale-90 ${
+              className={`shrink-0 rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-wider transition-all active:scale-90 ${
                 quickFilter === f
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "bg-surface-hover text-secondary border border-card-border hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
+                  : "bg-card/80 backdrop-blur-xl text-secondary border border-card-border hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-200 dark:hover:border-blue-800 shadow-sm"
               }`}
             >
               {f === "all" ? t("customer.filter_all") : f === "hasPin" ? t("customer.filter_has_pin") : f === "noPin" ? t("customer.filter_no_pin") : t("customer.filter_visited")}
@@ -322,88 +380,114 @@ function CustomersListContent() {
           ))}
         </div>
 
+        {/* Error State */}
         {fetchError && (
-          <div className="mb-4 flex items-center justify-between rounded-2xl bg-red-50 dark:bg-red-950/20 p-4 border border-red-100 dark:border-red-900/50">
-            <p className="text-[13px] font-bold text-red-700 dark:text-red-400">{fetchError}</p>
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 flex items-center justify-between rounded-2xl bg-red-50 dark:bg-red-950/20 p-4 border border-red-100 dark:border-red-900/50"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 shrink-0">
+                <Icon name="info" size={16} className="text-red-600 dark:text-red-400" />
+              </div>
+              <p className="text-[13px] font-bold text-red-700 dark:text-red-400">{fetchError}</p>
+            </div>
             <button
               onClick={() => fetchCustomers(query, page)}
-              className="rounded-xl bg-red-600 px-4 py-2 text-[12px] font-bold text-white active:scale-90 transition-all"
+              className="rounded-xl bg-red-600 px-4 py-2 text-[12px] font-bold text-white active:scale-90 transition-all shrink-0"
             >
               Retry
             </button>
-          </div>
+          </motion.div>
         )}
 
         {allCustomers.length === 0 && !isLoading ? (
-          <div className="rounded-[2rem] bg-card p-10 text-center shadow-sm border border-card-border">
-            <div className="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30 text-3xl">
-              🕵️
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            className="rounded-[2.5rem] bg-card p-12 text-center shadow-sm border border-card-border"
+          >
+            <div className="mb-5 inline-flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-4xl shadow-lg shadow-blue-500/20">
+              {query ? '🔍' : '👤'}
             </div>
-            <p className="text-lg font-medium text-primary">
+            <p className="text-xl font-extrabold tracking-tight text-primary">
               {query ? t("search.no_results") : "It's quiet here"}
             </p>
-            <p className="mt-2 text-secondary">
-              {query ? `We couldn't find anyone matching "${query}".` : "You haven't added any customers yet."}
+            <p className="mt-2 text-[14px] font-medium text-secondary max-w-xs mx-auto">
+              {query ? `We couldn't find anyone matching "${query}".` : "You haven't added any customers yet. Start building your database."}
             </p>
             {!query && (
               <Link
                 href="/customers/new"
-                className="btn-secondary mt-6 inline-block"
+                className="btn-primary mt-8 inline-flex items-center gap-2"
               >
-                Add your first customer
+                <span className="text-lg leading-none">+</span> Add your first customer
               </Link>
             )}
-          </div>
-          ) : (
-          /* M3 List Container */
+          </motion.div>
+        ) : (
           <div className="relative overflow-hidden rounded-[2rem] bg-card shadow-sm border border-card-border min-h-[500px]">
-            {isLoading && (
+            {isLoading && !fetchError && (
               <div className="absolute inset-0 z-20 flex items-center justify-center bg-card/60 backdrop-blur-sm rounded-[2rem]">
-                <div className="flex h-12 w-12 animate-spin items-center justify-center rounded-full bg-surface-hover text-2xl border border-card-border">
-                  ⏳
+                <div className="flex flex-col items-center gap-4">
+                  <div className="flex gap-2">
+                    {[1,2,3].map(i => (
+                      <div key={i} className="h-2.5 w-2.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                    ))}
+                  </div>
+                  <p className="text-[12px] font-bold text-secondary animate-pulse">Loading...</p>
                 </div>
               </div>
             )}
             {displayCustomers.length > 0 && (
             <ul className="divide-y divide-card-border min-h-[500px] overflow-y-auto">
-              {displayCustomers.map((customer, i) => (
+              {displayCustomers.map((customer, i) => {
+                const gradientIndex = customer.name.charCodeAt(0) % avatarGradients.length;
+                return (
                 <motion.li
                   key={customer.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ type: "spring", stiffness: 400, damping: 25, delay: i * 0.035 }}
                   onClick={() => isManagementMode && toggleSelection(customer.id)}
-                  className={`group relative flex items-center justify-between p-4 transition-colors sm:p-5 ${
+                  className={`group relative flex items-center justify-between p-4 transition-all sm:p-5 ${
                     isManagementMode && selectedIds.includes(customer.id) 
                       ? "bg-blue-50/50 dark:bg-blue-900/20" 
-                      : "hover:bg-blue-50/50 dark:hover:bg-blue-900/10"
-                  } ${isManagementMode ? "cursor-pointer" : ""}`}
+                      : "hover:bg-blue-50/40 dark:hover:bg-blue-900/10"
+                  } ${isManagementMode ? "cursor-pointer" : "cursor-default active:scale-[0.99]"}`}
                 >
                   {!isManagementMode && (
                     <Link
                       href={`/customers/${customer.id}`}
-                      className="absolute inset-0 z-0 rounded-[2rem] transition-all duration-200 active:scale-90 focus:outline-none focus:ring-4 focus:ring-inset focus:ring-blue-500/20"
+                      className="absolute inset-0 z-0 rounded-[2rem] transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-inset focus:ring-blue-500/20"
                       aria-label={`View details for ${customer.name}`}
                     />
                   )}
 
                   <div className="z-10 flex min-w-0 flex-1 items-center gap-4 pointer-events-none">
                     {isManagementMode && (
-                      <div className="mr-3">
-                        <div className={`flex h-6 w-6 items-center justify-center rounded-full transition-all duration-200 ${selectedIds.includes(customer.id) ? "bg-blue-600 text-white scale-110" : "border-2 border-card-border bg-transparent"
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="mr-2"
+                      >
+                        <div className={`flex h-6 w-6 items-center justify-center rounded-full transition-all duration-200 ${selectedIds.includes(customer.id) ? "bg-blue-600 text-white scale-110 shadow-sm" : "border-2 border-card-border bg-transparent"
                           }`}>
                           {selectedIds.includes(customer.id) && (
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
+                            <Icon name="check" size={16} strokeWidth={3} />
                           )}
                         </div>
-                      </div>
+                      </motion.div>
                     )}
                     
                     <div className="relative h-14 w-14 shrink-0">
-                      <div className="absolute inset-0 flex items-center justify-center rounded-[1rem] bg-secondary text-lg font-bold text-primary">
+                      <div className={`absolute inset-0 flex items-center justify-center rounded-[1rem] bg-gradient-to-br ${avatarGradients[gradientIndex]} text-lg font-bold text-white shadow-sm`}>
                         {customer.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="absolute -top-1.5 -left-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[9px] font-black text-white shadow-sm border-2 border-card leading-none">
+                        {page * pageSize + i + 1}
                       </div>
                       {customer.housePictureUrl && (
                         <img
@@ -411,31 +495,54 @@ function CustomersListContent() {
                           alt=""
                           loading="lazy"
                           referrerPolicy="no-referrer"
-                          className="relative h-14 w-14 rounded-[1rem] object-cover border border-card-border"
+                          className="relative h-14 w-14 rounded-[1rem] object-cover border-2 border-card opacity-0 transition-opacity duration-300"
                           onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1'; }}
                           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                          style={{ opacity: 0 }}
                         />
                       )}
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <h2 className="truncate text-[17px] font-bold tracking-tight text-primary">
+                      <h2 className="truncate text-[17px] font-extrabold tracking-tight text-primary">
                         {customer.name}
                       </h2>
-                      <p className="mt-0.5 truncate text-[13px] font-medium text-secondary">
-                        {customer.phoneNumber ? `📞 ${customer.phoneNumber}` : "No phone number"}
-                      </p>
-                      <p className="mt-0.5 truncate text-[13px] text-secondary/80">
+                      <div className="mt-0.5 flex items-center gap-1.5">
+                        <Icon name="whatsapp" size={14} className="text-[#25D366]" />
+                        <span className="truncate text-[13px] font-medium text-secondary">
+                          {customer.phoneNumber ? customer.phoneNumber : "No phone number"}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 truncate text-[12px] text-secondary/70">
                         {customer.address}
                       </p>
-                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                        <p className="text-[10px] font-medium text-secondary/50">
-                          📅 {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' }) : "-"}
-                        </p>
-                        {visitsMap[customer.id] && (
+                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-surface-hover px-2 py-0.5 text-[9px] font-medium text-secondary/60">
+                          <Icon name="calendar" size={12} />
+                          {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' }) : "-"}
+                        </span>
+                        {(customer.lastVisitedAt || visitsMap[customer.id]) && (
                           <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 text-[9px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-tight">
-                            ✅ {timeAgo(visitsMap[customer.id])}
+                            <Icon name="check" size={10} strokeWidth={2.5} /> {timeAgo(customer.lastVisitedAt || visitsMap[customer.id])}
+                          </span>
+                        )}
+                        {customer.visitCount > 0 && (
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-tight">
+                            {t("customer.visit_count").replace("[N]", String(customer.visitCount))}
+                          </span>
+                        )}
+                        {customer.visitCount >= 1 && customer.visitCount < 4 && (
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-tight">
+                            {t("customer.tier_new")}
+                          </span>
+                        )}
+                        {customer.visitCount >= 4 && customer.visitCount < 10 && (
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 text-[9px] font-black text-blue-700 dark:text-blue-400 uppercase tracking-tight">
+                            {t("customer.tier_regular")}
+                          </span>
+                        )}
+                        {customer.visitCount >= 10 && (
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-[9px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-tight">
+                            {t("customer.tier_frequent")}
                           </span>
                         )}
                         {customer.clusters?.map((cc: any) => (
@@ -448,18 +555,16 @@ function CustomersListContent() {
                   </div>
 
                   {!isManagementMode && (
-                    <div className="relative z-10 ml-4 flex shrink-0 items-center gap-2">
+                    <div className="relative z-10 ml-3 flex shrink-0 items-center gap-1.5">
                       {customer.phoneNumber && (
                         <a
                           href={`https://wa.me/${customer.phoneNumber.replace(/\D/g, "")}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex h-10 w-10 items-center justify-center rounded-full bg-[#25D366] text-white shadow-sm transition hover:bg-[#20bd5a] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-1"
+                          className="flex h-9 w-9 items-center justify-center rounded-full bg-[#25D366] text-white shadow-sm transition-all hover:bg-[#20bd5a] hover:shadow-md hover:scale-105 active:scale-90 focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-1"
                           title={t("customer.call")}
                         >
-                          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z" />
-                          </svg>
+                          <Icon name="whatsapp" size={16} />
                         </a>
                       )}
 
@@ -468,59 +573,75 @@ function CustomersListContent() {
                           href={`https://maps.google.com/?q=${customer.latitude},${customer.longitude}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 shadow-sm transition hover:bg-blue-200 dark:hover:bg-blue-800/60 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                          className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 shadow-sm transition-all hover:bg-blue-200 dark:hover:bg-blue-800/60 hover:shadow-md hover:scale-105 active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
                           title={t("customer.pin")}
                         >
-                          <span className="text-lg">📍</span>
+                          <span className="text-base">📍</span>
                         </a>
                       )}
                     </div>
                   )}
                 </motion.li>
-              ))}
+                );
+              })}
             </ul>
             )}
 
             {!query && (
-              <div className="flex items-center justify-center gap-2 border-t border-card-border px-4 py-4">
-                <button
-                  onClick={() => setPage(p => Math.max(0, p - 1))}
-                  disabled={page === 0 || isLoading}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-hover text-primary font-bold transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  ‹
-                </button>
-                <input
-                  type="number"
-                  min={1}
-                  value={jumpInput}
-                  onChange={e => setJumpInput(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === "Enter") {
-                      const p = parseInt(e.currentTarget.value);
-                      if (!isNaN(p) && p >= 1) { setPage(p - 1); setJumpInput(""); }
-                    }
-                  }}
-                  onBlur={() => setJumpInput("")}
-                  className="w-14 text-center text-[14px] font-bold text-secondary bg-transparent border border-transparent focus:border-purple-500 focus:bg-card rounded-lg px-1 py-0.5 outline-none"
-                  placeholder={String(page + 1)}
-                />
-                <button
-                  onClick={() => setPage(p => p + 1)}
-                  disabled={!hasMore || isLoading}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-hover text-primary font-bold transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  ›
-                </button>
-                <select
-                  value={pageSize}
-                  onChange={e => { setPageSize(Number(e.target.value)); setPage(0); setJumpInput(""); }}
-                  className="ml-2 rounded-xl bg-surface-hover px-2.5 py-1.5 text-[12px] font-bold text-primary border border-card-border outline-none cursor-pointer active:scale-90 transition-all"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={50}>50</option>
-                </select>
+              <div className="flex items-center justify-between gap-3 border-t border-card-border px-4 py-4">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPage(p => Math.max(0, p - 1))}
+                    disabled={page === 0 || isLoading}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-card/80 backdrop-blur-xl text-primary shadow-sm ring-1 ring-gray-200/50 dark:ring-slate-800 transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-hover"
+                  >
+                    <Icon name="chevron-left" size={16} />
+                  </button>
+
+                  <div className="flex items-center gap-1.5 px-2">
+                    <span className="text-[12px] font-medium text-secondary">Page</span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={jumpInput}
+                      onChange={e => setJumpInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") {
+                          const p = parseInt(e.currentTarget.value);
+                          if (!isNaN(p) && p >= 1) { setPage(p - 1); setJumpInput(""); }
+                        }
+                      }}
+                      onBlur={() => setJumpInput("")}
+                      className="w-10 text-center text-[14px] font-bold text-primary bg-transparent border border-transparent focus:border-blue-500 focus:bg-card rounded-lg px-1 py-0.5 outline-none"
+                      placeholder={String(page + 1)}
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => setPage(p => p + 1)}
+                    disabled={!hasMore || isLoading}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-card/80 backdrop-blur-xl text-primary shadow-sm ring-1 ring-gray-200/50 dark:ring-slate-800 transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-hover"
+                  >
+                    <Icon name="chevron-right" size={16} />
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <select
+                    value={pageSize}
+                    onChange={e => { setPageSize(Number(e.target.value)); setPage(0); setJumpInput(""); }}
+                    className="rounded-xl bg-card/80 backdrop-blur-xl px-2.5 py-1.5 text-[12px] font-bold text-primary border border-card-border outline-none cursor-pointer active:scale-90 transition-all shadow-sm"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={50}>50</option>
+                  </select>
+                  {allCustomers.length > 0 && (
+                    <span className="text-[11px] font-medium text-secondary/60">
+                      {itemStart}–{itemEnd}
+                    </span>
+                  )}
+                </div>
               </div>
             )}
           </div>

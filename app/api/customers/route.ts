@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(Number(searchParams.get("limit")) || 500, 1000);
     const offset = Number(searchParams.get("offset")) || 0;
     const clusterId = searchParams.get("clusterId");
+    const sort = searchParams.get("sort") || "newest";
 
     let customerIds: string[] | undefined;
     if (clusterId) {
@@ -35,6 +36,13 @@ export async function GET(req: NextRequest) {
 
     const where = customerIds ? inArray(customers.id, customerIds) : undefined;
 
+    const orderBy = sort === "oldest" ? sql`${customers.createdAt} ASC` :
+      sort === "recent_visit" ? sql`visit_stats.last_visited_at DESC NULLS LAST` :
+      sort === "oldest_visit" ? sql`visit_stats.last_visited_at ASC NULLS FIRST` :
+      sort === "most_visited" ? sql`visit_stats.visit_count DESC NULLS LAST` :
+      sort === "least_visited" ? sql`visit_stats.visit_count ASC NULLS FIRST` :
+      sql`${customers.createdAt} DESC`;
+
     const allCustomers = await db.select({
       id: customers.id,
       name: customers.name,
@@ -45,10 +53,20 @@ export async function GET(req: NextRequest) {
       latitude: customers.latitude,
       longitude: customers.longitude,
       notes: customers.notes,
+      lastVisitedAt: sql<string | null>`visit_stats.last_visited_at`,
+      visitCount: sql<number>`COALESCE(visit_stats.visit_count, 0)`,
     })
       .from(customers)
+      .leftJoin(
+        sql`(
+          SELECT customer_id, MAX(visited_at) AS last_visited_at, COUNT(*)::int AS visit_count
+          FROM customer_visits
+          GROUP BY customer_id
+        ) visit_stats`,
+        sql`visit_stats.customer_id = ${customers.id}`
+      )
       .where(where)
-      .orderBy(sql`${customers.createdAt} DESC`)
+      .orderBy(orderBy)
       .limit(limit + 1)
       .offset(offset);
 

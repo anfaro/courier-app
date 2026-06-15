@@ -13,28 +13,27 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const resolvedParams = await params;
     const id = resolvedParams.id;
 
-    const session = await db.query.sessions.findFirst({
-      where: eq(sessions.id, id),
-      with: {
-        incomings: {
-          orderBy: (incomings, { desc }) => [desc(incomings.time)],
-          with: {
-            deliveries: {
-              with: {
-                customer: true,
-              },
-            },
-          },
+    const [sessionRows, incomingsRows, deliveriesRows] = await Promise.all([
+      db.select().from(sessions).where(eq(sessions.id, id)).limit(1),
+      db.query.incomings.findMany({
+        where: eq(incomings.sessionId, id),
+        orderBy: (i, { desc }) => [desc(i.time)],
+        with: {
+          deliveries: true,
         },
-        deliveries: {
-          orderBy: (sd, { desc }) => [desc(sd.createdAt)],
-          with: {
-            customer: true,
-            incoming: true,
-          },
+      }),
+      db.query.sessionDeliveries.findMany({
+        where: eq(sessionDeliveries.sessionId, id),
+        orderBy: (sd, { desc }) => [desc(sd.createdAt)],
+        with: {
+          customer: true,
+          incoming: true,
         },
-      },
-    });
+      }),
+    ]);
+
+    if (!sessionRows.length) return NextResponse.json({ message: "Session not found" }, { status: 404 });
+    const session = { ...sessionRows[0], incomings: incomingsRows, deliveries: deliveriesRows };
 
     if (!session) return NextResponse.json({ message: "Session not found" }, { status: 404 });
     if (session.userId !== token.id) return NextResponse.json({ message: "Forbidden" }, { status: 403 });

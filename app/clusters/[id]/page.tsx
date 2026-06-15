@@ -5,6 +5,7 @@ import PageHeader from "@/components/PageHeader";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ClusterCustomerList from "./ClusterCustomerList";
+import Icon from "@/components/Icon";
 
 export default async function ClusterDetailsPage({
   params,
@@ -36,9 +37,7 @@ export default async function ClusterDetailsPage({
             href={`/clusters/${clusterId}/edit`}
             className="btn-primary !py-2.5 !px-5"
           >
-            <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
+            <Icon name="edit" size={16} className="mr-2" />
             Edit
           </Link>
         </div>

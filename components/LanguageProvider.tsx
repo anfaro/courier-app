@@ -103,6 +103,27 @@ export const translations: Translations = {
   "map.save_desc": { en: "Give your route a name so you can load it later.", id: "Beri nama rute Anda agar dapat dimuat kembali nanti." },
   "map.save_name_placeholder": { en: "e.g. Tuesday Morning Route", id: "cth. Rute Selasa Pagi" },
 
+  // Customer Stats
+  "customer.stats_title": { en: "Customer Statistics", id: "Statistik Pelanggan" },
+  "customer.stats_total": { en: "Total Customers", id: "Total Pelanggan" },
+  "customer.stats_pinned": { en: "With GPS Pin", id: "Dengan Pin GPS" },
+  "customer.stats_unpinned": { en: "Without GPS Pin", id: "Tanpa Pin GPS" },
+  "customer.stats_visited": { en: "Ever Visited", id: "Pernah Dikunjungi" },
+  "customer.stats_unvisited": { en: "Never Visited", id: "Belum Dikunjungi" },
+  "customer.stats_per_cluster": { en: "Customers per Cluster", id: "Pelanggan per Klaster" },
+  "customer.stats_top_visited": { en: "Most Visited", id: "Terbanyak Dikunjungi" },
+  "customer.stats_visit_avg": { en: "Avg Visits per Customer", id: "Rata-rata Kunjungan" },
+  "customer.stats_tier_breakdown": { en: "Customer Tiers", id: "Tingkatan Pelanggan" },
+  "customer.stats_with_phone": { en: "With Phone", id: "Dengan Telepon" },
+  "customer.stats_no_cluster": { en: "Unclustered", id: "Tanpa Klaster" },
+  "customer.stats_data_quality": { en: "Data Quality", id: "Kualitas Data" },
+  "customer.stats_total_clusters": { en: "Total Clusters", id: "Total Klaster" },
+  "customer.stats_total_visits": { en: "Total Visits", id: "Total Kunjungan" },
+  "customer.stats_total_deliveries": { en: "Total Deliveries", id: "Total Pengiriman" },
+  "customer.stats_avg_per_cluster": { en: "Avg per cluster", id: "Rata-rata per klaster" },
+  "customer.stats_overview": { en: "Overview", id: "Gambaran Umum" },
+  "customer.stats_breakdown": { en: "Cluster Breakdown", id: "Rincian Klaster" },
+
   // Customer Page
   "customer.share": { en: "Share", id: "Bagikan" },
   "customer.share_copied": { en: "Link copied!", id: "Tautan disalin!" },
@@ -251,6 +272,19 @@ export const translations: Translations = {
   "visit.visit_completed": { en: "Visit Completed", id: "Kunjungan Selesai" },
   "visit.visit_in_progress": { en: "In Progress", id: "Sedang Berlangsung" },
 
+  // Customer Ranking
+  "customer.sort_label": { en: "Sort by", id: "Urutkan" },
+  "customer.sort_newest": { en: "Newest", id: "Terbaru" },
+  "customer.sort_oldest": { en: "Oldest", id: "Terlama" },
+  "customer.sort_recent_visit": { en: "Recently visited", id: "Baru dikunjungi" },
+  "customer.sort_oldest_visit": { en: "Least recently visited", id: "Paling lama" },
+  "customer.sort_most_visited": { en: "Most visited", id: "Terbanyak dikunjungi" },
+  "customer.sort_least_visited": { en: "Least visited", id: "Tersedikit dikunjungi" },
+  "customer.visit_count": { en: "[N] visits", id: "[N] kunjungan" },
+  "customer.tier_new": { en: "New", id: "Baru" },
+  "customer.tier_regular": { en: "Regular", id: "Reguler" },
+  "customer.tier_frequent": { en: "Frequent", id: "Sering" },
+
   // Relative time
   "customer.relative_just_now": { en: "just now", id: "baru saja" },
   "customer.relative_min_ago": { en: "[N] min ago", id: "[N] menit lalu" },
@@ -270,6 +304,7 @@ export const translations: Translations = {
   "session.deleted": { en: "Session deleted", id: "Sesi dihapus" },
   "session.total_packages": { en: "Total Packages", id: "Total Paket" },
   "session.delivered": { en: "Delivered", id: "Telah Diantar" },
+  "session.returned": { en: "Returned", id: "Dikembalikan" },
   "session.progress": { en: "Progress", id: "Progres" },
   "session.no_sessions": { en: "No sessions yet. Start a new session to begin tracking.", id: "Belum ada sesi. Mulai sesi baru untuk mulai melacak." },
   "session.add_incoming": { en: "Add Incoming", id: "Tambah Incoming" },
@@ -279,6 +314,7 @@ export const translations: Translations = {
   "session.select_customers": { en: "Select Customers", id: "Pilih Pelanggan" },
   "session.customer_selected": { en: "[N] selected", id: "[N] dipilih" },
   "session.incoming_saved": { en: "Incoming recorded with [N] customers!", id: "Incoming dicatat dengan [N] pelanggan!" },
+  "session.incoming_error": { en: "Failed to save incoming", id: "Gagal menyimpan incoming" },
   "session.incoming_list": { en: "Incoming Arrivals", id: "Kedatangan Incoming" },
   "session.delivery_list": { en: "Delivery List", id: "Daftar Pengiriman" },
   "session.done": { en: "Done", id: "Selesai" },
@@ -336,6 +372,10 @@ export const translations: Translations = {
   "session.edit_date": { en: "Edit Date", id: "Ubah Tanggal" },
   "session.date_updated": { en: "Session date updated!", id: "Tanggal sesi diperbarui!" },
   "session.edit_incoming": { en: "Edit", id: "Edit" },
+  "session.remove_rescheduled": { en: "Remove", id: "Hapus" },
+  "session.remove_rescheduled_confirm_title": { en: "Remove Rescheduled", id: "Hapus Jadwal Ulang" },
+  "session.remove_rescheduled_confirm_msg": { en: "Remove this customer and its packages from the session? The incoming package count will be updated.", id: "Hapus pelanggan ini dan paketnya dari sesi? Jumlah paket incoming akan diperbarui." },
+  "session.rescheduled_removed": { en: "Rescheduled deliveries removed!", id: "Pengiriman terjadwal ulang dihapus!" },
 
   // Image Input
   "image.gallery": { en: "From Gallery", id: "Dari Galeri" },

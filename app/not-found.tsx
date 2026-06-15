@@ -1,6 +1,7 @@
 // app/not-found.tsx
 import Link from "next/link";
 import { APP_VERSION } from "@/lib/version";
+import Icon from "@/components/Icon";
 
 export default function NotFoundPage() {
   return (
@@ -19,9 +20,7 @@ export default function NotFoundPage() {
         href="/"
         className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-8 py-4 text-[15px] font-bold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-700 active:scale-90"
       >
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
+        <Icon name="home" size={20} />
         Back to Home
       </Link>
 

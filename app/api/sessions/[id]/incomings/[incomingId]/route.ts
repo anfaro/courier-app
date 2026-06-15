@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
 import { sessions, incomings, sessionDeliveries } from "@/lib/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { generateId } from "@/lib/utils";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
 
@@ -31,18 +31,17 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const body = await req.json();
     const { packages: packagesCount, customerAssignments, time } = body;
 
-    if (!packagesCount || !customerAssignments || !Array.isArray(customerAssignments) || customerAssignments.length === 0) {
-      return NextResponse.json({ message: "Packages count and customer assignments are required" }, { status: 400 });
-    }
-
-    const totalAssigned = customerAssignments.reduce((sum: number, a: any) => sum + (Number(a.packages) || 0), 0);
-    if (totalAssigned !== Number(packagesCount)) {
-      return NextResponse.json({ message: "Sum of assigned packages must match total packages count" }, { status: 400 });
-    }
-
-    for (const a of customerAssignments) {
-      if (!a.customerId || !a.packages || Number(a.packages) < 1) {
-        return NextResponse.json({ message: "Each assignment must have customerId and packages >= 1" }, { status: 400 });
+    // Allow empty customerAssignments (means: delete all pending, keep non-pending)
+    const hasAssignments = customerAssignments && Array.isArray(customerAssignments) && customerAssignments.length > 0;
+    if (hasAssignments) {
+      const totalAssigned = customerAssignments.reduce((sum: number, a: any) => sum + (Number(a.packages) || 0), 0);
+      if (totalAssigned !== Number(packagesCount)) {
+        return NextResponse.json({ message: "Sum of assigned packages must match total packages count" }, { status: 400 });
+      }
+      for (const a of customerAssignments) {
+        if (!a.customerId || !a.packages || Number(a.packages) < 1) {
+          return NextResponse.json({ message: "Each assignment must have customerId and packages >= 1" }, { status: 400 });
+        }
       }
     }
 
@@ -61,20 +60,22 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         eq(sessionDeliveries.status, "pending")
       ));
 
-    // Insert new pending deliveries from the form
-    const deliveryRows = customerAssignments.map((a: { customerId: string; packages: number }) => ({
-      id: generateId(),
-      sessionId,
-      incomingId,
-      customerId: a.customerId,
-      packages: String(a.packages),
-      status: "pending",
-    }));
-
-    await db.insert(sessionDeliveries).values(deliveryRows);
+    // Insert new pending deliveries from the form (if any)
+    let deliveryRows: any[] = [];
+    if (hasAssignments) {
+      deliveryRows = customerAssignments.map((a: { customerId: string; packages: number }) => ({
+        id: generateId(),
+        sessionId,
+        incomingId,
+        customerId: a.customerId,
+        packages: String(a.packages),
+        status: "pending",
+      }));
+      await db.insert(sessionDeliveries).values(deliveryRows);
+    }
 
     // Update incoming's total packages (preserved non-pending + new pending)
-    const newIncomingTotal = preservedPackages + Number(packagesCount);
+    const newIncomingTotal = preservedPackages + (hasAssignments ? Number(packagesCount) : 0);
     const incomingUpdate: Record<string, any> = { packages: String(newIncomingTotal) };
     if (time && isSuperAdmin) {
       incomingUpdate.time = new Date(time);
@@ -83,19 +84,21 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       .set(incomingUpdate)
       .where(eq(incomings.id, incomingId));
 
-    // Recalculate session totals by scanning ALL deliveries in this session
-    const allSessionDeliveries = await db.select().from(sessionDeliveries)
-      .where(eq(sessionDeliveries.sessionId, sessionId));
-
-    const newTotalPackages = allSessionDeliveries.reduce((sum, d) => sum + Number(d.packages), 0);
-    const newDeliveredPackages = allSessionDeliveries
-      .filter(d => d.status === "delivered")
-      .reduce((sum, d) => sum + Number(d.packages), 0);
+    // Recalculate session totals using SQL aggregates
+    const [aggRow] = await db.execute(sql`
+      SELECT
+        COALESCE(SUM(NULLIF(packages, '')::int), 0)::int AS total_pkgs,
+        COALESCE(SUM(NULLIF(packages, '')::int) FILTER (WHERE status = 'delivered'), 0)::int AS deliv_pkgs
+      FROM session_deliveries
+      WHERE session_id = ${sessionId}
+    `);
+    const totalPkgs = aggRow.total_pkgs;
+    const delivPkgs = aggRow.deliv_pkgs;
 
     await db.update(sessions)
       .set({
-        totalPackages: String(newTotalPackages),
-        deliveredPackages: String(newDeliveredPackages),
+        totalPackages: String(totalPkgs),
+        deliveredPackages: String(delivPkgs),
         updatedAt: new Date(),
       })
       .where(eq(sessions.id, sessionId));

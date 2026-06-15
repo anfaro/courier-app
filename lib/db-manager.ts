@@ -8,6 +8,29 @@ const DATA_DIR = process.env.VERCEL ? "/tmp/data" : path.join(process.cwd(), "da
 const CONFIG_PATH = path.join(DATA_DIR, "db-config.json");
 const PROFILES_PATH = path.join(DATA_DIR, "db-profiles.json");
 
+// Global cache for Vercel serverless — persists across function warm starts
+declare global {
+  var __dbClient: postgres.Sql | undefined;
+  var __dbInstance: ReturnType<typeof drizzle> | undefined;
+}
+
+function getCachedClient() {
+  if (globalThis.__dbClient && globalThis.__dbInstance) {
+    return { client: globalThis.__dbClient, db: globalThis.__dbInstance };
+  }
+  return null;
+}
+
+function setCachedClient(client: postgres.Sql, db: ReturnType<typeof drizzle>) {
+  globalThis.__dbClient = client;
+  globalThis.__dbInstance = db;
+}
+
+function clearCachedClient() {
+  globalThis.__dbClient = undefined;
+  globalThis.__dbInstance = undefined;
+}
+
 let currentClient: postgres.Sql | null = null;
 let currentDb: ReturnType<typeof drizzle> | null = null;
 
@@ -56,7 +79,7 @@ async function getConnectionString(): Promise<string> {
 function createClient(connectionString: string, ssl?: string) {
   return postgres(connectionString, {
     prepare: false,
-    max: 2,
+    max: process.env.VERCEL ? 2 : 5,
     idle_timeout: 300,
     connect_timeout: 30,
     max_lifetime: 3600,
@@ -65,6 +88,16 @@ function createClient(connectionString: string, ssl?: string) {
 }
 
 export async function initializeDb() {
+  // Reuse cached client in serverless environments to prevent connection exhaustion
+  if (process.env.VERCEL) {
+    const cached = getCachedClient();
+    if (cached) {
+      currentClient = cached.client;
+      currentDb = cached.db;
+      return currentDb;
+    }
+  }
+
   const config = await readConfig();
   const connectionString = buildConnectionString(config);
   const envUrl = process.env.DATABASE_URL;
@@ -73,6 +106,11 @@ export async function initializeDb() {
   currentClient = createClient(url, useConfig ? config.ssl : undefined);
   await currentClient`SELECT 1`.catch(() => {});
   currentDb = drizzle(currentClient, { schema });
+
+  if (process.env.VERCEL) {
+    setCachedClient(currentClient, currentDb);
+  }
+
   return currentDb;
 }
 
@@ -91,10 +129,17 @@ export async function updateDbConfig(config: Record<string, string>) {
     try { await currentClient.end({ timeout: 5 }); } catch {}
   }
 
+  clearCachedClient();
+
   const connectionString = buildConnectionString(config);
   currentClient = createClient(connectionString, config.ssl);
   await currentClient`SELECT 1`.catch(() => {});
   currentDb = drizzle(currentClient, { schema });
+
+  if (process.env.VERCEL) {
+    setCachedClient(currentClient, currentDb);
+  }
+
   return currentDb;
 }
 
@@ -112,9 +157,16 @@ export async function resetToEnvVar() {
     try { await currentClient.end({ timeout: 5 }); } catch {}
   }
 
+  clearCachedClient();
+
   currentClient = createClient(envUrl, "require");
   await currentClient`SELECT 1`.catch(() => {});
   currentDb = drizzle(currentClient, { schema });
+
+  if (process.env.VERCEL) {
+    setCachedClient(currentClient, currentDb);
+  }
+
   return currentDb;
 }
 

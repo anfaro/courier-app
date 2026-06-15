@@ -18,7 +18,8 @@ export async function GET(req: NextRequest) {
     const results = await db.select().from(customers)
       .where(or(
         ilike(customers.name, `%${q}%`),
-        ilike(customers.phoneNumber, `%${q}%`)
+        ilike(customers.phoneNumber, `%${q}%`),
+        ilike(customers.address, `%${q}%`)
       ))
       .limit(10);
 

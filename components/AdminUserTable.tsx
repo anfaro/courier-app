@@ -7,6 +7,7 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { useToast } from "@/components/ToastProvider";
 import { useConfirmation } from "@/components/ConfirmationProvider";
 import { useScrollLock } from "@/lib/useScrollLock";
+import Icon from "@/components/Icon";
 
 export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }) {
   const { data: session } = useSession();
@@ -234,9 +235,7 @@ export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }
       <div className="mb-6 flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+            <Icon name="search" size={20} strokeWidth={2.5} className="text-secondary" />
           </div>
           <input
             type="text"
@@ -320,9 +319,7 @@ export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }
                             <span className="text-lg">{roles.find(r => r.value === user.role)?.icon || "👤"}</span>
                             <span>{roles.find(r => r.value === user.role)?.label || user.role}</span>
                         </div>
-                        <svg className="h-4 w-4 text-secondary opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <Icon name="chevron-down" size={16} strokeWidth={2.5} className="text-secondary opacity-50" />
                     </button>
 
                     <button

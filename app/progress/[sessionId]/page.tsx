@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useToast } from "@/components/ToastProvider";
@@ -10,6 +10,8 @@ import PageHeader from "@/components/PageHeader";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 import { useScrollLock } from "@/lib/useScrollLock";
+import IncomingModal from "@/components/IncomingModal";
+import Icon from "@/components/Icon";
 
 const MapClientWrapper = dynamic(
   () => import("@/components/MapClientWrapper"),
@@ -34,6 +36,7 @@ interface Delivery {
   sessionId: string;
   incomingId: string;
   customerId: string;
+  packages: string;
   status: "pending" | "delivered" | "returned" | "rescheduled";
   createdAt: string;
   customer: Customer;
@@ -69,20 +72,8 @@ export default function SessionDetailPage() {
   const [sessionData, setSessionData] = useState<SessionData | null>(null);
   const [isFinalized, setIsFinalized] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
-  const [availableCustomers, setAvailableCustomers] = useState<Customer[]>([]);
-
   const [showIncomingModal, setShowIncomingModal] = useState(false);
   const [editingIncoming, setEditingIncoming] = useState<Incoming | null>(null);
-  const [customerAssignments, setCustomerAssignments] = useState<Record<string, number>>({});
-  const [savingIncoming, setSavingIncoming] = useState(false);
-  const [customerSearch, setCustomerSearch] = useState("");
-  const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [quickName, setQuickName] = useState("");
-  const [quickPhone, setQuickPhone] = useState("");
-  const [quickAddress, setQuickAddress] = useState("");
-  const [quickAddError, setQuickAddError] = useState("");
-  const [quickAddSaving, setQuickAddSaving] = useState(false);
   const [deliverySearch, setDeliverySearch] = useState("");
   const [mapExpanded, setMapExpanded] = useState(false);
   const [deliveredExpanded, setDeliveredExpanded] = useState(true);
@@ -93,13 +84,13 @@ export default function SessionDetailPage() {
     currentPackages: number;
     targetStatus: string;
     splitCount: number;
+    remainingDeliveryIds?: string[];
   } | null>(null);
   const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
   const [showDateEdit, setShowDateEdit] = useState(false);
   const [editDate, setEditDate] = useState("");
-  const [incomingTime, setIncomingTime] = useState("");
   const [savingDate, setSavingDate] = useState(false);
-  useScrollLock(showIncomingModal || selectedDelivery !== null || splitModal !== null || showDateEdit);
+  useScrollLock(selectedDelivery !== null || splitModal !== null || showDateEdit);
 
   const dateLocale = locale === "id" ? "id-ID" : "en-GB";
 
@@ -124,41 +115,6 @@ export default function SessionDetailPage() {
     fetchSession();
   }, [fetchSession]);
 
-  useEffect(() => {
-    async function fetchCustomers() {
-      try {
-        const res = await fetch("/api/customers?limit=500&offset=0");
-        if (res.ok) {
-          const data = await res.json();
-          setAllCustomers(data.customers || []);
-        }
-      } catch {}
-    }
-    fetchCustomers();
-  }, []);
-
-  useEffect(() => {
-    if (!showIncomingModal) {
-      setCustomerAssignments({});
-      setIncomingTime("");
-    }
-  }, [showIncomingModal]);
-
-  const filteredCustomers = availableCustomers.filter((c) => {
-    if (!customerSearch.trim()) return true;
-    const q = customerSearch.toLowerCase();
-    return (
-      c.name.toLowerCase().includes(q) ||
-      (c.phoneNumber && c.phoneNumber.includes(q))
-    );
-  });
-
-  useEffect(() => {
-    if (allCustomers.length > 0) {
-      setAvailableCustomers(allCustomers);
-    }
-  }, [allCustomers]);
-
   async function handleDelete() {
     if (!canEdit) { showToast(t("session.finalized_blocked"), "warning"); return; }
     const confirmed = await askConfirmation({
@@ -179,51 +135,31 @@ export default function SessionDetailPage() {
     }
   }
 
-  async function handleAddIncoming() {
+  async function handleRemoveRescheduled(deliveryId: string) {
     if (!canEdit) { showToast(t("session.finalized_blocked"), "warning"); return; }
-    const assignments = Object.entries(customerAssignments)
-      .filter(([_, qty]) => qty > 0)
-      .map(([customerId, packages]) => ({ customerId, packages }));
-    const count = assignments.reduce((sum, a) => sum + a.packages, 0);
-    if (count < 1) {
-      showToast("Assign at least one package", "error");
-      return;
-    }
-    setSavingIncoming(true);
+    const confirmed = await askConfirmation({
+      title: t("session.remove_rescheduled_confirm_title"),
+      message: t("session.remove_rescheduled_confirm_msg"),
+      type: "danger",
+      confirmText: t("action.delete"),
+    });
+    if (!confirmed) return;
     try {
-      const isEdit = editingIncoming !== null;
-      const url = isEdit ? `/api/sessions/${sessionId}/incomings/${editingIncoming!.id}` : `/api/sessions/${sessionId}/incomings`;
-      const method = isEdit ? "PUT" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          packages: count,
-          customerAssignments: assignments,
-          ...(isEdit && incomingTime ? { time: new Date(incomingTime).toISOString() } : {}),
-        }),
-      });
+      const res = await fetch(`/api/sessions/${sessionId}/deliveries/${deliveryId}`, { method: "DELETE" });
       if (res.ok) {
-        showToast(
-          isEdit ? "Incoming updated" : t("session.incoming_saved").replace("[N]", String(count)),
-          "success"
-        );
-        setShowIncomingModal(false);
+        showToast("Delivery removed", "success");
         fetchSession();
       } else {
         const err = await res.json();
-        showToast(err.message || "Failed to save incoming", "error");
+        showToast(err.message || "Failed to remove delivery", "error");
       }
     } catch {
-      showToast("Failed to save incoming", "error");
-    } finally {
-      setSavingIncoming(false);
+      showToast("Failed to remove delivery", "error");
     }
   }
 
   async function handleStatusChange(deliveryId: string, newStatus: string) {
-    const delivery = sessionData?.deliveries.find(d => d.id === deliveryId);
+    const delivery = deliveryById.get(deliveryId);
     if (!delivery) return;
     const pkgCount = Number(delivery.packages) || 1;
     if (pkgCount > 1) {
@@ -250,6 +186,47 @@ export default function SessionDetailPage() {
       }
     }
     await doStatusChange(deliveryId, newStatus, undefined, lat, lng);
+    fetchSession();
+  }
+
+  async function handleBulkStatusChange(customerId: string, newStatus: string) {
+    const group = groupedByCustomer[customerId];
+    if (!group) return;
+    const total = group.totalPackages;
+    if (total > 1) {
+      setSplitModal({
+        deliveryId: group.deliveries[0].id,
+        customerName: group.customer.name,
+        currentPackages: total,
+        targetStatus: newStatus,
+        splitCount: Math.ceil(total / 2),
+        remainingDeliveryIds: group.deliveries.length > 1 ? group.deliveries.slice(1).map(d => d.id) : undefined,
+      });
+      return;
+    }
+    for (const d of group.deliveries) {
+      await doStatusChange(d.id, newStatus);
+    }
+    fetchSession();
+  }
+
+  async function handleBulkRemove(customerId: string) {
+    const group = groupedByCustomer[customerId];
+    if (!group) return;
+    const confirmed = await askConfirmation({
+      title: t("session.remove_rescheduled_confirm_title"),
+      message: t("session.remove_rescheduled_confirm_msg"),
+      type: "danger",
+      confirmText: t("action.delete"),
+    });
+    if (!confirmed) return;
+    for (const d of group.deliveries) {
+      try {
+        await fetch(`/api/sessions/${sessionId}/deliveries/${d.id}`, { method: "DELETE" });
+      } catch { /* continue */ }
+    }
+    showToast(t("session.rescheduled_removed"), "success");
+    fetchSession();
   }
 
   async function doStatusChange(deliveryId: string, newStatus: string, splitCount?: number, latitude?: string, longitude?: string) {
@@ -268,7 +245,9 @@ export default function SessionDetailPage() {
       });
       if (res.ok) {
         showToast(t("session.delivery_updated"), "success");
-        fetchSession();
+      } else {
+        const err = await res.json();
+        showToast(err.message || "Failed to update status", "error");
       }
     } catch {
       showToast("Failed to update status", "error");
@@ -322,23 +301,161 @@ export default function SessionDetailPage() {
 
   async function confirmSplit() {
     if (!splitModal) return;
-    const delivery = sessionData?.deliveries.find(d => d.id === splitModal.deliveryId);
-    let lat: string | undefined;
-    let lng: string | undefined;
-    if (getGeocodeEnabled && splitModal.targetStatus === "delivered" && delivery && !delivery.customer.latitude && !delivery.customer.longitude) {
-      try {
-        const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000, enableHighAccuracy: true });
-        });
-        lat = pos.coords.latitude.toString();
-        lng = pos.coords.longitude.toString();
-      } catch {
-        // Location unavailable — proceed without it
+    let remaining = splitModal.splitCount;
+    const markStatus = splitModal.targetStatus;
+    const allIds = [splitModal.deliveryId, ...(splitModal.remainingDeliveryIds || [])];
+
+    for (const id of allIds) {
+      if (remaining <= 0) break;
+      const del = deliveryById.get(id);
+      const pkg = Number(del?.packages) || 1;
+      const mark = Math.min(remaining, pkg);
+      remaining -= mark;
+
+      let lat: string | undefined;
+      let lng: string | undefined;
+      if (getGeocodeEnabled && markStatus === "delivered" && del && !del.customer.latitude && !del.customer.longitude) {
+        try {
+          const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000, enableHighAccuracy: true });
+          });
+          lat = pos.coords.latitude.toString();
+          lng = pos.coords.longitude.toString();
+        } catch {
+          // Location unavailable — proceed without it
+        }
+      }
+
+      if (mark < pkg) {
+        await doStatusChange(id, markStatus, mark, lat, lng);
+      } else {
+        await doStatusChange(id, markStatus, undefined, lat, lng);
       }
     }
-    await doStatusChange(splitModal.deliveryId, splitModal.targetStatus, splitModal.splitCount, lat, lng);
+    fetchSession();
     setSplitModal(null);
   }
+
+  const total = useMemo(() => Number(sessionData?.totalPackages ?? "0") || 0, [sessionData?.totalPackages]);
+  const delivered = useMemo(() => Number(sessionData?.deliveredPackages ?? "0") || 0, [sessionData?.deliveredPackages]);
+  const progress = useMemo(() => total > 0 ? Math.round((delivered / total) * 100) : 0, [total, delivered]);
+
+  // Target metrics (recomputed on every render — cheap arithmetic)
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const incomings = sessionData?.incomings ?? [];
+  const deliveries = sessionData?.deliveries ?? [];
+
+  const incomingTimeMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    incomings.forEach((inc) => { map[inc.id] = inc.time; });
+    return map;
+  }, [incomings]);
+
+  const earlyCutoff = useMemo(() => {
+    const [ey, em, ed] = (sessionData?.date ?? "").split("-").map(Number);
+    return new Date(Date.UTC(ey, em - 1, ed, 2, 0, 0));
+  }, [sessionData?.date]);
+
+  const earlyDeliveries = useMemo(() =>
+    deliveries.filter((d) => {
+      const t = incomingTimeMap[d.incomingId];
+      return t && new Date(t) < earlyCutoff;
+    }),
+    [deliveries, incomingTimeMap, earlyCutoff]
+  );
+
+  const earlyTotal = useMemo(() => earlyDeliveries.reduce((s, d) => s + (Number(d.packages) || 1), 0), [earlyDeliveries]);
+  const earlyDelivered = useMemo(() => earlyDeliveries.filter((d) => d.status === "delivered").reduce((s, d) => s + (Number(d.packages) || 1), 0), [earlyDeliveries]);
+  const earlyPct = useMemo(() => earlyTotal > 0 ? Math.round((earlyDelivered / earlyTotal) * 100) : 0, [earlyTotal, earlyDelivered]);
+
+  const isEarlyTarget = currentMinutes < 12 * 60;
+  const activeTarget = isEarlyTarget ? 50 : currentMinutes < 20 * 60 ? 93 : 97;
+  const activeSafe = isEarlyTarget ? null : 90;
+  const activeLabel = isEarlyTarget ? "09:00" : currentMinutes < 20 * 60 ? "12:00" : "";
+  const activeMetric = isEarlyTarget ? earlyPct : progress;
+  const targetMet = activeMetric >= activeTarget;
+  const inSafe = activeSafe !== null && activeMetric >= activeSafe;
+
+  // Delivery filtering & grouping (memoized on data + search query)
+  function groupByCustomer(deliveries: Delivery[]) {
+    return Object.values(
+      deliveries.reduce((acc, d) => {
+        const cid = d.customerId;
+        if (!acc[cid]) {
+          acc[cid] = { customer: d.customer, deliveries: [], totalPackages: 0 };
+        }
+        acc[cid].deliveries.push(d);
+        acc[cid].totalPackages += Number(d.packages) || 1;
+        return acc;
+      }, {} as Record<string, { customer: any; deliveries: Delivery[]; totalPackages: number }>)
+    ).sort((a, b) => a.customer.name.localeCompare(b.customer.name));
+  }
+
+  const filterBySearch = (d: Delivery) => {
+    if (!deliverySearch.trim()) return true;
+    const q = deliverySearch.toLowerCase();
+    return d.customer.name.toLowerCase().includes(q) ||
+      (d.customer.phoneNumber && d.customer.phoneNumber.includes(q)) ||
+      (d.customer.address && d.customer.address.toLowerCase().includes(q)) ||
+      d.status.toLowerCase().includes(q);
+  };
+
+  const pendingDeliveries = useMemo(
+    () => deliveries.filter((d) => d.status === "pending" && filterBySearch(d)),
+    [deliveries, deliverySearch]
+  );
+  const groupedByCustomer = useMemo(
+    () => pendingDeliveries.reduce((acc, d) => {
+      const cid = d.customerId;
+      if (!acc[cid]) acc[cid] = { customer: d.customer, deliveries: [], totalPackages: 0 };
+      acc[cid].deliveries.push(d);
+      acc[cid].totalPackages += Number(d.packages) || 1;
+      return acc;
+    }, {} as Record<string, { customer: any; deliveries: Delivery[]; totalPackages: number }>),
+    [pendingDeliveries]
+  );
+  const combinedCustomerList = useMemo(
+    () => Object.values(groupedByCustomer).sort((a, b) => a.customer.name.localeCompare(b.customer.name)),
+    [groupedByCustomer]
+  );
+
+  const deliveredDeliveries = useMemo(
+    () => deliveries.filter((d) => d.status === "delivered" && filterBySearch(d)),
+    [deliveries, deliverySearch]
+  );
+  const returnedDeliveries = useMemo(
+    () => deliveries.filter((d) => d.status === "returned" && filterBySearch(d)),
+    [deliveries, deliverySearch]
+  );
+  const rescheduledDeliveries = useMemo(
+    () => deliveries.filter((d) => d.status === "rescheduled" && filterBySearch(d)),
+    [deliveries, deliverySearch]
+  );
+
+  const combinedDeliveredList = useMemo(() => groupByCustomer(deliveredDeliveries), [deliveredDeliveries]);
+  const combinedReturnedList = useMemo(() => groupByCustomer(returnedDeliveries), [returnedDeliveries]);
+  const combinedRescheduledList = useMemo(() => groupByCustomer(rescheduledDeliveries), [rescheduledDeliveries]);
+
+  const mapCustomers = useMemo(
+    () => pendingDeliveries.map((d) => d.customer).filter((c) => c.latitude && c.longitude),
+    [pendingDeliveries]
+  );
+
+  // Delivery lookup index for O(1) access
+  const deliveryById = useMemo(() => {
+    const map = new Map<string, Delivery>();
+    deliveries.forEach((d) => map.set(d.id, d));
+    return map;
+  }, [deliveries]);
+
+  const finalized = sessionData?.finalized ?? false;
+  const isSuperAdmin = (authSession?.user as any)?.role === "superadmin";
+  const canEdit = !isFinalized || isSuperAdmin;
+  const showFinalized = finalized || isFinalized;
+  const showTargetSystem = (authSession?.user as any)?.targetSystem !== false;
+  const getGeocodeEnabled = (authSession?.user as any)?.getGeocode !== false;
 
   if (loading || !sessionData) {
     return (
@@ -355,64 +472,6 @@ export default function SessionDetailPage() {
       </div>
     );
   }
-
-  const total = Number(sessionData.totalPackages) || 0;
-  const delivered = Number(sessionData.deliveredPackages) || 0;
-  const progress = total > 0 ? Math.round((delivered / total) * 100) : 0;
-
-  // Target metrics
-  const now = new Date();
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-  const incomingTimeMap: Record<string, string> = {};
-  sessionData.incomings.forEach((inc) => {
-    incomingTimeMap[inc.id] = inc.time;
-  });
-
-  const [ey, em, ed] = sessionData.date.split("-").map(Number);
-  const earlyCutoff = new Date(Date.UTC(ey, em - 1, ed, 2, 0, 0)); // 09:00 WIB = 02:00 UTC
-  const earlyDeliveries = sessionData.deliveries.filter((d) => {
-    const t = incomingTimeMap[d.incomingId];
-    return t && new Date(t) < earlyCutoff;
-  });
-
-  const earlyTotal = earlyDeliveries.reduce((s, d) => s + (Number(d.packages) || 1), 0);
-  const earlyDelivered = earlyDeliveries
-    .filter((d) => d.status === "delivered")
-    .reduce((s, d) => s + (Number(d.packages) || 1), 0);
-  const earlyPct = earlyTotal > 0 ? Math.round((earlyDelivered / earlyTotal) * 100) : 0;
-
-  const isEarlyTarget = currentMinutes < 12 * 60;
-  const activeTarget = isEarlyTarget ? 50 : currentMinutes < 20 * 60 ? 93 : 97;
-  const activeSafe = isEarlyTarget ? null : 90;
-  const activeLabel = isEarlyTarget ? "09:00" : currentMinutes < 20 * 60 ? "12:00" : "";
-  const activeMetric = isEarlyTarget ? earlyPct : progress;
-  const targetMet = activeMetric >= activeTarget;
-  const inSafe = activeSafe !== null && activeMetric >= activeSafe;
-
-  const filterBySearch = (d: Delivery) => {
-    if (!deliverySearch.trim()) return true;
-    const q = deliverySearch.toLowerCase();
-    return d.customer.name.toLowerCase().includes(q) ||
-      (d.customer.phoneNumber && d.customer.phoneNumber.includes(q)) ||
-      (d.customer.address && d.customer.address.toLowerCase().includes(q)) ||
-      d.status.toLowerCase().includes(q);
-  };
-  const pendingDeliveries = sessionData.deliveries.filter((d) => d.status === "pending" && filterBySearch(d));
-  const deliveredDeliveries = sessionData.deliveries.filter((d) => d.status === "delivered" && filterBySearch(d));
-  const returnedDeliveries = sessionData.deliveries.filter((d) => d.status === "returned" && filterBySearch(d));
-  const rescheduledDeliveries = sessionData.deliveries.filter((d) => d.status === "rescheduled" && filterBySearch(d));
-
-  const mapCustomers = pendingDeliveries
-    .map((d) => d.customer)
-    .filter((c) => c.latitude && c.longitude);
-
-  const finalized = sessionData?.finalized ?? false;
-  const isSuperAdmin = (authSession?.user as any)?.role === "superadmin";
-  const canEdit = !isFinalized;
-  const showFinalized = finalized || isFinalized;
-  const showTargetSystem = (authSession?.user as any)?.targetSystem !== false;
-  const getGeocodeEnabled = (authSession?.user as any)?.getGeocode !== false;
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -435,9 +494,7 @@ export default function SessionDetailPage() {
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-hover text-secondary hover:text-blue-600 dark:hover:text-blue-400 border border-card-border active:scale-90"
                   aria-label={t("session.edit_date")}
                 >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
+                  <Icon name="edit" size={14} />
                 </motion.button>
               )}
             </h1>
@@ -457,9 +514,7 @@ export default function SessionDetailPage() {
                     onClick={handleUnfinalize}
                     className="flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 px-3 py-1.5 text-[11px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-widest active:scale-90"
                   >
-                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
-                    </svg>
+                    <Icon name="refresh" size={12} />
                     {t("session.unfinalize")}
                   </motion.button>
                 )}
@@ -470,9 +525,7 @@ export default function SessionDetailPage() {
                 onClick={handleFinalize}
                 className="flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 px-3 py-1.5 text-[11px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-widest active:scale-90"
               >
-                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
+                <Icon name="check" size={12} />
                 {t("session.finalize")}
               </motion.button>
             )}
@@ -618,9 +671,7 @@ export default function SessionDetailPage() {
           className="btn-primary w-full"
           style={{ display: isFinalized ? 'none' : '' }}
         >
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
+          <Icon name="plus" size={20} />
           {t("session.add_incoming")}
         </motion.button>
 
@@ -658,24 +709,12 @@ export default function SessionDetailPage() {
                         whileTap={{ scale: 0.85 }}
                         onClick={() => {
                           if (isFinalized && !isSuperAdmin) return;
-                          const assignments: Record<string, number> = {};
-                          (inc.deliveries || [])
-                            .filter((d: any) => d.status === "pending")
-                            .forEach((d: any) => {
-                              assignments[d.customerId] = (assignments[d.customerId] || 0) + Number(d.packages);
-                            });
-                          setCustomerAssignments(assignments);
                           setEditingIncoming(inc);
-                          const d = new Date(inc.time);
-                          const localVal = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-                          setIncomingTime(localVal);
                           setShowIncomingModal(true);
                         }}
                         className="h-8 w-8 flex items-center justify-center rounded-full bg-surface-hover text-secondary border border-card-border active:scale-90"
                       >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
+                        <Icon name="edit" size={14} />
                       </motion.button>
                     </div>
                   </div>
@@ -701,9 +740,7 @@ export default function SessionDetailPage() {
                 placeholder="Search delivery..."
                 className="w-full rounded-full bg-surface-hover pl-10 pr-4 py-2.5 text-[13px] font-bold text-primary outline-none ring-1 ring-transparent focus:ring-blue-500/30 transition-all"
               />
-              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <Icon name="search" size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary" />
             </div>
 
             {/* Tab Bar */}
@@ -738,18 +775,38 @@ export default function SessionDetailPage() {
                 <div className="h-full rounded-2xl p-[2px] bg-gradient-to-r from-blue-500 to-emerald-500">
                   <div className="h-full rounded-2xl bg-card">
                     {pendingDeliveries.length > 0 ? (
-                      <div className="h-full overflow-y-auto space-y-2 p-3 [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
-                        {pendingDeliveries.map((d) => (
-                          <DeliveryCard
-                            key={d.id}
-                            delivery={d}
-                            locale={dateLocale}
-                            onStatusChange={handleStatusChange}
-                            onSelect={() => setSelectedDelivery(d)}
-                            t={t}
-                            disabled={!canEdit}
-                          />
-                        ))}
+                      <div className="h-full overflow-y-auto p-3 [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
+                        {combinedCustomerList.map((group) => {
+                          const isCombined = group.deliveries.length > 1;
+                          const first = group.deliveries[0];
+                          return (
+                            <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} dateLocale={dateLocale} sessionData={sessionData} t={t} onClick={!isCombined ? () => setSelectedDelivery(first) : undefined}>
+                              <div className="flex gap-1.5 shrink-0">
+                                <StatusButton
+                                  label={t("session.done")}
+                                  status="delivered"
+                                  color="emerald"
+                                  onClick={() => isCombined ? handleBulkStatusChange(group.customer.id, "delivered") : handleStatusChange(first.id, "delivered")}
+                                  disabled={!canEdit}
+                                />
+                                <StatusButton
+                                  label={t("session.return")}
+                                  status="returned"
+                                  color="orange"
+                                  onClick={() => isCombined ? handleBulkStatusChange(group.customer.id, "returned") : handleStatusChange(first.id, "returned")}
+                                  disabled={!canEdit}
+                                />
+                                <StatusButton
+                                  label={t("session.reschedule")}
+                                  status="rescheduled"
+                                  color="purple"
+                                  onClick={() => isCombined ? handleBulkStatusChange(group.customer.id, "rescheduled") : handleStatusChange(first.id, "rescheduled")}
+                                  disabled={!canEdit}
+                                />
+                              </div>
+                            </CustomerGroupCard>
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="h-full flex items-center justify-center p-6">
@@ -765,18 +822,18 @@ export default function SessionDetailPage() {
               {activeDeliveryTab === "returned" && (
                 <div className="h-full rounded-2xl p-[2px] bg-gradient-to-r from-orange-500 to-red-500">
                   <div className="h-full rounded-2xl bg-card">
-                    <div className="h-full overflow-y-auto space-y-2 p-3 [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
+                    <div className="h-full overflow-y-auto p-3 [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
                       {returnedDeliveries.length > 0 ? (
-                        returnedDeliveries.map((d) => (
-                          <DeliveryCard
-                            key={d.id}
-                            delivery={d}
-                            locale={dateLocale}
-                            onStatusChange={handleStatusChange}
-                            t={t}
-                            disabled={!canEdit}
-                          />
-                        ))
+                        combinedReturnedList.map((group) => {
+                          const isCombined = group.deliveries.length > 1;
+                          return (
+                            <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} dateLocale={dateLocale} sessionData={sessionData} t={t}>
+                              <span className="text-[10px] font-black uppercase tracking-wider shrink-0 text-orange-600 dark:text-orange-400">
+                                {t("session.returned")}
+                              </span>
+                            </CustomerGroupCard>
+                          );
+                        })
                       ) : (
                         <div className="flex items-center justify-center py-8">
                           <p className="text-[13px] font-bold text-secondary">{t("session.all_processed")}</p>
@@ -790,18 +847,32 @@ export default function SessionDetailPage() {
               {activeDeliveryTab === "rescheduled" && (
                 <div className="h-full rounded-2xl p-[2px] bg-gradient-to-r from-purple-500 to-indigo-500">
                   <div className="h-full rounded-2xl bg-card">
-                    <div className="h-full overflow-y-auto space-y-2 p-3 [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
+                    <div className="h-full overflow-y-auto p-3 [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
                       {rescheduledDeliveries.length > 0 ? (
-                        rescheduledDeliveries.map((d) => (
-                          <DeliveryCard
-                            key={d.id}
-                            delivery={d}
-                            locale={dateLocale}
-                            onStatusChange={handleStatusChange}
-                            t={t}
-                            disabled={!canEdit}
-                          />
-                        ))
+                        combinedRescheduledList.map((group) => {
+                          const isCombined = group.deliveries.length > 1;
+                          const first = group.deliveries[0];
+                          return (
+                            <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} dateLocale={dateLocale} sessionData={sessionData} t={t}>
+                              <div className="flex gap-1.5 shrink-0">
+                                <StatusButton
+                                  label={t("session.done")}
+                                  status="delivered"
+                                  color="emerald"
+                                  onClick={() => isCombined ? handleBulkStatusChange(group.customer.id, "delivered") : handleStatusChange(first.id, "delivered")}
+                                  disabled={!canEdit}
+                                />
+                                <StatusButton
+                                  label={t("session.remove_rescheduled")}
+                                  status="remove"
+                                  color="red"
+                                  onClick={() => isCombined ? handleBulkRemove(group.customer.id) : handleRemoveRescheduled(first.id)}
+                                  disabled={!canEdit}
+                                />
+                              </div>
+                            </CustomerGroupCard>
+                          );
+                        })
                       ) : (
                         <div className="flex items-center justify-center py-8">
                           <p className="text-[13px] font-bold text-secondary">{t("session.all_processed")}</p>
@@ -824,14 +895,13 @@ export default function SessionDetailPage() {
                   <span className="text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
                     {t("session.delivered_section")} ({deliveredDeliveries.length})
                   </span>
-                  <motion.svg
+                  <motion.div
                     animate={{ rotate: deliveredExpanded ? 180 : 0 }}
                     transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                    className="h-4 w-4 text-emerald-500 shrink-0"
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+                    className="text-emerald-500 shrink-0"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </motion.svg>
+                    <Icon name="chevron-down" size={16} />
+                  </motion.div>
                 </motion.button>
                 <AnimatePresence initial={false}>
                   {deliveredExpanded && (
@@ -843,16 +913,16 @@ export default function SessionDetailPage() {
                       className="overflow-hidden"
                     >
                       <div className="space-y-2 pt-3">
-                        {deliveredDeliveries.map((d) => (
-                          <DeliveryCard
-                            key={d.id}
-                            delivery={d}
-                            locale={dateLocale}
-                            onStatusChange={handleStatusChange}
-                            t={t}
-                            disabled={!canEdit}
-                          />
-                        ))}
+                        {combinedDeliveredList.map((group) => {
+                          const isCombined = group.deliveries.length > 1;
+                          return (
+                            <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} dateLocale={dateLocale} sessionData={sessionData} t={t}>
+                              <span className="text-[10px] font-black uppercase tracking-wider shrink-0 text-emerald-600 dark:text-emerald-400">
+                                {t("session.delivered")}
+                              </span>
+                            </CustomerGroupCard>
+                          );
+                        })}
                       </div>
                     </motion.div>
                   )}
@@ -872,9 +942,7 @@ export default function SessionDetailPage() {
             >
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                  </svg>
+                  <Icon name="route" size={20} />
                 </div>
                 <div className="text-left">
                   <p className="text-[14px] font-bold text-primary">
@@ -885,14 +953,13 @@ export default function SessionDetailPage() {
                   </p>
                 </div>
               </div>
-              <motion.svg
+              <motion.div
                 animate={{ rotate: mapExpanded ? 180 : 0 }}
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                className="h-5 w-5 text-secondary shrink-0"
-                fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+                className="text-secondary shrink-0"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </motion.svg>
+                <Icon name="chevron-down" size={20} />
+              </motion.div>
             </motion.button>
             <motion.div
               initial={false}
@@ -924,330 +991,22 @@ export default function SessionDetailPage() {
             disabled={!canEdit}
             className="w-full rounded-full border-2 border-red-200 dark:border-red-900/50 px-5 py-3 text-[13px] font-black text-red-500 dark:text-red-400 uppercase tracking-widest disabled:opacity-30 disabled:active:scale-100 active:scale-90"
           >
-            <svg className="h-4 w-4 inline mr-2 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
+            <Icon name="trash" size={16} className="inline mr-2 -mt-0.5" />
             {t("session.delete_session")}
           </motion.button>
         </div>
       </main>
 
-      {/* Add Incoming Modal */}
-      <AnimatePresence>
-        {showIncomingModal && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm"
-              onClick={() => setShowIncomingModal(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, y: 100 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 100 }}
-              transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              className="relative w-full max-w-lg bg-card rounded-t-[32px] sm:rounded-[32px] p-6 pb-24 max-h-[85vh] overflow-y-auto custom-scrollbar shadow-2xl"
-            >
-              <h2 className="text-xl font-extrabold text-primary mb-2">
-                {t("session.incoming_title")}
-              </h2>
-              <p className="text-[13px] font-medium text-secondary mb-6">
-                {t("session.incoming_desc")}
-              </p>
-
-              {editingIncoming && isSuperAdmin && (
-                <div className="mb-5">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1.5 block">
-                    {t("session.incoming_time")}
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={incomingTime}
-                    onChange={e => setIncomingTime(e.target.value)}
-                    className="w-full rounded-full bg-surface-hover px-4 py-2.5 text-[13px] font-bold text-primary outline-none ring-1 ring-transparent focus:ring-blue-500/30 transition-all [color-scheme:dark]"
-                  />
-                </div>
-              )}
-
-              {/* Customer Selection */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-[12px] font-black uppercase tracking-widest text-secondary">
-                    {t("session.select_customers")}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    {Object.values(customerAssignments).reduce((s, v) => s + v, 0) > 0 && (
-                      <span className="text-[11px] font-medium text-secondary">
-                        {Object.values(customerAssignments).reduce((s, v) => s + v, 0)} packages, {Object.keys(customerAssignments).filter(k => customerAssignments[k] > 0).length} customers
-                      </span>
-                    )}
-                    {!showQuickAdd && (
-                      <motion.button
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => { setShowQuickAdd(true); setQuickName(""); setQuickPhone(""); setQuickAddress(""); setQuickAddError(""); }}
-                        className="text-[11px] font-black text-blue-600 dark:text-blue-400 active:scale-90"
-                      >
-                        + New
-                      </motion.button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Quick Add Form */}
-                {showQuickAdd && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="overflow-hidden mb-3"
-                  >
-                    <div className="rounded-[24px] bg-surface-hover border border-card-border p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <p className="text-[12px] font-black uppercase tracking-widest text-secondary">
-                          Quick Add
-                        </p>
-                        <motion.button
-                          whileTap={{ scale: 0.85 }}
-                          onClick={() => { setShowQuickAdd(false); setQuickAddError(""); }}
-                          className="h-6 w-6 rounded-full bg-surface-hover flex items-center justify-center text-secondary active:scale-90 border border-card-border"
-                        >
-                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </motion.button>
-                      </div>
-                      <input
-                        type="text"
-                        value={quickName}
-                        onChange={e => setQuickName(e.target.value)}
-                        placeholder="Customer name *"
-                        className="w-full rounded-full bg-card px-4 py-2.5 text-[13px] font-bold text-primary outline-none ring-1 ring-transparent focus:ring-blue-500/30 transition-all"
-                      />
-                      <input
-                        type="text"
-                        value={quickPhone}
-                        onChange={e => setQuickPhone(e.target.value)}
-                        placeholder="Phone number"
-                        className="w-full rounded-full bg-card px-4 py-2.5 text-[13px] font-bold text-primary outline-none ring-1 ring-transparent focus:ring-blue-500/30 transition-all"
-                      />
-                      <input
-                        type="text"
-                        value={quickAddress}
-                        onChange={e => setQuickAddress(e.target.value)}
-                        placeholder="Address"
-                        className="w-full rounded-full bg-card px-4 py-2.5 text-[13px] font-bold text-primary outline-none ring-1 ring-transparent focus:ring-blue-500/30 transition-all"
-                      />
-                      {quickAddError && (
-                        <p className="text-[11px] font-bold text-red-500">{quickAddError}</p>
-                      )}
-                      <div className="flex gap-2">
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => { setShowQuickAdd(false); setQuickAddError(""); }}
-                          className="btn-outline flex-1 py-2 text-[12px]"
-                        >
-                          Cancel
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
-                          disabled={quickAddSaving || !quickName.trim()}
-                          onClick={async () => {
-                            if (!quickName.trim()) return;
-                            setQuickAddSaving(true);
-                            setQuickAddError("");
-                            try {
-                              const res = await fetch("/api/customers", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                  name: quickName.trim(),
-                                  phoneNumber: quickPhone.trim(),
-                                  address: quickAddress.trim(),
-                                }),
-                              });
-                              if (res.ok) {
-                                const data = await res.json();
-                                const newCustomer = data.customer;
-                                setAvailableCustomers(prev => [newCustomer, ...prev]);
-                                setCustomerAssignments(prev => ({ ...prev, [newCustomer.id]: 1 }));
-                                setShowQuickAdd(false);
-                              } else {
-                                const err = await res.json();
-                                setQuickAddError(err.message || err.error || "Failed to create customer");
-                              }
-                            } catch {
-                              setQuickAddError("Network error");
-                            } finally {
-                              setQuickAddSaving(false);
-                            }
-                          }}
-                          className="btn-primary flex-1 py-2 text-[12px]"
-                        >
-                          {quickAddSaving ? (
-                            <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                          ) : "Save"}
-                        </motion.button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Search */}
-                <div className="relative mb-3">
-                  <input
-                    type="text"
-                    value={customerSearch}
-                    onChange={(e) => setCustomerSearch(e.target.value)}
-                    placeholder="Search customers..."
-                    className="w-full rounded-full bg-surface-hover pl-10 pr-4 py-2.5 text-[13px] font-bold text-primary outline-none ring-1 ring-transparent focus:ring-blue-500/30 transition-all"
-                  />
-                  <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-
-                <div className="h-[400px] overflow-y-auto custom-scrollbar space-y-1">
-                  {filteredCustomers.length === 0 ? (
-                    <p className="text-[13px] text-secondary py-4 text-center">
-                      {customerSearch ? "No customers match your search" : "No customers available"}
-                    </p>
-                  ) : (
-                    filteredCustomers.map((c) => {
-                      const qty = customerAssignments[c.id] || 0;
-                      const checked = qty > 0;
-                      return (
-                        <motion.div
-                          key={c.id}
-                          layout
-                          transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                          onClick={() => {
-                            if (checked) {
-                              setCustomerAssignments(prev => ({ ...prev, [c.id]: 0 }));
-                            } else {
-                              setCustomerAssignments(prev => ({ ...prev, [c.id]: 1 }));
-                            }
-                          }}
-                          className="flex items-center gap-3 p-3 rounded-2xl bg-surface-hover active:scale-90 cursor-pointer transition-transform"
-                        >
-                          {/* Checkbox */}
-                          <motion.div
-                            layout
-                            transition={{ type: "spring", stiffness: 500, damping: 28 }}
-                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 ${
-                              checked
-                                ? 'bg-blue-600 border-blue-600 text-white'
-                                : 'border-secondary/30 bg-transparent'
-                            }`}
-                          >
-                            {checked && (
-                              <motion.svg
-                                initial={{ scale: 0, rotate: -45 }}
-                                animate={{ scale: 1, rotate: 0 }}
-                                transition={{ type: "spring", stiffness: 500, damping: 20 }}
-                                className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}
-                              >
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                              </motion.svg>
-                            )}
-                          </motion.div>
-
-                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-card text-secondary border border-card-border text-[12px] font-black">
-                            {c.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-bold text-primary truncate">
-                              {c.name}
-                            </p>
-                            <p className="text-[11px] font-medium text-secondary truncate">
-                              {c.address || c.phoneNumber || ""}
-                            </p>
-                          </div>
-
-                          {/* Quantity Input (shown when checked) */}
-                          {checked && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ type: "spring", stiffness: 400, damping: 22 }}
-                              onClick={e => e.stopPropagation()}
-                              className="flex items-center gap-1.5 shrink-0"
-                            >
-                              <motion.button
-                                whileTap={{ scale: 0.85 }}
-                                onClick={() => setCustomerAssignments(prev => ({ ...prev, [c.id]: Math.max(1, (prev[c.id] || 1) - 1) }))}
-                                className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-hover text-primary font-black border border-card-border active:scale-90"
-                              >
-                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
-                                </svg>
-                              </motion.button>
-                              <input
-                                type="number"
-                                min="1"
-                                value={qty}
-                                onChange={(e) => {
-                                  const v = Math.max(1, parseInt(e.target.value) || 0);
-                                  setCustomerAssignments(prev => ({ ...prev, [c.id]: v }));
-                                }}
-                                className="w-12 text-center text-[15px] font-black text-primary bg-transparent outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                              />
-                              <motion.button
-                                whileTap={{ scale: 0.85 }}
-                                onClick={() => setCustomerAssignments(prev => ({ ...prev, [c.id]: (prev[c.id] || 1) + 1 }))}
-                                className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-black active:scale-90"
-                              >
-                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                                </svg>
-                              </motion.button>
-                            </motion.div>
-                          )}
-                        </motion.div>
-                      );
-                    })
-                  )}
-                </div>
-
-                {Object.values(customerAssignments).reduce((s, v) => s + v, 0) > 0 && (
-                  <div className="flex items-center justify-between mt-3 px-1">
-                    <span className="text-[11px] font-medium text-secondary">
-                      {t("session.total")}
-                    </span>
-                    <span className="text-[15px] font-black text-emerald-600">
-                      {Object.values(customerAssignments).reduce((s, v) => s + v, 0)} packages
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3">
-                <motion.button
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setShowIncomingModal(false)}
-                  className="btn-outline flex-1"
-                >
-                  {t("action.cancel")}
-                </motion.button>
-                <motion.button
-                  whileTap={{ scale: 0.9 }}
-                  onClick={handleAddIncoming}
-                  disabled={savingIncoming || Object.values(customerAssignments).reduce((s, v) => s + v, 0) === 0 || !canEdit}
-                  className="btn-primary flex-1"
-                >
-                  {savingIncoming ? (
-                    <span className="h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                  ) : (
-                    t("action.save")
-                  )}
-                </motion.button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <IncomingModal
+        show={showIncomingModal}
+        onClose={() => { setShowIncomingModal(false); setEditingIncoming(null); }}
+        editingIncoming={editingIncoming}
+        sessionId={sessionId}
+        onSaved={fetchSession}
+        canEdit={canEdit}
+        isSuperAdmin={isSuperAdmin}
+        t={t}
+      />
 
       {/* Customer Details Popover */}
       <AnimatePresence>
@@ -1296,9 +1055,7 @@ export default function SessionDetailPage() {
                     onClick={() => setSelectedDelivery(null)}
                     className="shrink-0 ml-3 h-8 w-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white active:scale-90 hover:bg-white/30 transition-all"
                   >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <Icon name="close" size={16} />
                   </button>
                 </div>
               </div>
@@ -1308,9 +1065,7 @@ export default function SessionDetailPage() {
                 {selectedDelivery.customer.phoneNumber && (
                   <div className="flex items-center gap-3.5 rounded-2xl bg-surface-hover/60 px-4 py-3 border border-card-border/50">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
+                      <Icon name="phone" size={16} />
                     </div>
                     <div className="min-w-0">
                       <p className="text-[10px] font-black uppercase tracking-widest text-secondary mb-0.5">Phone</p>
@@ -1321,10 +1076,7 @@ export default function SessionDetailPage() {
                 {selectedDelivery.customer.address && (
                   <div className="flex items-center gap-3.5 rounded-2xl bg-surface-hover/60 px-4 py-3 border border-card-border/50">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
+                      <Icon name="map-pin" size={16} />
                     </div>
                     <div className="min-w-0">
                       <p className="text-[10px] font-black uppercase tracking-widest text-secondary mb-0.5">Address</p>
@@ -1335,9 +1087,7 @@ export default function SessionDetailPage() {
                 {selectedDelivery.incoming?.time && (
                   <div className="flex items-center gap-3.5 rounded-2xl bg-surface-hover/60 px-4 py-3 border border-card-border/50">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                      <Icon name="clock" size={16} />
                     </div>
                     <div className="min-w-0">
                       <p className="text-[10px] font-black uppercase tracking-widest text-secondary mb-0.5">Incoming Time</p>
@@ -1522,10 +1272,86 @@ export default function SessionDetailPage() {
   );
 }
 
+function CustomerGroupCard({
+  group,
+  isCombined,
+  dateLocale,
+  sessionData,
+  t,
+  children,
+  onClick,
+}: {
+  group: { customer: any; deliveries: Delivery[]; totalPackages: number };
+  isCombined: boolean;
+  dateLocale: string;
+  sessionData: any;
+  t: (key: string) => string;
+  children: React.ReactNode;
+  onClick?: () => void;
+}) {
+  const firstPkg = group.deliveries[0]?.packages;
+  const pkgCount = Number(firstPkg) || 1;
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 10 }}
+      onClick={onClick}
+      className={`rounded-[16px] bg-card border border-card-border p-4 shadow-sm mb-3 ${onClick ? 'cursor-pointer hover:bg-surface-hover transition-colors active:scale-90' : ''}`}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[13px] font-black">
+            {group.customer.name?.charAt(0)?.toUpperCase() || "?"}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <p className="text-[13px] font-bold text-primary truncate">
+                {group.customer.name}
+              </p>
+              {!isCombined && pkgCount > 1 && (
+                <span className="shrink-0 rounded-full bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 text-[10px] font-black text-blue-700 dark:text-blue-300">
+                  ×{pkgCount}
+                </span>
+              )}
+              {isCombined && (
+                <span className="shrink-0 rounded-full bg-purple-100 dark:bg-purple-900/40 px-2 py-0.5 text-[10px] font-black text-purple-700 dark:text-purple-300">
+                  ×{group.totalPackages}
+                </span>
+              )}
+            </div>
+            {group.customer.address && (
+              <p className="text-[11px] text-secondary truncate">
+                {group.customer.address}
+              </p>
+            )}
+            {isCombined && (
+              <div className="flex items-center gap-1 mt-1">
+                <Icon name="clock" size={10} strokeWidth={2.5} className="text-secondary/60" />
+                <p className="text-[10px] font-medium text-secondary/60">
+                  {group.deliveries.map((d: Delivery) => {
+                    const inc = sessionData.incomings.find((i: any) => i.id === d.incomingId);
+                    return inc ? new Date(inc.time).toLocaleTimeString(dateLocale, {
+                      hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta",
+                    }) : "";
+                  }).filter(Boolean).join(", ")}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+        {children}
+      </div>
+    </motion.div>
+  );
+}
+
 function DeliveryCard({
   delivery,
   locale,
   onStatusChange,
+  onRemove,
   onSelect,
   t,
   disabled,
@@ -1533,6 +1359,7 @@ function DeliveryCard({
   delivery: Delivery;
   locale: string;
   onStatusChange: (id: string, status: string) => void;
+  onRemove?: (id: string) => void;
   onSelect?: () => void;
   t: (key: string) => string;
   disabled?: boolean;
@@ -1604,7 +1431,7 @@ function DeliveryCard({
           </div>
         )}
         {delivery.status === "rescheduled" && (
-          <div className="flex shrink-0">
+          <div className="flex gap-1.5 shrink-0">
             <StatusButton
               label={t("session.done")}
               status="delivered"
@@ -1612,6 +1439,15 @@ function DeliveryCard({
               onClick={() => onStatusChange(delivery.id, "delivered")}
               disabled={disabled}
             />
+            {onRemove && (
+              <StatusButton
+                label={t("session.remove_rescheduled")}
+                status="remove"
+                color="red"
+                onClick={() => onRemove(delivery.id)}
+                disabled={disabled}
+              />
+            )}
           </div>
         )}
         {delivery.status !== "pending" && delivery.status !== "rescheduled" && (
@@ -1644,6 +1480,7 @@ function StatusButton({
     emerald: "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border-emerald-200 dark:border-emerald-800/50",
     orange: "bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/50 border-orange-200 dark:border-orange-800/50",
     purple: "bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 border-purple-200 dark:border-purple-800/50",
+    red: "bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/50 border-red-200 dark:border-red-800/50",
   };
 
   return (
