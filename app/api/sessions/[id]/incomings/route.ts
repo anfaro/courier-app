@@ -42,10 +42,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }
     }
 
+    const now = new Date();
+    const [sy, sm, sd] = existing[0].date.split("-").map(Number);
+    now.setFullYear(sy, sm - 1, sd);
     const [incoming] = await db.insert(incomings).values({
       id: generateId(),
       sessionId,
-      time: new Date(),
+      time: now,
       packages: String(packagesCount),
     }).returning();
 

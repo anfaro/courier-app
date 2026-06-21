@@ -39,7 +39,17 @@ export default function ProgressDashboard() {
   const dateLocale = locale === "id" ? "id-ID" : "en-GB";
 
   useEffect(() => {
-    Promise.all([fetchSessions(), fetchAnalytics()]);
+    fetchSessions();
+    fetchAnalytics();
+  }, []);
+
+  useEffect(() => {
+    function handleFocus() {
+      fetchSessions();
+      fetchAnalytics();
+    }
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, []);
 
   async function fetchSessions() {

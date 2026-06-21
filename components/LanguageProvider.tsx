@@ -376,6 +376,14 @@ export const translations: Translations = {
   "session.remove_rescheduled_confirm_title": { en: "Remove Rescheduled", id: "Hapus Jadwal Ulang" },
   "session.remove_rescheduled_confirm_msg": { en: "Remove this customer and its packages from the session? The incoming package count will be updated.", id: "Hapus pelanggan ini dan paketnya dari sesi? Jumlah paket incoming akan diperbarui." },
   "session.rescheduled_removed": { en: "Rescheduled deliveries removed!", id: "Pengiriman terjadwal ulang dihapus!" },
+  "session.add_customer": { en: "Add Customer", id: "Tambah Pelanggan" },
+  "session.remove_customer": { en: "Remove", id: "Hapus" },
+  "session.customer_rank": { en: "Customer Ranking", id: "Peringkat Pelanggan" },
+  "session.top_customers": { en: "Top Customers", id: "Pelanggan Teratas" },
+  "session.incoming_empty": { en: "No deliveries in this incoming", id: "Tidak ada pengiriman di incoming ini" },
+  "session.incoming_detail": { en: "Incoming Detail", id: "Detail Incoming" },
+  "session.incoming_progress": { en: "Incoming Progress", id: "Progres Incoming" },
+  "session.customers": { en: "customers", id: "pelanggan" },
 
   // Image Input
   "image.gallery": { en: "From Gallery", id: "Dari Galeri" },
