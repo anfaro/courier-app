@@ -25,20 +25,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const body = await req.json();
-    const { packages: packagesCount, customerAssignments } = body;
+    const { packages: packagesCount, customerAssignments = [] } = body;
+    const pkgCount = packagesCount ? Number(packagesCount) : 0;
 
-    if (!packagesCount || !customerAssignments || !Array.isArray(customerAssignments) || customerAssignments.length === 0) {
-      return NextResponse.json({ message: "Packages count and customer assignments are required" }, { status: 400 });
-    }
-
-    const totalAssigned = customerAssignments.reduce((sum: number, a: any) => sum + (Number(a.packages) || 0), 0);
-    if (totalAssigned !== Number(packagesCount)) {
-      return NextResponse.json({ message: "Sum of assigned packages must match total packages count" }, { status: 400 });
-    }
-
-    for (const a of customerAssignments) {
-      if (!a.customerId || !a.packages || Number(a.packages) < 1) {
-        return NextResponse.json({ message: "Each assignment must have customerId and packages >= 1" }, { status: 400 });
+    if (customerAssignments.length > 0) {
+      if (!Array.isArray(customerAssignments)) {
+        return NextResponse.json({ message: "Customer assignments must be an array" }, { status: 400 });
+      }
+      const totalAssigned = customerAssignments.reduce((sum: number, a: any) => sum + (Number(a.packages) || 0), 0);
+      if (totalAssigned !== pkgCount) {
+        return NextResponse.json({ message: "Sum of assigned packages must match total packages count" }, { status: 400 });
+      }
+      for (const a of customerAssignments) {
+        if (!a.customerId || !a.packages || Number(a.packages) < 1) {
+          return NextResponse.json({ message: "Each assignment must have customerId and packages >= 1" }, { status: 400 });
+        }
       }
     }
 
@@ -49,27 +50,29 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       id: generateId(),
       sessionId,
       time: now,
-      packages: String(packagesCount),
+      packages: String(pkgCount),
     }).returning();
 
-    const deliveryRows = customerAssignments.map((a: { customerId: string; packages: number }) => ({
-      id: generateId(),
-      sessionId,
-      incomingId: incoming.id,
-      customerId: a.customerId,
-      packages: String(a.packages),
-      status: "pending",
-    }));
+    let deliveryRows: any[] = [];
+    if (customerAssignments.length > 0) {
+      deliveryRows = customerAssignments.map((a: { customerId: string; packages: number }) => ({
+        id: generateId(),
+        sessionId,
+        incomingId: incoming.id,
+        customerId: a.customerId,
+        packages: String(a.packages),
+        status: "pending",
+      }));
+      await db.insert(sessionDeliveries).values(deliveryRows);
 
-    await db.insert(sessionDeliveries).values(deliveryRows);
-
-    const prevTotal = Number(existing[0].totalPackages) || 0;
-    await db.update(sessions)
-      .set({
-        totalPackages: String(prevTotal + Number(packagesCount)),
-        updatedAt: new Date(),
-      })
-      .where(eq(sessions.id, sessionId));
+      const prevTotal = Number(existing[0].totalPackages) || 0;
+      await db.update(sessions)
+        .set({
+          totalPackages: String(prevTotal + pkgCount),
+          updatedAt: new Date(),
+        })
+        .where(eq(sessions.id, sessionId));
+    }
 
     await logActivity({
       userId: token.id as string,

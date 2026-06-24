@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { users, passwordResetTokens } from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { logActivity, logError } from "@/lib/logger";
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await db.update(users).set({ password: hashedPassword }).where(eq(users.email, resetToken.email));
+    await db.update(users).set({ password: hashedPassword, tokenVersion: sql`token_version + 1` }).where(eq(users.email, resetToken.email));
     await db.delete(passwordResetTokens).where(eq(passwordResetTokens.id, resetToken.id));
 
     // Log the successful reset

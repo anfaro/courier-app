@@ -82,7 +82,7 @@ export default function DeliveryChart({ data }: { data: DayData[] }) {
                 <motion.rect
                   initial={{ height: 0, y: chartHeight }}
                   animate={{ height: totalH, y: chartHeight - totalH }}
-                  transition={{ type: "spring", stiffness: 200, damping: 20, delay: i * 0.03 }}
+                  transition={{ delay: Math.min(i, 10) * 0.02, duration: 0.3, ease: "easeOut" }}
                   x={x}
                   width={barWidth}
                   rx={4}
@@ -92,7 +92,7 @@ export default function DeliveryChart({ data }: { data: DayData[] }) {
                 <motion.rect
                   initial={{ height: 0, y: chartHeight }}
                   animate={{ height: delH, y: chartHeight - delH }}
-                  transition={{ type: "spring", stiffness: 200, damping: 20, delay: i * 0.03 + 0.05 }}
+                  transition={{ delay: Math.min(i, 10) * 0.02 + 0.04, duration: 0.3, ease: "easeOut" }}
                   x={x + barWidth + 2}
                   width={barWidth}
                   rx={4}

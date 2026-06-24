@@ -10,7 +10,8 @@ export default function AccessLogger() {
   const { data: session } = useSession();
 
   useEffect(() => {
-    // Only log page views, ignore API and static files
+    // Skip access logging in production to avoid cold-start overhead on serverless
+    if (process.env.NODE_ENV === "production") return;
     if (pathname.startsWith("/api") || pathname.startsWith("/_next")) return;
 
     const logPageAccess = async () => {

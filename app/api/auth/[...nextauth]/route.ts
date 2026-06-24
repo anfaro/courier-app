@@ -52,6 +52,7 @@ const handler = NextAuth({
             role: user.role,
             targetSystem: user.targetSystem,
             getGeocode: user.getGeocode,
+            tokenVersion: user.tokenVersion,
           };
         }
 
@@ -64,6 +65,7 @@ const handler = NextAuth({
   },
   session: {
     strategy: "jwt",
+    maxAge: 4 * 24 * 60 * 60, // 4 days
   },
   callbacks: {
     async jwt({ token, user, trigger, session }) {
@@ -76,6 +78,8 @@ const handler = NextAuth({
         token.targetSystem = user.targetSystem;
         // @ts-expect-error: getGeocode is not in the default user type
         token.getGeocode = user.getGeocode;
+        // @ts-expect-error: tokenVersion is not in the default user type
+        token.tokenVersion = user.tokenVersion;
       }
 
       if (trigger === "update") {
@@ -84,6 +88,24 @@ const handler = NextAuth({
         if (session?.targetSystem !== undefined) token.targetSystem = session.targetSystem;
         // @ts-expect-error: getGeocode
         if (session?.getGeocode !== undefined) token.getGeocode = session.getGeocode;
+      }
+
+      // Check token version — invalidate session if user's password was changed
+      // @ts-expect-error: tokenVersion is custom
+      if (token.id && token.tokenVersion) {
+        try {
+          const [userRow] = await db
+            .select({ tokenVersion: users.tokenVersion })
+            .from(users)
+            .where(eq(users.id, token.id as string))
+            .limit(1);
+          // @ts-expect-error: tokenVersion is custom
+          if (!userRow || userRow.tokenVersion !== token.tokenVersion) {
+            return {};
+          }
+        } catch {
+          // DB error — don't invalidate session
+        }
       }
 
       return token;

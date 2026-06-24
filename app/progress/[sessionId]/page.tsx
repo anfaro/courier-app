@@ -376,7 +376,7 @@ export default function SessionDashboard() {
                     key={inc.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05, type: "spring", stiffness: 400, damping: 25 }}
+                    transition={{ delay: Math.min(i, 10) * 0.03, duration: 0.2, ease: "easeOut" }}
                   >
                     <Link
                       href={`/progress/${sessionId}/${inc.id}`}

@@ -11,6 +11,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 import { useScrollLock } from "@/lib/useScrollLock";
 import SplitModal from "@/components/SplitModal";
+import QuickAddCustomer from "@/components/QuickAddCustomer";
+import CustomerGroupCard from "@/components/CustomerGroupCard";
+import StatusButton from "@/components/StatusButton";
 import Icon from "@/components/Icon";
 
 const MapClientWrapper = dynamic(
@@ -94,15 +97,12 @@ export default function IncomingDetailPage() {
   const [availableCustomers, setAvailableCustomers] = useState<Customer[]>([]);
   const [customerSearch, setCustomerSearch] = useState("");
   const [customerAssignments, setCustomerAssignments] = useState<Record<string, number>>({});
+  const [showCustomerSnackbar, setShowCustomerSnackbar] = useState(false);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [quickName, setQuickName] = useState("");
-  const [quickPhone, setQuickPhone] = useState("");
-  const [quickAddress, setQuickAddress] = useState("");
-  const [quickAddError, setQuickAddError] = useState("");
-  const [quickAddSaving, setQuickAddSaving] = useState(false);
   const [addingDeliveries, setAddingDeliveries] = useState(false);
+  const [pendingRemoveCustomerIds, setPendingRemoveCustomerIds] = useState<string[]>([]);
 
-  useScrollLock(selectedDelivery !== null || splitModal !== null);
+  useScrollLock(selectedDelivery !== null || splitModal !== null || showCustomerSnackbar);
 
   const dateLocale = locale === "id" ? "id-ID" : "en-GB";
 
@@ -140,7 +140,6 @@ export default function IncomingDetailPage() {
 
   // Load customers for add section
   useEffect(() => {
-    if (!loading) return;
     let cancelled = false;
     async function fetchCustomers() {
       try {
@@ -153,7 +152,7 @@ export default function IncomingDetailPage() {
     }
     fetchCustomers();
     return () => { cancelled = true; };
-  }, [loading]);
+  }, []);
 
   // Debounced search for customer add
   useEffect(() => {
@@ -361,22 +360,40 @@ export default function IncomingDetailPage() {
     const assignments = Object.entries(customerAssignments)
       .filter(([_, qty]) => qty > 0)
       .map(([customerId, packages]) => ({ customerId, packages }));
-    if (assignments.length === 0) return;
+    if (assignments.length === 0 && pendingRemoveCustomerIds.length === 0) return;
     setAddingDeliveries(true);
     try {
-      const res = await fetch(`/api/sessions/${sessionId}/incomings/${incomingId}/deliveries`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ customerAssignments: assignments }),
-      });
-      if (res.ok) {
+      let success = true;
+      if (assignments.length > 0) {
+        const res = await fetch(`/api/sessions/${sessionId}/incomings/${incomingId}/deliveries`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ customerAssignments: assignments }),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          showToast(err.message || "Failed to add deliveries", "error");
+          success = false;
+        }
+      }
+      if (success && pendingRemoveCustomerIds.length > 0) {
+        const pendingDeliveries = deliveries.filter(
+          d => pendingRemoveCustomerIds.includes(d.customerId) && d.status === "pending"
+        );
+        for (const d of pendingDeliveries) {
+          try {
+            const delRes = await fetch(`/api/sessions/${sessionId}/deliveries/${d.id}`, { method: "DELETE" });
+            if (!delRes.ok) success = false;
+          } catch { success = false; }
+        }
+      }
+      if (success) {
         showToast(t("session.incoming_saved").replace("[N]", String(assignments.length)), "success");
         setCustomerAssignments({});
         setCustomerSearch("");
+        setPendingRemoveCustomerIds([]);
+        setShowCustomerSnackbar(false);
         fetchData();
-      } else {
-        const err = await res.json();
-        showToast(err.message || "Failed to add deliveries", "error");
       }
     } catch {
       showToast("Failed to add deliveries", "error");
@@ -410,25 +427,12 @@ export default function IncomingDetailPage() {
     }
   }
 
-  async function handleRemoveCustomerPending(customerId: string) {
-    const pendingForCustomer = deliveries.filter(
-      d => d.customerId === customerId && d.status === "pending"
+  function handleToggleRemovePending(customerId: string) {
+    setPendingRemoveCustomerIds(prev =>
+      prev.includes(customerId)
+        ? prev.filter(id => id !== customerId)
+        : [...prev, customerId]
     );
-    if (pendingForCustomer.length === 0) return;
-    const confirmed = await askConfirmation({
-      title: t("session.remove_rescheduled_confirm_title"),
-      message: t("session.remove_rescheduled_confirm_msg"),
-      type: "danger",
-      confirmText: t("action.delete"),
-    });
-    if (!confirmed) return;
-    for (const d of pendingForCustomer) {
-      try {
-        await fetch(`/api/sessions/${sessionId}/deliveries/${d.id}`, { method: "DELETE" });
-      } catch {}
-    }
-    showToast(t("session.rescheduled_removed"), "success");
-    fetchData();
   }
 
   const total = useMemo(() => Number(incoming?.packages ?? "0") || 0, [incoming?.packages]);
@@ -461,6 +465,21 @@ export default function IncomingDetailPage() {
       }, {} as Record<string, { customer: Customer; deliveries: Delivery[]; totalPackages: number }>)
     ).sort((a, b) => a.customer.name.localeCompare(b.customer.name));
   }
+
+  const customerIdsWithPending = useMemo(
+    () => new Set(deliveries.filter(d => d.status === "pending").map(d => d.customerId)),
+    [deliveries]
+  );
+
+  const sessionDataProp = useMemo(() => ({
+    incomings: incoming ? [{ id: incomingId, time: incoming.time, packages: incoming.packages }] : []
+  }), [incomingId, incoming?.time, incoming?.packages]);
+
+  const handleCustomerCreated = useCallback((newCustomer: Customer) => {
+    setAvailableCustomers(prev => [newCustomer, ...prev]);
+    setAllCustomers(prev => [...prev, newCustomer]);
+    setCustomerAssignments(prev => ({ ...prev, [newCustomer.id]: 1 }));
+  }, []);
 
   const pendingDeliveries = useMemo(
     () => deliveries.filter((d) => d.status === "pending" && filterBySearch(d)),
@@ -617,256 +636,34 @@ export default function IncomingDetailPage() {
           </div>
         </motion.div>
 
-        {/* Customer Add Section */}
+        {/* Select Customers moved to snackbar */}
+
+        {/* Delivery List */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.1 }}
-          className="rounded-[24px] bg-card border border-card-border p-5 shadow-sm"
+          transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.15 }}
         >
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-[12px] font-black uppercase tracking-widest text-secondary">
-              {t("session.select_customers")}
-            </span>
-            <div className="flex items-center gap-2">
-              {Object.values(customerAssignments).reduce((s, v) => s + v, 0) > 0 && (
-                <span className="text-[11px] font-medium text-secondary">
-                  {Object.values(customerAssignments).reduce((s, v) => s + v, 0)} {t("session.packages")}
-                </span>
-              )}
-              {!showQuickAdd && (
-                <motion.button
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => { setShowQuickAdd(true); setQuickName(""); setQuickPhone(""); setQuickAddress(""); setQuickAddError(""); }}
-                  className="text-[11px] font-black text-blue-600 dark:text-blue-400 active:scale-90"
-                >
-                  + New
-                </motion.button>
-              )}
-            </div>
-          </div>
-
-          {/* Quick Add Form */}
-          {showQuickAdd && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden mb-4"
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-[14px] font-bold tracking-tight text-primary">
+              {t("session.delivery_list")}
+            </h2>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setShowCustomerSnackbar(true)}
+              className="text-[11px] font-black text-blue-600 dark:text-blue-400 active:scale-90"
             >
-              <div className="rounded-[20px] bg-surface-hover border border-card-border p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-[12px] font-black uppercase tracking-widest text-secondary">Quick Add</p>
-                  <motion.button
-                    whileTap={{ scale: 0.85 }}
-                    onClick={() => { setShowQuickAdd(false); setQuickAddError(""); }}
-                    className="h-6 w-6 rounded-full bg-surface-hover flex items-center justify-center text-secondary active:scale-90 border border-card-border"
-                  >
-                    <Icon name="close" size={12} />
-                  </motion.button>
-                </div>
-                <input
-                  type="text"
-                  value={quickName}
-                  onChange={e => setQuickName(e.target.value)}
-                  placeholder="Customer name *"
-                  className="w-full rounded-full bg-card px-4 py-2.5 text-[13px] font-bold text-primary outline-none ring-1 ring-transparent focus:ring-blue-500/30 transition-all"
-                />
-                <input
-                  type="text"
-                  value={quickPhone}
-                  onChange={e => setQuickPhone(e.target.value)}
-                  placeholder="Phone number"
-                  className="w-full rounded-full bg-card px-4 py-2.5 text-[13px] font-bold text-primary outline-none ring-1 ring-transparent focus:ring-blue-500/30 transition-all"
-                />
-                <input
-                  type="text"
-                  value={quickAddress}
-                  onChange={e => setQuickAddress(e.target.value)}
-                  placeholder="Address"
-                  className="w-full rounded-full bg-card px-4 py-2.5 text-[13px] font-bold text-primary outline-none ring-1 ring-transparent focus:ring-blue-500/30 transition-all"
-                />
-                {quickAddError && (
-                  <p className="text-[11px] font-bold text-red-500">{quickAddError}</p>
-                )}
-                <div className="flex gap-2">
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => { setShowQuickAdd(false); setQuickAddError(""); }}
-                    className="btn-outline flex-1 py-2 text-[12px]"
-                  >
-                    Cancel
-                  </motion.button>
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    disabled={quickAddSaving || !quickName.trim()}
-                    onClick={async () => {
-                      if (!quickName.trim()) return;
-                      setQuickAddSaving(true);
-                      setQuickAddError("");
-                      try {
-                        const res = await fetch("/api/customers", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            name: quickName.trim(),
-                            phoneNumber: quickPhone.trim(),
-                            address: quickAddress.trim(),
-                          }),
-                        });
-                        if (res.ok) {
-                          const data = await res.json();
-                          const newCustomer = data.customer;
-                          setAvailableCustomers(prev => [newCustomer, ...prev]);
-                          setCustomerAssignments(prev => ({ ...prev, [newCustomer.id]: 1 }));
-                          setShowQuickAdd(false);
-                        } else {
-                          const err = await res.json();
-                          setQuickAddError(err.message || err.error || "Failed to create customer");
-                        }
-                      } catch {
-                        setQuickAddError("Network error");
-                      } finally {
-                        setQuickAddSaving(false);
-                      }
-                    }}
-                    className="btn-primary flex-1 py-2 text-[12px]"
-                  >
-                    {quickAddSaving ? (
-                      <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                    ) : "Save"}
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Search */}
-          <div className="relative mb-3">
-            <input
-              type="text"
-              value={customerSearch}
-              onChange={(e) => setCustomerSearch(e.target.value)}
-              placeholder="Search customers..."
-              className="w-full rounded-full bg-surface-hover pl-10 pr-4 py-2.5 text-[13px] font-bold text-primary outline-none ring-1 ring-transparent focus:ring-blue-500/30 transition-all"
-            />
-            <Icon name="search" size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary" />
-          </div>
-
-          {/* Customer List */}
-          <div className="max-h-[300px] overflow-y-auto custom-scrollbar space-y-1 mb-4">
-            {availableCustomers.length === 0 ? (
-              <p className="text-[13px] text-secondary py-4 text-center">
-                {customerSearch ? "No customers match your search" : "No customers available"}
-              </p>
-            ) : (
-              availableCustomers.map((c) => {
-                const qty = customerAssignments[c.id] || 0;
-                const checked = qty > 0;
-                const hasPending = deliveries.some(d => d.customerId === c.id && d.status === "pending");
-                return (
-                  <div
-                    key={c.id}
-                    className="flex items-center gap-3 p-3 rounded-2xl bg-surface-hover active:scale-90 cursor-pointer transition-transform"
-                    onClick={() => {
-                      if (checked) {
-                        setCustomerAssignments(prev => ({ ...prev, [c.id]: 0 }));
-                      } else {
-                        setCustomerAssignments(prev => ({ ...prev, [c.id]: 1 }));
-                      }
-                    }}
-                  >
-                    <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 transition-all ${
-                      checked
-                        ? 'bg-blue-600 border-blue-600 text-white'
-                        : 'border-secondary/30 bg-transparent'
-                    }`}>
-                      {checked && (
-                        <Icon name="check" size={14} strokeWidth={3} />
-                      )}
-                    </div>
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-card text-secondary border border-card-border text-[12px] font-black">
-                      {c.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-bold text-primary truncate">{c.name}</p>
-                      <p className="text-[11px] font-medium text-secondary truncate">
-                        {c.address || c.phoneNumber || ""}
-                      </p>
-                    </div>
-                    {checked && (
-                      <div onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 shrink-0">
-                        <button
-                          onClick={() => setCustomerAssignments(prev => ({ ...prev, [c.id]: Math.max(1, (prev[c.id] || 1) - 1) }))}
-                          className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-hover text-primary font-black border border-card-border active:scale-90"
-                        >
-                          <Icon name="minus" size={12} />
-                        </button>
-                        <input
-                          type="number"
-                          min="1"
-                          value={qty}
-                          onChange={(e) => {
-                            const v = Math.max(1, parseInt(e.target.value) || 0);
-                            setCustomerAssignments(prev => ({ ...prev, [c.id]: v }));
-                          }}
-                          className="w-12 text-center text-[15px] font-black text-primary bg-transparent outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                        />
-                        <button
-                          onClick={() => setCustomerAssignments(prev => ({ ...prev, [c.id]: (prev[c.id] || 1) + 1 }))}
-                          className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-black active:scale-90"
-                        >
-                          <Icon name="plus" size={12} />
-                        </button>
-                      </div>
-                    )}
-                    {!checked && hasPending && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleRemoveCustomerPending(c.id); }}
-                        className="flex h-7 w-7 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/30 text-red-500 border border-red-200 dark:border-red-800/50 active:scale-90"
-                      >
-                        <Icon name="trash" size={12} />
-                      </button>
-                    )}
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            {Object.values(customerAssignments).reduce((s, v) => s + v, 0) > 0 && (
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={handleAddDeliveries}
-                disabled={addingDeliveries}
-                className="btn-primary flex-1"
-              >
-                {addingDeliveries ? (
-                  <span className="h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                ) : (
-                  <>
-                    <Icon name="plus" size={16} className="inline mr-1 -mt-0.5" />
-                    {t("session.add_customer")}
-                  </>
-                )}
-              </motion.button>
-            )}
+              + {t("session.add_edit_pending")}
+            </motion.button>
           </div>
         </motion.div>
 
-        {/* Delivery List */}
         {deliveries.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.15 }}
           >
-            <h2 className="text-[14px] font-bold tracking-tight text-primary mb-3">
-              {t("session.delivery_list")}
-            </h2>
-
             {/* Delivery Search */}
             <div className="relative mb-3">
               <input
@@ -908,33 +705,29 @@ export default function IncomingDetailPage() {
             {/* Tab Content */}
             <div className="h-[450px]">
               {activeDeliveryTab === "pending" && (
-                <div className="h-full rounded-2xl p-[2px] bg-gradient-to-r from-blue-500 to-emerald-500">
-                  <div className="h-full rounded-2xl bg-card">
-                    {pendingDeliveries.length > 0 ? (
-                      <div className="h-full overflow-y-auto p-3 [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
-                        {combinedCustomerList.map((group) => {
+                <div className="h-full overflow-y-auto [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
+                  {pendingDeliveries.length > 0 ? (
+                    <div className="p-1 space-y-1">
+                      {combinedCustomerList.map((group) => {
                           const isCombined = group.deliveries.length > 1;
                           const first = group.deliveries[0];
                           return (
-                            <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} dateLocale={dateLocale} sessionData={{ incomings: [{ id: incomingId, time: incoming.time, packages: incoming.packages }] }} t={t} onClick={!isCombined ? () => setSelectedDelivery(first) : undefined}>
-                              <div className="flex gap-1.5 shrink-0">
-                                <StatusButton
+                            <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} sessionData={sessionDataProp} status="pending" onClick={!isCombined ? () => setSelectedDelivery(first) : undefined}>
+                              <div className="flex gap-2 w-full">
+                                <StatusButton className="flex-1"
                                   label={t("session.done")}
-                                  status="delivered"
                                   color="emerald"
                                   onClick={() => isCombined ? handleBulkStatusChange(group.customer.id, "delivered") : handleStatusChange(first.id, "delivered")}
                                   disabled={!canEdit}
                                 />
-                                <StatusButton
+                                <StatusButton className="flex-1"
                                   label={t("session.return")}
-                                  status="returned"
                                   color="orange"
                                   onClick={() => isCombined ? handleBulkStatusChange(group.customer.id, "returned") : handleStatusChange(first.id, "returned")}
                                   disabled={!canEdit}
                                 />
-                                <StatusButton
+                                <StatusButton className="flex-1"
                                   label={t("session.reschedule")}
-                                  status="rescheduled"
                                   color="purple"
                                   onClick={() => isCombined ? handleBulkStatusChange(group.customer.id, "rescheduled") : handleStatusChange(first.id, "rescheduled")}
                                   disabled={!canEdit}
@@ -945,62 +738,56 @@ export default function IncomingDetailPage() {
                         })}
                       </div>
                     ) : (
-                      <div className="h-full flex items-center justify-center p-6">
+                      <div className="flex items-center justify-center py-8">
                         <p className="text-[13px] font-bold text-emerald-600 dark:text-emerald-400">
                           {deliverySearch.trim() ? "No matches found" : t("session.all_processed")}
                         </p>
                       </div>
                     )}
                   </div>
-                </div>
               )}
 
               {activeDeliveryTab === "returned" && (
-                <div className="h-full rounded-2xl p-[2px] bg-gradient-to-r from-orange-500 to-red-500">
-                  <div className="h-full rounded-2xl bg-card">
-                    <div className="h-full overflow-y-auto p-3 [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
-                      {returnedDeliveries.length > 0 ? (
-                        combinedReturnedList.map((group) => {
+                <div className="h-full overflow-y-auto [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
+                  {returnedDeliveries.length > 0 ? (
+                    <div className="p-1 space-y-1">
+                      {combinedReturnedList.map((group) => {
                           const isCombined = group.deliveries.length > 1;
                           return (
-                            <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} dateLocale={dateLocale} sessionData={{ incomings: [{ id: incomingId, time: incoming.time, packages: incoming.packages }] }} t={t}>
+                            <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} sessionData={sessionDataProp} status="returned">
                               <span className="text-[10px] font-black uppercase tracking-wider shrink-0 text-orange-600 dark:text-orange-400">
                                 {t("session.returned")}
                               </span>
                             </CustomerGroupCard>
                           );
-                        })
-                      ) : (
-                        <div className="flex items-center justify-center py-8">
-                          <p className="text-[13px] font-bold text-secondary">{t("session.all_processed")}</p>
-                        </div>
-                      )}
+                        })}
                     </div>
-                  </div>
+                  ) : (
+                    <div className="flex items-center justify-center py-8">
+                      <p className="text-[13px] font-bold text-secondary">{t("session.all_processed")}</p>
+                    </div>
+                  )}
                 </div>
               )}
 
               {activeDeliveryTab === "rescheduled" && (
-                <div className="h-full rounded-2xl p-[2px] bg-gradient-to-r from-purple-500 to-indigo-500">
-                  <div className="h-full rounded-2xl bg-card">
-                    <div className="h-full overflow-y-auto p-3 [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
-                      {rescheduledDeliveries.length > 0 ? (
-                        combinedRescheduledList.map((group) => {
-                          const isCombined = group.deliveries.length > 1;
-                          const first = group.deliveries[0];
+                <div className="h-full overflow-y-auto [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
+                  {rescheduledDeliveries.length > 0 ? (
+                    <div className="p-1 space-y-1">
+                      {combinedRescheduledList.map((group) => {
+                        const isCombined = group.deliveries.length > 1;
+                        const first = group.deliveries[0];
                           return (
-                            <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} dateLocale={dateLocale} sessionData={{ incomings: [{ id: incomingId, time: incoming.time, packages: incoming.packages }] }} t={t}>
-                              <div className="flex gap-1.5 shrink-0">
-                                <StatusButton
+                            <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} sessionData={sessionDataProp} status="rescheduled">
+                              <div className="flex gap-2 w-full">
+                                <StatusButton className="flex-1"
                                   label={t("session.done")}
-                                  status="delivered"
                                   color="emerald"
                                   onClick={() => isCombined ? handleBulkStatusChange(group.customer.id, "delivered") : handleStatusChange(first.id, "delivered")}
                                   disabled={!canEdit}
                                 />
-                                <StatusButton
+                                <StatusButton className="flex-1"
                                   label={t("session.remove_rescheduled")}
-                                  status="remove"
                                   color="red"
                                   onClick={() => isCombined ? handleBulkRemove(group.customer.id) : handleRemoveRescheduled(first.id)}
                                   disabled={!canEdit}
@@ -1008,19 +795,18 @@ export default function IncomingDetailPage() {
                               </div>
                             </CustomerGroupCard>
                           );
-                        })
-                      ) : (
-                        <div className="flex items-center justify-center py-8">
-                          <p className="text-[13px] font-bold text-secondary">{t("session.all_processed")}</p>
-                        </div>
-                      )}
-                    </div>
+                        })}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center py-8">
+                        <p className="text-[13px] font-bold text-secondary">{t("session.all_processed")}</p>
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
 
-            {/* Delivered section — collapsible */}
+                {/* Delivered section — collapsible */}
             {deliveredDeliveries.length > 0 && (
               <div className="mt-4">
                 <motion.button
@@ -1042,9 +828,9 @@ export default function IncomingDetailPage() {
                 <AnimatePresence initial={false}>
                   {deliveredExpanded && (
                     <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
+                      initial={{ maxHeight: 0, opacity: 0 }}
+                      animate={{ maxHeight: 2000, opacity: 1 }}
+                      exit={{ maxHeight: 0, opacity: 0 }}
                       transition={{ type: "spring", stiffness: 300, damping: 25 }}
                       className="overflow-hidden"
                     >
@@ -1052,7 +838,7 @@ export default function IncomingDetailPage() {
                         {combinedDeliveredList.map((group) => {
                           const isCombined = group.deliveries.length > 1;
                           return (
-                            <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} dateLocale={dateLocale} sessionData={{ incomings: [{ id: incomingId, time: incoming.time, packages: incoming.packages }] }} t={t}>
+                            <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} sessionData={sessionDataProp} status="delivered">
                               <span className="text-[10px] font-black uppercase tracking-wider shrink-0 text-emerald-600 dark:text-emerald-400">
                                 {t("session.delivered")}
                               </span>
@@ -1302,112 +1088,181 @@ export default function IncomingDetailPage() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Select Customers Snackbar */}
+      <AnimatePresence>
+        {showCustomerSnackbar && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+              onClick={() => { setShowCustomerSnackbar(false); setShowQuickAdd(false); }}
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="fixed bottom-0 left-0 right-0 z-50 max-h-[85vh] overflow-y-auto"
+            >
+              <div className="mx-auto max-w-3xl p-4">
+                <div className="rounded-[24px] bg-card border border-card-border p-5 shadow-xl">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-[12px] font-black uppercase tracking-widest text-secondary">
+                      {t("session.select_customers")}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {Object.values(customerAssignments).reduce((s, v) => s + v, 0) > 0 && (
+                        <span className="text-[11px] font-medium text-secondary">
+                          {Object.values(customerAssignments).reduce((s, v) => s + v, 0)} {t("session.packages")}
+                        </span>
+                      )}
+                      {!showQuickAdd && (
+                        <motion.button
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => setShowQuickAdd(true)}
+                          className="text-[11px] font-black text-blue-600 dark:text-blue-400 active:scale-90"
+                        >
+                          + New
+                        </motion.button>
+                      )}
+                    </div>
+                  </div>
+
+                  <QuickAddCustomer
+                    show={showQuickAdd}
+                    onClose={() => setShowQuickAdd(false)}
+                    onCustomerCreated={handleCustomerCreated}
+                  />
+
+                  {/* Search */}
+                  <div className="relative mb-3">
+                    <input
+                      type="text"
+                      value={customerSearch}
+                      onChange={(e) => setCustomerSearch(e.target.value)}
+                      placeholder="Search customers..."
+                      className="w-full rounded-full bg-surface-hover pl-10 pr-4 py-2.5 text-[13px] font-bold text-primary outline-none ring-1 ring-transparent focus:ring-blue-500/30 transition-all"
+                    />
+                    <Icon name="search" size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary" />
+                  </div>
+
+                  {/* Customer List */}
+                  <div className="max-h-[300px] overflow-y-auto custom-scrollbar space-y-1 mb-4">
+                    {availableCustomers.length === 0 ? (
+                      <p className="text-[13px] text-secondary py-4 text-center">
+                        {customerSearch ? "No customers match your search" : "No customers available"}
+                      </p>
+                    ) : (
+                      availableCustomers.map((c) => {
+                        const qty = customerAssignments[c.id] || 0;
+                        const checked = qty > 0;
+                        const hasPending = customerIdsWithPending.has(c.id);
+                        return (
+                          <div
+                            key={c.id}
+                            className="flex items-center gap-3 p-3 rounded-2xl bg-surface-hover active:scale-90 cursor-pointer transition-transform"
+                            onClick={() => {
+                              if (checked) {
+                                setCustomerAssignments(prev => ({ ...prev, [c.id]: 0 }));
+                              } else {
+                                setCustomerAssignments(prev => ({ ...prev, [c.id]: 1 }));
+                              }
+                            }}
+                          >
+                            <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 transition-all ${
+                              checked
+                                ? 'bg-blue-600 border-blue-600 text-white'
+                                : 'border-secondary/30 bg-transparent'
+                            }`}>
+                              {checked && (
+                                <Icon name="check" size={14} strokeWidth={3} />
+                              )}
+                            </div>
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-card text-secondary border border-card-border text-[12px] font-black">
+                              {c.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[13px] font-bold text-primary truncate">{c.name}</p>
+                              <p className="text-[11px] font-medium text-secondary truncate">
+                                {c.address || c.phoneNumber || ""}
+                              </p>
+                            </div>
+                            {checked && (
+                              <div onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 shrink-0">
+                                <button
+                                  onClick={() => setCustomerAssignments(prev => ({ ...prev, [c.id]: Math.max(1, (prev[c.id] || 1) - 1) }))}
+                                  className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-hover text-primary font-black border border-card-border active:scale-90"
+                                >
+                                  <Icon name="minus" size={12} />
+                                </button>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={qty}
+                                  onChange={(e) => {
+                                    const v = Math.max(1, parseInt(e.target.value) || 0);
+                                    setCustomerAssignments(prev => ({ ...prev, [c.id]: v }));
+                                  }}
+                                  className="w-12 text-center text-[15px] font-black text-primary bg-transparent outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                />
+                                <button
+                                  onClick={() => setCustomerAssignments(prev => ({ ...prev, [c.id]: (prev[c.id] || 1) + 1 }))}
+                                  className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-black active:scale-90"
+                                >
+                                  <Icon name="plus" size={12} />
+                                </button>
+                              </div>
+                            )}
+                            {!checked && hasPending && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleToggleRemovePending(c.id); }}
+                                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider border transition-all active:scale-90 ${
+                                  pendingRemoveCustomerIds.includes(c.id)
+                                    ? 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-400 dark:border-red-500'
+                                    : 'bg-red-50 dark:bg-red-950/30 text-red-500 border-red-200 dark:border-red-800/50'
+                                }`}
+                              >
+                                <Icon name="trash" size={10} />
+                                {pendingRemoveCustomerIds.includes(c.id) && "will remove"}
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3">
+                    {(Object.values(customerAssignments).reduce((s, v) => s + v, 0) > 0 || pendingRemoveCustomerIds.length > 0) && (
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={handleAddDeliveries}
+                        disabled={addingDeliveries}
+                        className="btn-primary flex-1"
+                      >
+                        {addingDeliveries ? (
+                          <span className="h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                        ) : (
+                          <>
+                            <Icon name="plus" size={16} className="inline mr-1 -mt-0.5" />
+                            {pendingRemoveCustomerIds.length > 0 ? t("session.save_changes") : t("session.add_customer")}
+                          </>
+                        )}
+                      </motion.button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-function CustomerGroupCard({
-  group,
-  isCombined,
-  dateLocale,
-  sessionData,
-  t,
-  children,
-  onClick,
-}: {
-  group: { customer: Customer; deliveries: Delivery[]; totalPackages: number };
-  isCombined: boolean;
-  dateLocale: string;
-  sessionData: any;
-  t: (key: string) => string;
-  children: React.ReactNode;
-  onClick?: () => void;
-}) {
-  const firstPkg = group.deliveries[0]?.packages;
-  const pkgCount = Number(firstPkg) || 1;
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 10 }}
-      onClick={onClick}
-      className={`rounded-[16px] bg-card border border-card-border p-4 shadow-sm mb-3 ${onClick ? 'cursor-pointer hover:bg-surface-hover transition-colors active:scale-90' : ''}`}
-    >
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[13px] font-black">
-            {group.customer.name?.charAt(0)?.toUpperCase() || "?"}
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <p className="text-[13px] font-bold text-primary truncate">
-                {group.customer.name}
-              </p>
-              {!isCombined && pkgCount > 1 && (
-                <span className="shrink-0 rounded-full bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 text-[10px] font-black text-blue-700 dark:text-blue-300">
-                  ×{pkgCount}
-                </span>
-              )}
-              {isCombined && (
-                <span className="shrink-0 rounded-full bg-purple-100 dark:bg-purple-900/40 px-2 py-0.5 text-[10px] font-black text-purple-700 dark:text-purple-300">
-                  ×{group.totalPackages}
-                </span>
-              )}
-            </div>
-            {group.customer.address && (
-              <p className="text-[11px] text-secondary truncate">
-                {group.customer.address}
-              </p>
-            )}
-            {isCombined && (
-              <div className="flex items-center gap-1 mt-1">
-                <Icon name="clock" size={10} strokeWidth={2.5} className="text-secondary/60" />
-                <p className="text-[10px] font-medium text-secondary/60">
-                  {group.deliveries.map((d: Delivery) => {
-                    const inc = sessionData.incomings.find((i: any) => i.id === d.incomingId);
-                    return inc ? new Date(inc.time).toLocaleTimeString(dateLocale, {
-                      hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta",
-                    }) : "";
-                  }).filter(Boolean).join(", ")}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-        {children}
-      </div>
-    </motion.div>
-  );
-}
 
-function StatusButton({
-  label,
-  status,
-  color,
-  onClick,
-  disabled,
-}: {
-  label: string;
-  status: string;
-  color: string;
-  onClick: () => void;
-  disabled?: boolean;
-}) {
-  const colorMap: Record<string, string> = {
-    emerald: "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border-emerald-200 dark:border-emerald-800/50",
-    orange: "bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/50 border-orange-200 dark:border-orange-800/50",
-    purple: "bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 border-purple-200 dark:border-purple-800/50",
-    red: "bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/50 border-red-200 dark:border-red-800/50",
-  };
-
-  return (
-    <motion.button
-      whileTap={disabled ? undefined : { scale: 0.85 }}
-      onClick={(e) => { if (disabled) return; e.stopPropagation(); onClick(); }}
-      className={`px-2.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider border transition-all ${colorMap[color] || ""} ${disabled ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'active:scale-90'}`}
-    >
-      {label}
-    </motion.button>
-  );
-}

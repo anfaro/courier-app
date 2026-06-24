@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
 import { users } from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
 
@@ -40,6 +40,7 @@ export async function PATCH(
       }
       const hashedPassword = await bcrypt.hash(password, 10);
       updateData.password = hashedPassword;
+      updateData.tokenVersion = sql`token_version + 1`;
     }
 
     if (Object.keys(updateData).length === 0) {

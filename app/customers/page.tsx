@@ -12,7 +12,7 @@ import { useConfirmation } from "@/components/ConfirmationProvider";
 import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
 import Icon from "@/components/Icon";
 
-const pageCache = new Map<string, { customers: any[]; hasMore: boolean; ts: number }>();
+const pageCache = new Map<string, { customers: any[]; hasMore: boolean; visitsMap?: Record<string, string>; ts: number }>();
 const PAGE_CACHE_TTL = 60000;
 
 const avatarGradients = [
@@ -61,6 +61,7 @@ function CustomersListContent() {
     if (cached && Date.now() - cached.ts < PAGE_CACHE_TTL) {
       setAllCustomers(cached.customers);
       setHasMore(cached.hasMore);
+      if (cached.visitsMap) setVisitsMap(cached.visitsMap);
       setIsLoading(false);
       setFetchError("");
       return;
@@ -80,13 +81,15 @@ function CustomersListContent() {
         setHasMore(false);
       } else {
         const cfParam = clusterFilter !== "all" ? `&clusterId=${clusterFilter}` : "";
-        const url = `/api/customers?limit=${pageSize}&offset=${p * pageSize}${cfParam}&sort=${sortBy}`;
+        const url = `/api/customers-page?limit=${pageSize}&offset=${p * pageSize}${cfParam}&sort=${sortBy}`;
         const res = await fetchWithTimeout(url, {}, 60000);
         if (!res.ok) throw new Error(`Server error (${res.status})`);
         const data = await res.json();
         const list = data.customers || [];
         const more = data.hasMore ?? false;
-        pageCache.set(cacheKey, { customers: list, hasMore: more, ts: Date.now() });
+        if (data.visitsMap) setVisitsMap(data.visitsMap);
+        if (data.clusters && allClusters.length === 0) setAllClusters(data.clusters);
+        pageCache.set(cacheKey, { customers: list, hasMore: more, visitsMap: data.visitsMap, ts: Date.now() });
         setAllCustomers(list);
         setHasMore(more);
       }
@@ -131,25 +134,12 @@ function CustomersListContent() {
   }, [query, page, pageSize, clusterFilter, sortBy]);
 
   useEffect(() => {
+    // Fetch clusters once for the filter dropdown
     fetch("/api/clusters?limit=200&offset=0")
       .then(r => r.json())
       .then(data => setAllClusters(data.clusters || []))
       .catch(() => {});
   }, []);
-
-  useEffect(() => {
-    if (allCustomers.length === 0) return;
-    fetch("/api/visits")
-      .then(r => r.json())
-      .then(data => {
-        const map: Record<string, string> = {};
-        (data.visits || []).forEach((v: any) => {
-          map[v.customer_id || v.customerId] = v.visited_at || v.visitedAt;
-        });
-        setVisitsMap(map);
-      })
-      .catch(() => {});
-  }, [allCustomers]);
 
   const toggleSelection = (id: string) => {
     setSelectedIds((prev) =>
@@ -450,7 +440,7 @@ function CustomersListContent() {
                   key={customer.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 25, delay: i * 0.035 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25, delay: Math.min(i, 10) * 0.025 }}
                   onClick={() => isManagementMode && toggleSelection(customer.id)}
                   className={`group relative flex items-center justify-between p-4 transition-all sm:p-5 ${
                     isManagementMode && selectedIds.includes(customer.id) 

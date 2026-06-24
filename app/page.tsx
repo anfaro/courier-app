@@ -26,53 +26,28 @@ export default function HomePage() {
   });
 
   useEffect(() => {
-    async function fetchStats() {
+    async function fetchDashboard() {
       try {
-        const [custRes, clustRes, nameRes] = await Promise.all([
-          fetch("/api/customers?limit=1&offset=0"),
-          fetch("/api/clusters?limit=1&offset=0"),
-          fetch("/api/customers?limit=1000&offset=0"),
-        ]);
-        if (custRes.ok) {
-          const custData = await custRes.json();
-          setStats(prev => ({ ...prev, totalCustomers: custData.total ?? custData.customers?.length ?? 0 }));
-        }
-        if (clustRes.ok) {
-          const clustData = await clustRes.json();
-          setStats(prev => ({ ...prev, totalClusters: clustData.total ?? clustData.clusters?.length ?? 0 }));
-        }
-        if (nameRes.ok) {
-          const nameData = await nameRes.json();
-          const allCustomers = nameData.customers || [];
-          const visitRes = await fetch("/api/visits");
-          if (visitRes.ok) {
-            const { visits: visitList } = await visitRes.json();
-            if (visitList && visitList.length > 0) {
-              const customerMap = new Map(allCustomers.map((c: any) => [c.id, c.name]));
-              const enriched = (visitList as any[])
-                .sort((a, b) => new Date(b.visited_at || b.visitedAt).getTime() - new Date(a.visited_at || a.visitedAt).getTime())
-                .slice(0, 5)
-                .map((v: any) => ({
-                  ...v,
-                  customerName: v.customer_name || customerMap.get(v.customer_id || v.customerId) || "Unknown",
-                }));
-              setRecentVisits(enriched);
-            }
+        const res = await fetch("/api/dashboard");
+        if (res.ok) {
+          const data = await res.json();
+          setStats({ totalCustomers: data.totalCustomers, totalClusters: data.totalClusters });
+          setRecentVisits(data.recentVisits || []);
+          if (data.earnings) {
+            setEarningsData({
+              totalEarnings: data.earnings.totalEarnings,
+              totalDelivered: data.earnings.totalDelivered,
+            });
           }
         }
-        const earnRes = await fetch("/api/earnings");
-        if (earnRes.ok) {
-          const earnData = await earnRes.json();
-          setEarningsData({ totalEarnings: earnData.totalEarnings, totalDelivered: earnData.totalDelivered });
-        }
       } catch (err) {
-        console.warn("Failed to fetch home stats", err);
+        console.warn("Failed to fetch dashboard data", err);
       } finally {
         setStatsLoaded(true);
         setEarningsLoading(false);
       }
     }
-    fetchStats();
+    fetchDashboard();
   }, []);
 
   return (

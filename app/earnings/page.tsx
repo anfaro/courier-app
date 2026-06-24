@@ -284,7 +284,7 @@ export default function EarningsPage() {
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${pct}%` }}
-                            transition={{ delay: i * 0.04, type: "spring", stiffness: 150, damping: 18 }}
+                            transition={{ delay: Math.min(i, 10) * 0.02, duration: 0.3, ease: "easeOut" }}
                             className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500"
                           />
                         </div>
@@ -310,7 +310,7 @@ export default function EarningsPage() {
                       key={day.date}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.03 }}
+                      transition={{ delay: Math.min(i, 10) * 0.02, duration: 0.2, ease: "easeOut" }}
                       className="flex items-center justify-between rounded-[20px] bg-card border border-card-border p-4 shadow-sm"
                     >
                       <div>

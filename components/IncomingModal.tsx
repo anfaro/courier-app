@@ -181,7 +181,6 @@ export default function IncomingModal({
       .map(([customerId, packages]) => ({ customerId, packages }));
     const count = assignments.reduce((sum, a) => sum + a.packages, 0);
     const isEdit = editingIncoming !== null;
-    if (!isEdit && count < 1) return;
 
     setSavingIncoming(true);
     try {
@@ -204,6 +203,9 @@ export default function IncomingModal({
         onClose();
         onSaved();
         showToast(t("session.incoming_saved").replace("[N]", String(count)), "success");
+      } else {
+        const err = await res.json();
+        showToast(err.message || err.error || "Failed to save incoming", "error");
       }
     } catch {
       showToast(t("session.incoming_error"), "error");
@@ -497,7 +499,7 @@ export default function IncomingModal({
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={handleSave}
-                disabled={savingIncoming || (editingIncoming === null && Object.values(customerAssignments).reduce((s, v) => s + v, 0) === 0) || !canEdit}
+                disabled={savingIncoming || !canEdit}
                 className="btn-primary flex-1"
               >
                 {savingIncoming ? (

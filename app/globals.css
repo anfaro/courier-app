@@ -56,18 +56,10 @@ body {
 .text-secondary,
 .btn-outline,
 .btn-secondary,
-.btn-danger,
-header,
-main,
-section,
-article,
-svg,
-path {
+.btn-danger {
   transition: background-color 0.3s ease-out, 
               color 0.3s ease-out, 
-              border-color 0.3s ease-out, 
-              fill 0.3s ease-out,
-              stroke 0.3s ease-out;
+              border-color 0.3s ease-out;
 }
 
 /* Disable transitions for specific elements that shouldn't have them (like logo paths) */

@@ -310,7 +310,7 @@ function ClustersListContent() {
                   key={cluster.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 25, delay: i * 0.035 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25, delay: Math.min(i, 10) * 0.025 }}
                   onClick={() => isManagementMode && toggleSelection(cluster.id)}
                   className={`group relative flex items-center justify-between p-5 transition-all ${
                     isManagementMode && selectedIds.includes(cluster.id)
