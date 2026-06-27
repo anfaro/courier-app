@@ -5,7 +5,10 @@ import { logError } from "@/lib/logger";
 import { promises as fs } from "fs";
 import path from "path";
 
-const SETTINGS_PATH = path.join(process.cwd(), "db-settings.json");
+export const runtime = "nodejs";
+
+const DATA_DIR = process.env.VERCEL ? "/tmp/data" : path.join(process.cwd(), "data");
+const SETTINGS_PATH = path.join(DATA_DIR, "db-settings.json");
 
 async function readSettings(): Promise<Record<string, string>> {
   try {
@@ -17,6 +20,7 @@ async function readSettings(): Promise<Record<string, string>> {
 }
 
 async function writeSettings(settings: Record<string, string>) {
+  await fs.mkdir(DATA_DIR, { recursive: true });
   await fs.writeFile(SETTINGS_PATH, JSON.stringify(settings, null, 2), "utf-8");
 }
 

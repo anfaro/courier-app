@@ -7,6 +7,8 @@ import { logActivity, logError } from "@/lib/logger";
 import { sql } from "drizzle-orm";
 import { gzipSync } from "zlib";
 
+export const runtime = "nodejs";
+
 const BACKUP_VERSION = 6;
 
 const ALL_TABLES = ["users", "clusters", "customers", "customerClusters", "sessions", "incomings", "sessionDeliveries", "customerVisits", "savedRoutes", "passwordResetTokens"] as const;

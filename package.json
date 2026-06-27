@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "migrate:images": "node node_modules/tsx/dist/cli.mjs scripts/migrate-images.ts"
@@ -14,11 +15,9 @@
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
-    "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.2",
     "framer-motion": "^12.38.0",
     "html5-qrcode": "^2.3.8",
-    "jimp": "^1.6.1",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
     "nanoid": "^5.1.11",
@@ -36,10 +35,14 @@
     "@types/node": "^25.7.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.6",
     "tailwindcss": "^4.3.0",
     "tsx": "^4.22.3",
-    "typescript": "^6.0.3"
+    "typescript": "^5.9.3"
+  },
+  "allowScripts": {
+    "@img/sharp-wasm32@0.35.2": true
   }
 }

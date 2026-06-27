@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "app/api/admin/geocode/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/admin/system/backup/route.ts": {
+      "maxDuration": 120
+    },
+    "app/api/dashboard/route.ts": {
+      "maxDuration": 30
+    }
+  }
+}

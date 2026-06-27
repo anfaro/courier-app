@@ -390,6 +390,12 @@ export const translations: Translations = {
   // Image Input
   "image.gallery": { en: "From Gallery", id: "Dari Galeri" },
   "image.camera": { en: "Take Photo", id: "Ambil Foto" },
+
+  // PWA
+  "pwa.install_title": { en: "Install Courier App", id: "Pasang Aplikasi Kurir" },
+  "pwa.install_desc": { en: "Add to your home screen for quick access", id: "Tambahkan ke layar utama untuk akses cepat" },
+  "pwa.install_btn": { en: "Install", id: "Pasang" },
+  "pwa.ios_instructions": { en: 'Tap Share → "Add to Home Screen"', id: 'Ketuk Bagikan → "Tambahkan ke Layar Utama"' },
 };
 
 interface LanguageContextType {

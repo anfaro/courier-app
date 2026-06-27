@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Header from "./header";
 import BottomNav from "./BottomNav";
 import AccessLogger from "./AccessLogger";
+import InstallPrompt from "./InstallPrompt";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -21,6 +22,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {!isSharePage && <AccessLogger />}
       {children}
       {!isSharePage && <BottomNav />}
+      {!isSharePage && <InstallPrompt />}
     </>
   );
 }

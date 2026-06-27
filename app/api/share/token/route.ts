@@ -5,6 +5,8 @@ import { customers } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
 
+export const runtime = "nodejs";
+
 const TOKEN_TTL_MS = 4 * 60 * 60 * 1000;
 
 export async function POST(req: NextRequest) {

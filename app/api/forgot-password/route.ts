@@ -7,6 +7,8 @@ import crypto from "crypto";
 import { logActivity, logError } from "@/lib/logger";
 import { generateId } from "@/lib/utils";
 
+export const runtime = "nodejs";
+
 export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json();

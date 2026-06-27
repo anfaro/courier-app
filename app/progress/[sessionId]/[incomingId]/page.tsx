@@ -485,6 +485,10 @@ export default function IncomingDetailPage() {
     () => deliveries.filter((d) => d.status === "pending" && filterBySearch(d)),
     [deliveries, deliverySearch]
   );
+  const pendingPackagesCount = useMemo(
+    () => pendingDeliveries.reduce((s, d) => s + (Number(d.packages) || 1), 0),
+    [pendingDeliveries]
+  );
   const groupedByCustomer = useMemo(
     () => pendingDeliveries.reduce((acc, d) => {
       const cid = d.customerId;
@@ -679,7 +683,7 @@ export default function IncomingDetailPage() {
             {/* Tab Bar */}
             <div className="flex gap-1 mb-4 bg-surface-hover rounded-2xl p-1">
               {(["pending", "returned", "rescheduled"] as const).map((tab) => {
-                const countMap = { pending: pendingDeliveries.length, returned: returnedDeliveries.length, rescheduled: rescheduledDeliveries.length };
+                const countMap = { pending: pendingPackagesCount, returned: returnedDeliveries.length, rescheduled: rescheduledDeliveries.length };
                 const colorMap = { pending: "text-blue-600 dark:text-blue-400", returned: "text-orange-600 dark:text-orange-400", rescheduled: "text-purple-600 dark:text-purple-400" };
                 const labelMap = { pending: t("session.pending"), returned: t("session.returned_section"), rescheduled: t("session.rescheduled_section") };
                 return (
@@ -703,9 +707,9 @@ export default function IncomingDetailPage() {
             </div>
 
             {/* Tab Content */}
-            <div className="h-[450px]">
+            <div>
               {activeDeliveryTab === "pending" && (
-                <div className="h-full overflow-y-auto [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
+                <div className="max-h-[450px] overflow-y-auto [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
                   {pendingDeliveries.length > 0 ? (
                     <div className="p-1 space-y-1">
                       {combinedCustomerList.map((group) => {
@@ -748,7 +752,7 @@ export default function IncomingDetailPage() {
               )}
 
               {activeDeliveryTab === "returned" && (
-                <div className="h-full overflow-y-auto [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
+                <div className="max-h-[450px] overflow-y-auto [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
                   {returnedDeliveries.length > 0 ? (
                     <div className="p-1 space-y-1">
                       {combinedReturnedList.map((group) => {
@@ -771,7 +775,7 @@ export default function IncomingDetailPage() {
               )}
 
               {activeDeliveryTab === "rescheduled" && (
-                <div className="h-full overflow-y-auto [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
+                <div className="max-h-[450px] overflow-y-auto [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
                   {rescheduledDeliveries.length > 0 ? (
                     <div className="p-1 space-y-1">
                       {combinedRescheduledList.map((group) => {
@@ -796,61 +800,15 @@ export default function IncomingDetailPage() {
                             </CustomerGroupCard>
                           );
                         })}
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center py-8">
-                        <p className="text-[13px] font-bold text-secondary">{t("session.all_processed")}</p>
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center py-8">
+                      <p className="text-[13px] font-bold text-secondary">{t("session.all_processed")}</p>
+                    </div>
+                  )}
+                </div>
                 )}
               </div>
-
-                {/* Delivered section — collapsible */}
-            {deliveredDeliveries.length > 0 && (
-              <div className="mt-4">
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setDeliveredExpanded(!deliveredExpanded)}
-                  className="w-full flex items-center justify-between bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl px-4 py-2.5"
-                >
-                  <span className="text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
-                    {t("session.delivered_section")} ({deliveredDeliveries.length})
-                  </span>
-                  <motion.div
-                    animate={{ rotate: deliveredExpanded ? 180 : 0 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                    className="text-emerald-500 shrink-0"
-                  >
-                    <Icon name="chevron-down" size={16} />
-                  </motion.div>
-                </motion.button>
-                <AnimatePresence initial={false}>
-                  {deliveredExpanded && (
-                    <motion.div
-                      initial={{ maxHeight: 0, opacity: 0 }}
-                      animate={{ maxHeight: 2000, opacity: 1 }}
-                      exit={{ maxHeight: 0, opacity: 0 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="space-y-2 pt-3">
-                        {combinedDeliveredList.map((group) => {
-                          const isCombined = group.deliveries.length > 1;
-                          return (
-                            <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} sessionData={sessionDataProp} status="delivered">
-                              <span className="text-[10px] font-black uppercase tracking-wider shrink-0 text-emerald-600 dark:text-emerald-400">
-                                {t("session.delivered")}
-                              </span>
-                            </CustomerGroupCard>
-                          );
-                        })}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
           </motion.div>
         )}
 
@@ -926,6 +884,58 @@ export default function IncomingDetailPage() {
             </p>
           </motion.div>
         ) : null}
+
+        {/* Delivered section — collapsible (after map) */}
+        {deliveredDeliveries.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          >
+            <div className="mt-4">
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setDeliveredExpanded(!deliveredExpanded)}
+                className="w-full flex items-center justify-between bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl px-4 py-2.5"
+              >
+                <span className="text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                  {t("session.delivered_section")} ({deliveredDeliveries.length})
+                </span>
+                <motion.div
+                  animate={{ rotate: deliveredExpanded ? 180 : 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  className="text-emerald-500 shrink-0"
+                >
+                  <Icon name="chevron-down" size={16} />
+                </motion.div>
+              </motion.button>
+              <AnimatePresence initial={false}>
+                {deliveredExpanded && (
+                  <motion.div
+                    initial={{ maxHeight: 0, opacity: 0 }}
+                    animate={{ maxHeight: 2000, opacity: 1 }}
+                    exit={{ maxHeight: 0, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="space-y-2 pt-3">
+                      {combinedDeliveredList.map((group) => {
+                        const isCombined = group.deliveries.length > 1;
+                        return (
+                          <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} sessionData={sessionDataProp} status="delivered">
+                            <span className="text-[10px] font-black uppercase tracking-wider shrink-0 text-emerald-600 dark:text-emerald-400">
+                              {t("session.delivered")}
+                            </span>
+                          </CustomerGroupCard>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
       </main>
 
       {/* Customer Details Popover */}
