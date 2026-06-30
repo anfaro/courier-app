@@ -372,7 +372,7 @@ export default function CustomerSelectionMap({ customers, clusters }: { customer
       <div className="flex flex-col flex-1 min-h-0">
         <div className="flex-1 relative min-h-0 overflow-hidden">
           <MapContainer center={defaultCenter} zoom={13} className="h-full w-full z-0" zoomControl={false}>
-            <TileLayer attribution="&copy; CARTO" url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+            <TileLayer attribution="&copy; <a href=&quot;https://www.esri.com/&quot;>Esri</a>" url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}" />
             <MapController flyTo={flyToCoords} onReady={(m) => { mapRef.current = m; }} />
 
             {startCoords && (

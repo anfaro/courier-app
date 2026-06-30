@@ -1,7 +1,6 @@
 "use client";
 
 import { memo } from "react";
-import { motion } from "framer-motion";
 import { useLanguage } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 
@@ -51,11 +50,7 @@ export default memo(function CustomerGroupCard({
   const s = statusStyles[status];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95, y: -8 }}
-      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+    <div
       onClick={onClick}
       className={`rounded-[24px] bg-card/80 backdrop-blur-xl shadow-sm mb-3 p-5 border border-card-border/50 ${s.border} border-l-4 ${s.bg} ${onClick ? 'cursor-pointer hover:bg-surface-hover/80 transition-all active:scale-[0.98]' : ''}`}
     >
@@ -102,6 +97,6 @@ export default memo(function CustomerGroupCard({
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 });

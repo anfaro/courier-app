@@ -31,10 +31,10 @@ export default function LeafletMap({ lat, lng, interactive = true }: LeafletMapP
       dragging={interactive}
       zoomControl={interactive}
       doubleClickZoom={interactive}
-      attributionControl={false} // Hides the bulky attribution for a cleaner M3 look
       style={{ height: "100%", width: "100%", zIndex: 0 }}
     >
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
+        attribution="&copy; <a href=&quot;https://www.esri.com/&quot;>Esri</a>" />
       <Marker position={[lat, lng]} />
     </MapContainer>
   );

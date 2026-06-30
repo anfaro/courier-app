@@ -16,16 +16,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Invalid format" }, { status: 400 });
     }
 
-    const formattedData = body.map((item: any) => ({
-      id: generateId(),
-      name: item.name,
-      phoneNumber: item.phoneNumber,
-      address: item.address,
-      latitude: item.latitude || null,
-      longitude: item.longitude || null,
-      housePictureUrl: item.housePictureUrl || null,
-      notes: item.notes || null,
-    }));
+    const formattedData = body.map((item: any) => {
+      const photos = item.housePictures && Array.isArray(item.housePictures) ? item.housePictures : [];
+      return {
+        id: generateId(),
+        name: item.name,
+        phoneNumber: item.phoneNumber,
+        address: item.address,
+        latitude: item.latitude || null,
+        longitude: item.longitude || null,
+        housePictureUrl: item.housePictureUrl || photos[0] || null,
+        housePictures: photos.length > 0 ? JSON.stringify(photos) : null,
+        landmark: item.landmark || null,
+        accessInfo: item.accessInfo || null,
+        notes: item.notes || null,
+      };
+    });
 
     const result = await db.insert(customers).values(formattedData).returning();
 

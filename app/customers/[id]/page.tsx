@@ -12,6 +12,17 @@ import ShareButton from "@/components/ShareButton";
 import VisitManager from "@/components/VisitManager";
 import Icon from "@/components/Icon";
 
+function parseHousePictures(raw: string | null, primaryUrl: string | null): string[] {
+  if (!raw && !primaryUrl) return [];
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch {}
+  }
+  return primaryUrl ? [primaryUrl] : [];
+}
+
 export default async function CustomerDetailsPage({
   params,
 }: {
@@ -32,6 +43,8 @@ export default async function CustomerDetailsPage({
   });
 
   if (!customerData) return notFound();
+
+  const housePhotos = parseHousePictures(customerData.housePictures, customerData.housePictureUrl);
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -70,8 +83,15 @@ export default async function CustomerDetailsPage({
         {/* Customer Info Card */}
         <SectionWrapper delay={0.05} className="flex flex-col gap-6 rounded-[2.5rem] border border-card-border bg-card p-6 shadow-sm sm:flex-row sm:p-8"
         >
-          {customerData.housePictureUrl ? (
-            <ImageModal src={customerData.housePictureUrl} alt="House" thumbnailClassName="h-32 w-full sm:w-32 rounded-[1.5rem] object-cover shrink-0" />
+          {housePhotos.length > 0 ? (
+            <div className="shrink-0 space-y-2">
+              {housePhotos.slice(0, 4).map((url, i) => (
+                <ImageModal key={i} src={url} alt={`House ${i + 1}`} thumbnailClassName={`${i === 0 ? 'h-32 w-full sm:w-32' : 'h-20 w-full sm:w-20'} rounded-[1.5rem] object-cover`} />
+              ))}
+              {housePhotos.length > 4 && (
+                <p className="text-[10px] font-medium text-secondary text-center">+{housePhotos.length - 4} more</p>
+              )}
+            </div>
           ) : (
             <div className="flex h-32 w-full shrink-0 items-center justify-center rounded-[1.5rem] bg-secondary text-4xl sm:w-32 text-primary">🏠</div>
           )}
@@ -84,6 +104,22 @@ export default async function CustomerDetailsPage({
                 longitude={customerData.longitude}
                 address={customerData.address}
               />
+            )}
+
+            {/* Landmark */}
+            {customerData.landmark && (
+              <div className="mb-3 mt-4 rounded-2xl border border-blue-100 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/20 p-4">
+                <p className="mb-1 text-[11px] font-black uppercase tracking-widest text-blue-800 dark:text-blue-400">📍 Landmark / Patokan</p>
+                <p className="whitespace-pre-wrap text-[15px] text-primary">{customerData.landmark}</p>
+              </div>
+            )}
+
+            {/* Access Info */}
+            {customerData.accessInfo && (
+              <div className="mb-3 rounded-2xl border border-amber-100 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/20 p-4">
+                <p className="mb-1 text-[11px] font-black uppercase tracking-widest text-amber-800 dark:text-amber-400">🚪 Access</p>
+                <p className="whitespace-pre-wrap text-[15px] text-primary">{customerData.accessInfo}</p>
+              </div>
             )}
 
             {/* Notes Section */}

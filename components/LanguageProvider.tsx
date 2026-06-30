@@ -124,6 +124,15 @@ export const translations: Translations = {
   "customer.stats_overview": { en: "Overview", id: "Gambaran Umum" },
   "customer.stats_breakdown": { en: "Cluster Breakdown", id: "Rincian Klaster" },
 
+  // Customer details
+  "customer.landmark": { en: "Landmark / Patokan", id: "Landmark / Patokan" },
+  "customer.landmark_placeholder": { en: "e.g. Near Al-Hidayah mosque, next to Bu Ani's shop", id: "cth. Dekat masjid Al-Hidayah, samping warung Bu Ani" },
+  "customer.access_info": { en: "Access Instructions", id: "Akses Masuk" },
+  "customer.access_info_placeholder": { en: "e.g. Turn right after green gate, narrow alley", id: "cth. Belok kanan setelah gerbang hijau, gang sempit" },
+  "customer.house_photos": { en: "House Photos", id: "Foto Rumah" },
+  "customer.pin_on_map": { en: "Pin on Map", id: "Sematkan di Peta" },
+  "customer.pin_map_desc": { en: "Tap the map to place a pin at customer's location", id: "Ketuk peta untuk menyematkan lokasi pelanggan" },
+
   // Customer Page
   "customer.share": { en: "Share", id: "Bagikan" },
   "customer.share_copied": { en: "Link copied!", id: "Tautan disalin!" },

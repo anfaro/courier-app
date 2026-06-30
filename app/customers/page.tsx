@@ -506,6 +506,11 @@ function CustomersListContent() {
                         {customer.address}
                       </p>
                       <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                        {customer.landmark && (
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 text-[9px] font-black text-blue-700 dark:text-blue-400 uppercase tracking-tight">
+                            📍 {customer.landmark.length > 20 ? customer.landmark.substring(0, 20) + "…" : customer.landmark}
+                          </span>
+                        )}
                         <span className="inline-flex items-center gap-1 rounded-full bg-surface-hover px-2 py-0.5 text-[9px] font-medium text-secondary/60">
                           <Icon name="calendar" size={12} />
                           {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' }) : "-"}

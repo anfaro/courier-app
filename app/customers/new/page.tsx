@@ -5,61 +5,65 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
-import ImageInput from "@/components/ImageInput";
+import ImageGalleryInput from "@/components/ImageGalleryInput";
+import LocationPicker from "@/components/LocationPicker";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useToast } from "@/components/ToastProvider";
+import Icon from "@/components/Icon";
 
 export default function NewCustomerPage() {
   const { t } = useLanguage();
   const { showToast } = useToast();
   const router = useRouter();
 
-  // --- PRESERVED SINGLE CUSTOMER STATE ---
+  // --- SINGLE CUSTOMER STATE ---
   const [name, setName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
-  const [imageFile, setImageFile] = useState<string | null>(null);
+  const [housePictures, setHousePictures] = useState<string[]>([]);
+  const [landmark, setLandmark] = useState("");
+  const [accessInfo, setAccessInfo] = useState("");
   const [notes, setNotes] = useState("");
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
 
   // --- SYSTEM STATE ---
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isImageUploading, setIsImageUploading] = useState(false);
 
   // --- TABS STATE ---
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single");
 
-  // --- NEW BULK STATE (Unified Draft vs List) ---
+  // --- BULK STATE ---
   const [bulkDraft, setBulkDraft] = useState({
-    name: "", phoneNumber: "", address: "", notes: "", latitude: "", longitude: "", housePictureUrl: null as string | null
+    name: "", phoneNumber: "", address: "", notes: "", latitude: "", longitude: "",
+    landmark: "", accessInfo: "", housePictures: [] as string[]
   });
   const [bulkList, setBulkList] = useState<any[]>([]);
   const [pasteText, setPasteText] = useState("");
   const [isParsing, setIsParsing] = useState(false);
   const [isFormVisible, setIsFormVisible] = useState(true);
 
-  // --- PRESERVED SINGLE HELPERS ---
+  // --- HELPERS ---
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const onlyNumbers = e.target.value.replace(/\D/g, "");
+    setPhoneNumber(onlyNumbers);
+  };
+
   const getLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setLatitude(position.coords.latitude.toString());
           setLongitude(position.coords.longitude.toString());
-          showToast("Location pinned!", "success");
+          showToast("GPS captured!", "success");
         },
-        (err) => showToast("Location permission denied", "error")
+        () => showToast("Location permission denied", "error")
       );
     }
   };
 
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const onlyNumbers = e.target.value.replace(/\D/g, "");
-    setPhoneNumber(onlyNumbers);
-  };
-
-  // --- BULK HELPERS ---
   const getBulkLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((pos) => {
@@ -67,6 +71,11 @@ export default function NewCustomerPage() {
         showToast("GPS captured", "success");
       });
     }
+  };
+
+  const handleLocationConfirm = (lat: string, lng: string) => {
+    setLatitude(lat);
+    setLongitude(lng);
   };
 
   const handleAddDraftToList = () => {
@@ -83,9 +92,9 @@ export default function NewCustomerPage() {
             phoneNumber: columns[1]?.replace(/\D/g, "") || "",
             address: columns[2]?.trim() || "No Address",
             notes: columns[3]?.trim() || "",
-            latitude: "",
-            longitude: "",
-            housePictureUrl: null
+            latitude: "", longitude: "",
+            landmark: "", accessInfo: "",
+            housePictures: [] as string[]
           };
         });
         setBulkList([...bulkList, ...newCustomers]);
@@ -105,7 +114,7 @@ export default function NewCustomerPage() {
     }
 
     setBulkList([...bulkList, bulkDraft]);
-    setBulkDraft({ name: "", phoneNumber: "", address: "", notes: "", latitude: "", longitude: "", housePictureUrl: null });
+    setBulkDraft({ name: "", phoneNumber: "", address: "", notes: "", latitude: "", longitude: "", landmark: "", accessInfo: "", housePictures: [] });
     showToast("Added to list", "info");
   };
 
@@ -126,7 +135,9 @@ export default function NewCustomerPage() {
           address,
           latitude,
           longitude,
-          housePictureUrl: imageFile,
+          housePictures,
+          landmark,
+          accessInfo,
           notes
         };
       } else {
@@ -212,26 +223,59 @@ export default function NewCustomerPage() {
                 <textarea value={address} onChange={(e) => setAddress(e.target.value)} required rows={3} className={inputClass} placeholder="123 Main St..." />
               </div>
 
+              {/* Location Picker */}
               <div className="rounded-[2.5rem] bg-surface-hover p-6 border border-card-border">
                 <div className="mb-4 flex items-center justify-between">
-                  <label className="block text-[15px] font-black text-primary">GPS Coordinates</label>
-                  <button type="button" onClick={getLocation} className="btn-secondary px-4 py-2 text-[12px] shadow-sm">📍 {t("customer.pin")}</button>
+                  <label className="block text-[15px] font-black text-primary">{t("customer.pin")}</label>
+                  <button type="button" onClick={getLocation} className="btn-secondary px-4 py-2 text-[12px] shadow-sm">📍 GPS</button>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <input type="text" value={latitude} onChange={(e) => setLatitude(e.target.value)} className="w-full rounded-2xl border border-card-border dark:border-slate-700 bg-card dark:bg-slate-900 px-4 py-3 text-sm text-primary dark:text-slate-100 shadow-sm font-mono focus:border-blue-500 focus:outline-none" placeholder="Latitude" />
-                  <input type="text" value={longitude} onChange={(e) => setLongitude(e.target.value)} className="w-full rounded-2xl border border-card-border dark:border-slate-700 bg-card dark:bg-slate-900 px-4 py-3 text-sm text-primary dark:text-slate-100 shadow-sm font-mono focus:border-blue-500 focus:outline-none" placeholder="Longitude" />
-                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowLocationPicker(true)}
+                  className="w-full rounded-2xl border-2 border-dashed border-card-border bg-card/60 p-5 text-center transition hover:bg-card hover:border-blue-300 active:scale-90"
+                >
+                  {latitude && longitude ? (
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-2xl">📍</span>
+                      <span className="text-[12px] font-mono font-bold text-blue-600 dark:text-blue-400">
+                        {latitude}, {longitude}
+                      </span>
+                      <span className="text-[10px] font-medium text-secondary">{t("customer.pin_map_desc")}</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-3xl mb-1">🗺️</span>
+                      <span className="text-[14px] font-bold text-primary">{t("customer.pin_on_map")}</span>
+                      <span className="text-[11px] font-medium text-secondary">{t("customer.pin_map_desc")}</span>
+                    </div>
+                  )}
+                </button>
               </div>
 
-              <div><ImageInput label="House Photo" onImageChange={setImageFile} onUploadingChange={setIsImageUploading} /></div>
-
+              {/* Landmark */}
               <div>
-                <label className="mb-2 block text-[13px] font-black text-secondary uppercase tracking-widest ml-1">Notes (Optional)</label>
+                <label className="mb-2 block text-[13px] font-black text-secondary uppercase tracking-widest ml-1">{t("customer.landmark")}</label>
+                <input type="text" value={landmark} onChange={(e) => setLandmark(e.target.value)} className={inputClass} placeholder={t("customer.landmark_placeholder")} />
+              </div>
+
+              {/* Access Info */}
+              <div>
+                <label className="mb-2 block text-[13px] font-black text-secondary uppercase tracking-widest ml-1">{t("customer.access_info")}</label>
+                <textarea value={accessInfo} onChange={(e) => setAccessInfo(e.target.value)} rows={2} className={inputClass} placeholder={t("customer.access_info_placeholder")} />
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="mb-2 block text-[13px] font-black text-secondary uppercase tracking-widest ml-1">Notes</label>
                 <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className={inputClass} placeholder="..." />
               </div>
 
-              <button type="submit" disabled={isLoading || isImageUploading} className="btn-primary w-full py-4 text-[16px] mt-4">
-                {isLoading ? t("action.loading") : isImageUploading ? t("action.loading") : t("action.save")}
+              {/* House Photos Gallery */}
+              <ImageGalleryInput label={t("customer.house_photos")} images={housePictures} onImagesChange={setHousePictures} />
+
+              <button type="submit" disabled={isLoading} className="btn-primary w-full py-4 text-[16px] mt-4">
+                {isLoading ? t("action.loading") : t("action.save")}
               </button>
             </form>
           )}
@@ -346,6 +390,15 @@ export default function NewCustomerPage() {
         </div>
       </motion.div>
       </main>
+
+      {showLocationPicker && (
+        <LocationPicker
+          initialLat={latitude}
+          initialLng={longitude}
+          onConfirm={handleLocationConfirm}
+          onClose={() => setShowLocationPicker(false)}
+        />
+      )}
     </div>
   );
 }

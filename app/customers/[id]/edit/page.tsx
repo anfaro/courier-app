@@ -5,11 +5,14 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
-import ImageInput from "@/components/ImageInput";
+import ImageGalleryInput from "@/components/ImageGalleryInput";
+import LocationPicker from "@/components/LocationPicker";
 import { useScrollLock } from "@/lib/useScrollLock";
+import { useLanguage } from "@/components/LanguageProvider";
 import Icon from "@/components/Icon";
 
 export default function EditCustomerPage({ params }: { params: Promise<{ id: string }> }) {
+  const { t } = useLanguage();
   const resolvedParams = use(params);
   const customerId = resolvedParams.id;
 
@@ -17,12 +20,12 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
+  const [landmark, setLandmark] = useState("");
+  const [accessInfo, setAccessInfo] = useState("");
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
-  const [mapsLink, setMapsLink] = useState("");
-
-  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
-  const [isImageUploading, setIsImageUploading] = useState(false);
+  const [housePictures, setHousePictures] = useState<string[]>([]);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
 
   const [availableClusters, setAvailableClusters] = useState<any[]>([]);
   const [selectedClusters, setSelectedClusters] = useState<string[]>([]);
@@ -31,7 +34,6 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isResolving, setIsResolving] = useState(false);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   useScrollLock(showDeleteModal);
@@ -52,9 +54,21 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
         setName(data.name || "");
         setAddress(data.address || "");
         setNotes(data.notes || "");
+        setLandmark(data.landmark || "");
+        setAccessInfo(data.accessInfo || "");
         setLatitude(data.latitude || "");
         setLongitude(data.longitude || "");
-        setExistingImageUrl(data.housePictureUrl || null);
+
+        if (data.housePictures) {
+          try {
+            const parsed = JSON.parse(data.housePictures);
+            setHousePictures(Array.isArray(parsed) ? parsed : []);
+          } catch {
+            setHousePictures(data.housePictureUrl ? [data.housePictureUrl] : []);
+          }
+        } else if (data.housePictureUrl) {
+          setHousePictures([data.housePictureUrl]);
+        }
 
         if (data.clusters && Array.isArray(data.clusters)) {
           const currentClusterIds = data.clusters.map((c: any) => c.cluster?.id || c.clusterId);
@@ -81,38 +95,6 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
     fetchData();
   }, [customerId]);
 
-  useEffect(() => {
-    const resolveUrl = async () => {
-      const trimmed = mapsLink.trim();
-      if (trimmed.includes("google.com/maps") || trimmed.includes("goo.gl/maps") || trimmed.includes("googleusercontent.com") || trimmed.includes("maps.app.goo.gl")) {
-        setIsResolving(true);
-        setError("");
-        try {
-          const res = await fetch("/api/resolve-maps", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url: trimmed }),
-          });
-          const data = await res.json();
-
-          if (data.lat && data.lng) {
-            setLatitude(data.lat.toString());
-            setLongitude(data.lng.toString());
-            setMapsLink("");
-          } else {
-            setError(data.error || "Coordinates not found in this link.");
-          }
-        } catch (err) {
-          setError("Failed to reach location resolver.");
-        } finally {
-          setIsResolving(false);
-        }
-      }
-    };
-
-    if (mapsLink) resolveUrl();
-  }, [mapsLink]);
-
   const getLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -137,6 +119,11 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
     );
   };
 
+  const handleLocationConfirm = (lat: string, lng: string) => {
+    setLatitude(lat);
+    setLongitude(lng);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -152,7 +139,9 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
           address,
           latitude: latitude.toString(),
           longitude: longitude.toString(),
-          housePictureUrl: existingImageUrl,
+          housePictures,
+          landmark,
+          accessInfo,
           notes,
           clusterIds: selectedClusters
         }),
@@ -254,56 +243,61 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
                 </div>
               )}
 
+              {/* Landmark */}
               <div>
-                <label className="mb-2 block text-[15px] font-semibold text-secondary">Notes</label>
+                <label className="mb-2 block text-[13px] font-black text-secondary uppercase tracking-widest ml-1">{t("customer.landmark")}</label>
+                <input type="text" value={landmark} onChange={(e) => setLandmark(e.target.value)} className={inputClass} placeholder={t("customer.landmark_placeholder")} />
+              </div>
+
+              {/* Access Info */}
+              <div>
+                <label className="mb-2 block text-[13px] font-black text-secondary uppercase tracking-widest ml-1">{t("customer.access_info")}</label>
+                <textarea value={accessInfo} onChange={(e) => setAccessInfo(e.target.value)} rows={2} className={inputClass} placeholder={t("customer.access_info_placeholder")} />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-[13px] font-black text-secondary uppercase tracking-widest ml-1">Notes</label>
                 <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className={inputClass} placeholder="e.g. Near the mosque..." />
               </div>
 
-              <div className="rounded-[2rem] bg-blue-50/50 dark:bg-blue-900/10 p-6 border border-blue-100/50 dark:border-blue-900/30 space-y-4">
-                <div className="flex items-center justify-between">
-                  <label className="block text-[15px] font-semibold text-blue-900 dark:text-blue-400">Location Data</label>
-                  <button type="button" onClick={getLocation} className="rounded-full bg-card dark:bg-slate-900 px-4 py-2 text-[13px] font-semibold text-blue-700 dark:text-blue-400 shadow-sm border border-blue-100 dark:border-blue-900/50 active:scale-90 transition-all">
-                    📍 Update GPS
-                  </button>
+              {/* Location Picker */}
+              <div className="rounded-[2rem] bg-surface-hover p-6 border border-card-border">
+                <div className="flex items-center justify-between mb-4">
+                  <label className="block text-[15px] font-black text-primary">{t("customer.pin")}</label>
+                  <button type="button" onClick={getLocation} className="btn-secondary px-4 py-2 text-[12px] shadow-sm">📍 GPS</button>
                 </div>
 
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={mapsLink}
-                    placeholder="Paste Google Maps link here..."
-                    className={inputClass}
-                    onChange={(e) => setMapsLink(e.target.value)}
-                  />
-                  {isResolving && (
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 rounded-full bg-blue-100 dark:bg-blue-900 px-3 py-1.5 text-[11px] font-bold text-blue-700 dark:text-blue-300 shadow-sm animate-pulse">
-                      <Icon name="refresh" size={12} className="animate-spin" />
-                      Resolving
+                <button
+                  type="button"
+                  onClick={() => setShowLocationPicker(true)}
+                  className="w-full rounded-2xl border-2 border-dashed border-card-border bg-card/60 p-5 text-center transition hover:bg-card hover:border-blue-300 active:scale-90"
+                >
+                  {latitude && longitude ? (
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-2xl">📍</span>
+                      <span className="text-[12px] font-mono font-bold text-blue-600 dark:text-blue-400">
+                        {latitude}, {longitude}
+                      </span>
+                      <span className="text-[10px] font-medium text-secondary">{t("customer.pin_map_desc")}</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-3xl mb-1">🗺️</span>
+                      <span className="text-[14px] font-bold text-primary">{t("customer.pin_on_map")}</span>
+                      <span className="text-[11px] font-medium text-secondary">{t("customer.pin_map_desc")}</span>
                     </div>
                   )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <span className="text-[12px] font-medium text-blue-700 dark:text-blue-400 ml-2">Latitude</span>
-                    <input type="text" value={latitude} onChange={(e) => setLatitude(e.target.value)} className="w-full rounded-xl border border-blue-100 dark:border-blue-900/50 bg-card/60 dark:bg-slate-900/60 px-4 py-3 text-[14px] font-medium text-blue-900 dark:text-blue-300 focus:bg-card dark:focus:bg-slate-900 focus:outline-none" />
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[12px] font-medium text-blue-700 dark:text-blue-400 ml-2">Longitude</span>
-                    <input type="text" value={longitude} onChange={(e) => setLongitude(e.target.value)} className="w-full rounded-xl border border-blue-100 dark:border-blue-900/50 bg-card/60 dark:bg-slate-900/60 px-4 py-3 text-[14px] font-medium text-blue-900 dark:text-blue-300 focus:bg-card dark:focus:bg-slate-900 focus:outline-none" />
-                  </div>
-                </div>
+                </button>
               </div>
 
-              <ImageInput
-                label="House Picture"
-                existingImageUrl={existingImageUrl}
-                onImageChange={setExistingImageUrl}
-                onUploadingChange={setIsImageUploading}
+              <ImageGalleryInput
+                label={t("customer.house_photos")}
+                images={housePictures}
+                onImagesChange={setHousePictures}
               />
 
               <div className="flex flex-wrap gap-4 pt-4">
-                <button type="submit" disabled={isLoading || isImageUploading} className="flex-1 rounded-full bg-blue-600 py-4 text-[15px] font-bold text-white shadow-lg shadow-blue-500/20 active:scale-90 transition-all disabled:bg-blue-400 flex items-center justify-center gap-2">
+                <button type="submit" disabled={isLoading} className="flex-1 rounded-full bg-blue-600 py-4 text-[15px] font-bold text-white shadow-lg shadow-blue-500/20 active:scale-90 transition-all disabled:bg-blue-400 flex items-center justify-center gap-2">
                   {isLoading ? <><div className="h-5 w-5 animate-spin rounded-full border-[2.5px] border-white border-t-transparent" /> Saving...</> : "Save Changes"}
                 </button>
                 <button type="button" onClick={() => router.back()} className="flex-1 rounded-full bg-surface-hover py-4 text-[15px] font-bold text-secondary active:scale-90 transition-all hover:bg-gray-200 dark:hover:bg-slate-700 border border-card-border">Cancel</button>
@@ -316,6 +310,15 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
         </main>
         )}
       </div>
+
+      {showLocationPicker && (
+        <LocationPicker
+          initialLat={latitude}
+          initialLng={longitude}
+          onConfirm={handleLocationConfirm}
+          onClose={() => setShowLocationPicker(false)}
+        />
+      )}
 
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">

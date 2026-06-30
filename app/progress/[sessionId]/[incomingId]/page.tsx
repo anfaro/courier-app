@@ -32,6 +32,7 @@ interface Customer {
   address?: string;
   latitude?: string;
   longitude?: string;
+  housePictureUrl?: string;
 }
 
 interface Delivery {
@@ -77,8 +78,7 @@ export default function IncomingDetailPage() {
   const [loading, setLoading] = useState(true);
   const [deliverySearch, setDeliverySearch] = useState("");
   const [mapExpanded, setMapExpanded] = useState(false);
-  const [deliveredExpanded, setDeliveredExpanded] = useState(true);
-  const [activeDeliveryTab, setActiveDeliveryTab] = useState<"pending" | "returned" | "rescheduled">("pending");
+  const [activeDeliveryTab, setActiveDeliveryTab] = useState<"pending" | "returned" | "rescheduled" | "delivered">("pending");
   const [splitModal, setSplitModal] = useState<{
     deliveryId: string;
     customerName: string;
@@ -87,7 +87,12 @@ export default function IncomingDetailPage() {
     splitCount: number;
     remainingDeliveryIds?: string[];
   } | null>(null);
-  const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
+  const [snackbarData, setSnackbarData] = useState<{
+    customer: Customer;
+    deliveries: Delivery[];
+    totalPackages: number;
+    isCombined: boolean;
+  } | null>(null);
   const [showTimeEdit, setShowTimeEdit] = useState(false);
   const [editTime, setEditTime] = useState("");
   const [savingTime, setSavingTime] = useState(false);
@@ -102,7 +107,7 @@ export default function IncomingDetailPage() {
   const [addingDeliveries, setAddingDeliveries] = useState(false);
   const [pendingRemoveCustomerIds, setPendingRemoveCustomerIds] = useState<string[]>([]);
 
-  useScrollLock(selectedDelivery !== null || splitModal !== null || showCustomerSnackbar);
+  useScrollLock(snackbarData !== null || splitModal !== null || showCustomerSnackbar);
 
   const dateLocale = locale === "id" ? "id-ID" : "en-GB";
 
@@ -681,23 +686,23 @@ export default function IncomingDetailPage() {
             </div>
 
             {/* Tab Bar */}
-            <div className="flex gap-1 mb-4 bg-surface-hover rounded-2xl p-1">
-              {(["pending", "returned", "rescheduled"] as const).map((tab) => {
-                const countMap = { pending: pendingPackagesCount, returned: returnedDeliveries.length, rescheduled: rescheduledDeliveries.length };
-                const colorMap = { pending: "text-blue-600 dark:text-blue-400", returned: "text-orange-600 dark:text-orange-400", rescheduled: "text-purple-600 dark:text-purple-400" };
-                const labelMap = { pending: t("session.pending"), returned: t("session.returned_section"), rescheduled: t("session.rescheduled_section") };
+            <div className="flex gap-1 mb-4 bg-surface-hover rounded-2xl p-1 overflow-x-auto custom-scrollbar">
+              {(["pending", "returned", "rescheduled", "delivered"] as const).map((tab) => {
+                const countMap = { pending: pendingPackagesCount, returned: returnedDeliveries.length, rescheduled: rescheduledDeliveries.length, delivered: deliveredDeliveries.length };
+                const colorMap = { pending: "text-blue-600 dark:text-blue-400", returned: "text-orange-600 dark:text-orange-400", rescheduled: "text-purple-600 dark:text-purple-400", delivered: "text-emerald-600 dark:text-emerald-400" };
+                const labelMap = { pending: t("session.pending"), returned: t("session.returned_section"), rescheduled: t("session.rescheduled_section"), delivered: t("session.delivered_section") };
                 return (
                   <motion.button
                     key={tab}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setActiveDeliveryTab(tab)}
-                    className={`flex-1 rounded-2xl py-2.5 text-[12px] font-black uppercase tracking-wider transition-all ${
+                    className={`shrink-0 px-3 py-2.5 rounded-2xl text-[12px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${
                       activeDeliveryTab === tab
                         ? 'bg-card shadow-sm text-primary'
                         : 'text-secondary/60 hover:text-secondary'
                     }`}
                   >
-                    {labelMap[tab]}
+                    <span>{labelMap[tab]}</span>
                     <span className={`ml-1.5 ${activeDeliveryTab === tab ? colorMap[tab] : 'text-secondary/40'}`}>
                       {countMap[tab]}
                     </span>
@@ -709,35 +714,13 @@ export default function IncomingDetailPage() {
             {/* Tab Content */}
             <div>
               {activeDeliveryTab === "pending" && (
-                <div className="max-h-[450px] overflow-y-auto [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
+                <div className="max-h-[450px] overflow-y-auto">
                   {pendingDeliveries.length > 0 ? (
                     <div className="p-1 space-y-1">
                       {combinedCustomerList.map((group) => {
                           const isCombined = group.deliveries.length > 1;
-                          const first = group.deliveries[0];
                           return (
-                            <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} sessionData={sessionDataProp} status="pending" onClick={!isCombined ? () => setSelectedDelivery(first) : undefined}>
-                              <div className="flex gap-2 w-full">
-                                <StatusButton className="flex-1"
-                                  label={t("session.done")}
-                                  color="emerald"
-                                  onClick={() => isCombined ? handleBulkStatusChange(group.customer.id, "delivered") : handleStatusChange(first.id, "delivered")}
-                                  disabled={!canEdit}
-                                />
-                                <StatusButton className="flex-1"
-                                  label={t("session.return")}
-                                  color="orange"
-                                  onClick={() => isCombined ? handleBulkStatusChange(group.customer.id, "returned") : handleStatusChange(first.id, "returned")}
-                                  disabled={!canEdit}
-                                />
-                                <StatusButton className="flex-1"
-                                  label={t("session.reschedule")}
-                                  color="purple"
-                                  onClick={() => isCombined ? handleBulkStatusChange(group.customer.id, "rescheduled") : handleStatusChange(first.id, "rescheduled")}
-                                  disabled={!canEdit}
-                                />
-                              </div>
-                            </CustomerGroupCard>
+                            <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} sessionData={sessionDataProp} status="pending" onClick={() => setSnackbarData({ ...group, isCombined })} />
                           );
                         })}
                       </div>
@@ -752,7 +735,7 @@ export default function IncomingDetailPage() {
               )}
 
               {activeDeliveryTab === "returned" && (
-                <div className="max-h-[450px] overflow-y-auto [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
+                <div className="max-h-[450px] overflow-y-auto">
                   {returnedDeliveries.length > 0 ? (
                     <div className="p-1 space-y-1">
                       {combinedReturnedList.map((group) => {
@@ -775,7 +758,7 @@ export default function IncomingDetailPage() {
               )}
 
               {activeDeliveryTab === "rescheduled" && (
-                <div className="max-h-[450px] overflow-y-auto [mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_85%,transparent_100%)]">
+                <div className="max-h-[450px] overflow-y-auto">
                   {rescheduledDeliveries.length > 0 ? (
                     <div className="p-1 space-y-1">
                       {combinedRescheduledList.map((group) => {
@@ -807,7 +790,30 @@ export default function IncomingDetailPage() {
                     </div>
                   )}
                 </div>
-                )}
+              )}
+
+              {activeDeliveryTab === "delivered" && (
+                <div className="max-h-[450px] overflow-y-auto">
+                  {deliveredDeliveries.length > 0 ? (
+                    <div className="p-1 space-y-1">
+                      {combinedDeliveredList.map((group) => {
+                          const isCombined = group.deliveries.length > 1;
+                          return (
+                            <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} sessionData={sessionDataProp} status="delivered">
+                              <span className="text-[10px] font-black uppercase tracking-wider shrink-0 text-emerald-600 dark:text-emerald-400">
+                                {t("session.delivered")}
+                              </span>
+                            </CustomerGroupCard>
+                          );
+                        })}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center py-8">
+                      <p className="text-[13px] font-bold text-secondary">{t("session.all_processed")}</p>
+                    </div>
+                  )}
+                </div>
+              )}
               </div>
           </motion.div>
         )}
@@ -885,144 +891,108 @@ export default function IncomingDetailPage() {
           </motion.div>
         ) : null}
 
-        {/* Delivered section — collapsible (after map) */}
-        {deliveredDeliveries.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          >
-            <div className="mt-4">
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setDeliveredExpanded(!deliveredExpanded)}
-                className="w-full flex items-center justify-between bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl px-4 py-2.5"
-              >
-                <span className="text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
-                  {t("session.delivered_section")} ({deliveredDeliveries.length})
-                </span>
-                <motion.div
-                  animate={{ rotate: deliveredExpanded ? 180 : 0 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                  className="text-emerald-500 shrink-0"
-                >
-                  <Icon name="chevron-down" size={16} />
-                </motion.div>
-              </motion.button>
-              <AnimatePresence initial={false}>
-                {deliveredExpanded && (
-                  <motion.div
-                    initial={{ maxHeight: 0, opacity: 0 }}
-                    animate={{ maxHeight: 2000, opacity: 1 }}
-                    exit={{ maxHeight: 0, opacity: 0 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="space-y-2 pt-3">
-                      {combinedDeliveredList.map((group) => {
-                        const isCombined = group.deliveries.length > 1;
-                        return (
-                          <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} sessionData={sessionDataProp} status="delivered">
-                            <span className="text-[10px] font-black uppercase tracking-wider shrink-0 text-emerald-600 dark:text-emerald-400">
-                              {t("session.delivered")}
-                            </span>
-                          </CustomerGroupCard>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-        )}
+
       </main>
 
-      {/* Customer Details Popover */}
+      {/* Customer Details Snackbar */}
       <AnimatePresence>
-        {selectedDelivery && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        {snackbarData && (
+          <>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-md"
-              onClick={() => setSelectedDelivery(null)}
+              className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
+              onClick={() => setSnackbarData(null)}
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.85, y: 30 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.85, y: 30 }}
-              transition={{ type: "spring", stiffness: 350, damping: 28, mass: 0.9 }}
-              className="relative w-full max-w-sm bg-card rounded-[40px] overflow-hidden shadow-2xl border border-card-border"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="fixed bottom-0 left-0 right-0 z-[70] max-h-[85vh] overflow-y-auto"
             >
-              <div className="relative h-52 bg-gradient-to-br from-blue-400 via-blue-500 to-blue-700">
-                {selectedDelivery.customer.housePictureUrl ? (
-                  <img src={selectedDelivery.customer.housePictureUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-[80px] font-black text-white/20 select-none">
-                      {selectedDelivery.customer.name?.charAt(0)?.toUpperCase() || "?"}
-                    </span>
+              <div className="mx-auto max-w-3xl p-4">
+                <div className="rounded-[24px] bg-card border border-card-border p-5 shadow-xl">
+                  {/* House Picture */}
+                  <div className="w-full h-48 rounded-2xl border border-card-border bg-surface-hover overflow-hidden mb-5 relative">
+                    {snackbarData.customer.housePictureUrl ? (
+                      <img src={snackbarData.customer.housePictureUrl} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[13px] font-bold text-secondary">
+                        No House Image
+                      </div>
+                    )}
+                    <div className="absolute top-2 right-2 flex items-center gap-2 z-10">
+                      {snackbarData.isCombined && (
+                        <span className="rounded-full bg-purple-600 px-2.5 py-0.5 text-[11px] font-black text-white shadow-sm">
+                          ×{snackbarData.totalPackages}
+                        </span>
+                      )}
+                      <button
+                        onClick={() => setSnackbarData(null)}
+                        className="shrink-0 h-8 w-8 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white active:scale-90"
+                      >
+                        <Icon name="close" size={16} />
+                      </button>
+                    </div>
                   </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[22px] font-extrabold text-white drop-shadow-sm truncate">
-                      {selectedDelivery.customer.name}
-                    </p>
-                    <p className="text-[13px] font-medium text-white/80 mt-0.5">
-                      {(Number(selectedDelivery.packages) || 1)} {(Number(selectedDelivery.packages) || 1) > 1 ? "packages" : "package"}
-                    </p>
+
+                    {/* Hero */}
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[16px] bg-gradient-to-br from-blue-600 to-indigo-700 text-white text-[20px] font-black shadow-md">
+                        {snackbarData.customer.name?.charAt(0)?.toUpperCase() || "?"}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[17px] font-extrabold text-primary truncate">
+                          {snackbarData.customer.name}
+                        </p>
+                        <p className="text-[12px] font-medium text-secondary truncate">
+                          {snackbarData.customer.address || ""}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 w-full">
+                      <StatusButton className="flex-1"
+                        label={t("session.done")}
+                        color="emerald"
+                        onClick={() => {
+                          setSnackbarData(null);
+                          snackbarData.isCombined
+                            ? handleBulkStatusChange(snackbarData.customer.id, "delivered")
+                            : handleStatusChange(snackbarData.deliveries[0].id, "delivered");
+                        }}
+                        disabled={!canEdit}
+                      />
+                      <StatusButton className="flex-1"
+                        label={t("session.return")}
+                        color="orange"
+                        onClick={() => {
+                          setSnackbarData(null);
+                          snackbarData.isCombined
+                            ? handleBulkStatusChange(snackbarData.customer.id, "returned")
+                            : handleStatusChange(snackbarData.deliveries[0].id, "returned");
+                        }}
+                        disabled={!canEdit}
+                      />
+                      <StatusButton className="flex-1"
+                        label={t("session.reschedule")}
+                        color="purple"
+                        onClick={() => {
+                          setSnackbarData(null);
+                          snackbarData.isCombined
+                            ? handleBulkStatusChange(snackbarData.customer.id, "rescheduled")
+                            : handleStatusChange(snackbarData.deliveries[0].id, "rescheduled");
+                        }}
+                        disabled={!canEdit}
+                      />
+                    </div>
                   </div>
-                  <button
-                    onClick={() => setSelectedDelivery(null)}
-                    className="shrink-0 ml-3 h-8 w-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white active:scale-90 hover:bg-white/30 transition-all"
-                  >
-                    <Icon name="close" size={16} />
-                  </button>
                 </div>
-              </div>
-              <div className="p-5 space-y-3">
-                {selectedDelivery.customer.phoneNumber && (
-                  <div className="flex items-center gap-3.5 rounded-2xl bg-surface-hover/60 px-4 py-3 border border-card-border/50">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                      <Icon name="phone" size={16} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-secondary mb-0.5">Phone</p>
-                      <p className="text-[14px] font-bold text-primary">{selectedDelivery.customer.phoneNumber}</p>
-                    </div>
-                  </div>
-                )}
-                {selectedDelivery.customer.address && (
-                  <div className="flex items-center gap-3.5 rounded-2xl bg-surface-hover/60 px-4 py-3 border border-card-border/50">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
-                      <Icon name="map-pin" size={16} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-secondary mb-0.5">Address</p>
-                      <p className="text-[14px] font-bold text-primary">{selectedDelivery.customer.address}</p>
-                    </div>
-                  </div>
-                )}
-                {selectedDelivery.incoming?.time && (
-                  <div className="flex items-center gap-3.5 rounded-2xl bg-surface-hover/60 px-4 py-3 border border-card-border/50">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
-                      <Icon name="clock" size={16} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-secondary mb-0.5">Incoming Time</p>
-                      <p className="text-[14px] font-bold text-primary">
-                        {new Date(selectedDelivery.incoming.time).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" })}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
             </motion.div>
-          </div>
+          </>
         )}
       </AnimatePresence>
 
@@ -1107,7 +1077,7 @@ export default function IncomingDetailPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+              className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
               onClick={() => { setShowCustomerSnackbar(false); setShowQuickAdd(false); }}
             />
             <motion.div
@@ -1115,7 +1085,7 @@ export default function IncomingDetailPage() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              className="fixed bottom-0 left-0 right-0 z-50 max-h-[85vh] overflow-y-auto"
+              className="fixed bottom-0 left-0 right-0 z-[70] max-h-[85vh] overflow-y-auto"
             >
               <div className="mx-auto max-w-3xl p-4">
                 <div className="rounded-[24px] bg-card border border-card-border p-5 shadow-xl">
@@ -1173,70 +1143,90 @@ export default function IncomingDetailPage() {
                         return (
                           <div
                             key={c.id}
-                            className="flex items-center gap-3 p-3 rounded-2xl bg-surface-hover active:scale-90 cursor-pointer transition-transform"
-                            onClick={() => {
-                              if (checked) {
-                                setCustomerAssignments(prev => ({ ...prev, [c.id]: 0 }));
-                              } else {
-                                setCustomerAssignments(prev => ({ ...prev, [c.id]: 1 }));
-                              }
-                            }}
+                            className={`flex items-stretch${
+                              !checked && hasPending
+                                ? ' gap-1.5'
+                                : ' rounded-2xl overflow-hidden bg-surface-hover active:scale-90 cursor-pointer transition-transform'
+                            }`}
                           >
-                            <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 transition-all ${
-                              checked
-                                ? 'bg-blue-600 border-blue-600 text-white'
-                                : 'border-secondary/30 bg-transparent'
-                            }`}>
+                            {/* Section A: customer info + click-to-add */}
+                            <div
+                              className={`flex items-center gap-3 p-3 flex-1 min-w-0 transition-transform${
+                                !checked && hasPending
+                                  ? ' cursor-pointer active:scale-90 bg-surface-hover rounded-l-2xl rounded-r-[20px]'
+                                  : ''
+                              }`}
+                              onClick={() => {
+                                if (checked) {
+                                  setCustomerAssignments(prev => ({ ...prev, [c.id]: 0 }));
+                                } else {
+                                  setCustomerAssignments(prev => ({ ...prev, [c.id]: 1 }));
+                                }
+                              }}
+                            >
+                              <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 transition-all ${
+                                checked
+                                  ? 'bg-blue-600 border-blue-600 text-white'
+                                  : 'border-secondary/30 bg-transparent'
+                              }`}>
+                                {checked && (
+                                  <Icon name="check" size={14} strokeWidth={3} />
+                                )}
+                              </div>
+                              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-card text-secondary border border-card-border text-[12px] font-black">
+                                {c.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[13px] font-bold text-primary truncate">{c.name}</p>
+                                <p className="text-[11px] font-medium text-secondary truncate">
+                                  {c.address || c.phoneNumber || ""}
+                                </p>
+                              </div>
                               {checked && (
-                                <Icon name="check" size={14} strokeWidth={3} />
+                                <div onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 shrink-0">
+                                  <button
+                                    onClick={() => setCustomerAssignments(prev => ({ ...prev, [c.id]: Math.max(1, (prev[c.id] || 1) - 1) }))}
+                                    className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-hover text-primary font-black border border-card-border active:scale-90"
+                                  >
+                                    <Icon name="minus" size={12} />
+                                  </button>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    value={qty}
+                                    onChange={(e) => {
+                                      const v = Math.max(1, parseInt(e.target.value) || 0);
+                                      setCustomerAssignments(prev => ({ ...prev, [c.id]: v }));
+                                    }}
+                                    className="w-12 text-center text-[15px] font-black text-primary bg-transparent outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                  />
+                                  <button
+                                    onClick={() => setCustomerAssignments(prev => ({ ...prev, [c.id]: (prev[c.id] || 1) + 1 }))}
+                                    className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-black active:scale-90"
+                                  >
+                                    <Icon name="plus" size={12} />
+                                  </button>
+                                </div>
                               )}
                             </div>
-                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-card text-secondary border border-card-border text-[12px] font-black">
-                              {c.name.charAt(0).toUpperCase()}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-[13px] font-bold text-primary truncate">{c.name}</p>
-                              <p className="text-[11px] font-medium text-secondary truncate">
-                                {c.address || c.phoneNumber || ""}
-                              </p>
-                            </div>
-                            {checked && (
-                              <div onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 shrink-0">
-                                <button
-                                  onClick={() => setCustomerAssignments(prev => ({ ...prev, [c.id]: Math.max(1, (prev[c.id] || 1) - 1) }))}
-                                  className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-hover text-primary font-black border border-card-border active:scale-90"
-                                >
-                                  <Icon name="minus" size={12} />
-                                </button>
-                                <input
-                                  type="number"
-                                  min="1"
-                                  value={qty}
-                                  onChange={(e) => {
-                                    const v = Math.max(1, parseInt(e.target.value) || 0);
-                                    setCustomerAssignments(prev => ({ ...prev, [c.id]: v }));
-                                  }}
-                                  className="w-12 text-center text-[15px] font-black text-primary bg-transparent outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                                />
-                                <button
-                                  onClick={() => setCustomerAssignments(prev => ({ ...prev, [c.id]: (prev[c.id] || 1) + 1 }))}
-                                  className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-black active:scale-90"
-                                >
-                                  <Icon name="plus" size={12} />
-                                </button>
-                              </div>
-                            )}
+
+                            {/* Section B: remove button (only for existing pending customers) */}
                             {!checked && hasPending && (
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleToggleRemovePending(c.id); }}
-                                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider border transition-all active:scale-90 ${
-                                  pendingRemoveCustomerIds.includes(c.id)
-                                    ? 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-400 dark:border-red-500'
-                                    : 'bg-red-50 dark:bg-red-950/30 text-red-500 border-red-200 dark:border-red-800/50'
-                                }`}
+                                className="flex items-center justify-center px-4 bg-surface-hover rounded-l-[20px] rounded-r-2xl transition-all active:scale-90 shrink-0"
                               >
-                                <Icon name="trash" size={10} />
-                                {pendingRemoveCustomerIds.includes(c.id) && "will remove"}
+                                <div className={`flex items-center justify-center rounded-full w-9 h-9 transition-all ${
+                                  pendingRemoveCustomerIds.includes(c.id)
+                                    ? 'bg-red-500 text-white'
+                                    : 'bg-red-50 dark:bg-red-950/30 text-red-500'
+                                }`}>
+                                  {pendingRemoveCustomerIds.includes(c.id) ? (
+                                    <Icon name="close" size={18} strokeWidth={3} />
+                                  ) : (
+                                    <Icon name="trash" size={18} />
+                                  )}
+                                </div>
                               </button>
                             )}
                           </div>

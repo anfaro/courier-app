@@ -49,6 +49,9 @@ export async function GET(req: NextRequest) {
       phoneNumber: customers.phoneNumber,
       address: customers.address,
       housePictureUrl: customers.housePictureUrl,
+      housePictures: customers.housePictures,
+      landmark: customers.landmark,
+      accessInfo: customers.accessInfo,
       createdAt: customers.createdAt,
       latitude: customers.latitude,
       longitude: customers.longitude,
@@ -122,12 +125,13 @@ export async function POST(req: NextRequest) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (token) await logServerAccess(req, token);
     const body = await req.json();
-    const { name, phoneNumber, address, latitude, longitude, housePictureUrl, notes, clusterIds } = body;
+    const { name, phoneNumber, address, latitude, longitude, housePictureUrl, housePictures, landmark, accessInfo, notes, clusterIds } = body;
 
     if (!name || !address) {
       return NextResponse.json({ message: "Name and address are required" }, { status: 400 });
     }
 
+    const photos = housePictures && Array.isArray(housePictures) ? housePictures : [];
     const [newCustomer] = await db.insert(customers).values({
       id: generateId(),
       name,
@@ -135,7 +139,10 @@ export async function POST(req: NextRequest) {
       address,
       latitude: latitude ? latitude.toString() : null,
       longitude: longitude ? longitude.toString() : null,
-      housePictureUrl,
+      housePictureUrl: housePictureUrl || photos[0] || null,
+      housePictures: photos.length > 0 ? JSON.stringify(photos) : null,
+      landmark,
+      accessInfo,
       notes,
     }).returning();
 

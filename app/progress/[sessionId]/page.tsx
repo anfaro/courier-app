@@ -180,7 +180,7 @@ export default function SessionDashboard() {
       groups[d.customerId].total += Number(d.packages) || 1;
       if (d.status === "delivered") groups[d.customerId].delivered += Number(d.packages) || 1;
     });
-    return Object.values(groups).sort((a, b) => b.total - a.total).slice(0, 10);
+    return Object.values(groups).filter(g => g.total > 1).sort((a, b) => b.delivered - a.delivered || b.total - a.total).slice(0, 10);
   }, [sessionData?.deliveries]);
 
   const finalized = sessionData?.finalized ?? false;

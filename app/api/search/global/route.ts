@@ -37,7 +37,8 @@ export async function GET(req: NextRequest) {
           or(
             ilike(customers.name, `%${q}%`),
             ilike(customers.phoneNumber, `%${q}%`),
-            ilike(customers.address, `%${q}%`)
+            ilike(customers.address, `%${q}%`),
+            ilike(customers.landmark, `%${q}%`)
           )
       ).limit(5);
     }

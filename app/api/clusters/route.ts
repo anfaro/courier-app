@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
         name: clusters.name,
         notes: clusters.notes,
         createdAt: clusters.createdAt,
-        customerCount: sql<number>`count(${customerClusters.customerId})`.mapWith(Number),
+        customerCount: sql<number>`count(DISTINCT ${customerClusters.customerId})`.mapWith(Number),
         lastActivity: sql<string | null>`max(${customerVisits.visitedAt})`.mapWith(String),
       })
       .from(clusters)

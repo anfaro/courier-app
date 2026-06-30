@@ -14,13 +14,41 @@ Development is done on a **non-root Termux Android** environment. Turbopack is n
 
 # Project Overview
 
-**Courier SuperApps** — a mobile-first courier management system with customer management, waybill tracking, route optimization, and admin monitoring. Built with Next.js 16 + Drizzle ORM + PostgreSQL (Supabase).
+**Courier SuperApps** — a mobile-first courier management system with customer management, session tracking, route planning, and earnings monitoring. Built with Next.js 16 + Drizzle ORM + PostgreSQL (Supabase).
 
 **Primary audience:** Indonesian couriers/logistics. Indonesian (id) locale is the primary target; English (en) is the fallback.
 
 **Design language:** Google Material Design 3 (MD3) Expressive — large border radii, glassmorphism, spring-based animations, and tactile micro-interactions (`active:scale-90` on all touchable elements). 
 
-**Roadmap** at `ROADMAP.md`. Current milestone: v0.1.x (foundation & polish). Next major update: v2.0 (The Desktop Era) with full-screen command center, AI route optimization, real-time chat, and Redis support.
+**Roadmap** at `ROADMAP.md`. Current milestone: v1.x (foundation & polish). Next major update: v2.0 (The Desktop Era).
+
+## App Purpose (DO NOT OVERRIDE)
+
+This app serves as a **courier's personal logistics toolkit** — a supplement to the company's main app.
+
+### The Problem This App Solves
+1. **Company's main app is limited** — couriers can only see waybill number, WhatsApp number, and often-wrong customer-provided addresses
+2. **Company deletes delivery history after 1–2 weeks** — couriers lose their records
+3. **Couriers previously saved customer data in WhatsApp** — house pictures, locations, and addresses were stored in chat messages, which slowed devices as the database grew and risked accidental data loss
+
+### App's Core Purpose
+- 🏠 **Help couriers find customers' home locations** (accurate GPS pins, real addresses, house pictures, landmark notes)
+- 💾 **Replace WhatsApp as the customer database** (structured storage of customer info — no more scrolling through chat history)
+- 📋 **Preserve delivery history** (company app deletes after 1–2 weeks; this app keeps it permanently)
+- 💰 **Track courier performance & earnings** (session progress, delivery stats, salary tracking)
+
+### What This App Is NOT
+- **Not connected to the company's database** — all data is entered manually
+- **Not a barcode/waybill scanner tool** — scanning was experimental, no plans to use it (no company DB integration)
+- **Not a replacement for the company app** — it's a companion tool for the courier's own records
+
+### Feature Rationale
+- **Customers** — accurate home locations + house pictures + real addresses (replaces WhatsApp storage)
+- **Clusters** — categorizing customers based on their geographic location
+- **Session Progress** — track courier performance and preserve delivery history beyond the company's 1–2 week retention
+- **Earnings** — track courier salary based on delivery performance
+- **Visit Tracking** — record when couriers visit customers (for performance metrics and customer history)
+- **Share** — share customer info with customers themselves for confirmation/updates
 
 ---
 
@@ -276,6 +304,20 @@ npm run lint
 - **Bug fixes**: Removed "Deliveries" from `SystemHealth.tsx` and health/database/backup API routes; replaced broken `delivery.*` translation keys on customer new page with `customer.add_single`, `customer.add_bulk`, `customer.house_picture`; fixed user online status always showing "Offline" by switching admin users page from `db.select().from(users)` to `db.query.users.findMany()`.
 - **Version**: Updated `package.json` from `1.0.0-bugfix1` → `1.1.0`; removed `--webpack` flag from dev/build scripts.
 - **Branch**: Created `with-deliveries` branch at commit `2d72b43` preserving the old deliveries system.
+
+### 2026-06-30 — Customer enhancements: LocationPicker, ImageGalleryInput, landmark, accessInfo
+- **Schema**: Added `landmark`, `accessInfo`, `housePictures` (text, JSON array) columns to `customers` table.
+- **Migration**: Created and applied `drizzle/0016_customer_enhancements.sql` via postgres driver.
+- **LocationPicker** (`components/LocationPicker.tsx` + `components/LeafletMapPicker.tsx`): Full-screen map modal with Leaflet click-to-pin, Nominatim search, draggable marker, reverse geocode on drag.
+- **ImageGalleryInput** (`components/ImageGalleryInput.tsx`): Multi-image upload component with WebP conversion, gallery/camera buttons, thumbnail grid with per-image delete, progress indicator.
+- **API routes** updated: `api/customers` (POST), `api/customers/[id]` (PUT), `api/customers-page`, `api/customers/bulk`, `api/search/global` — all include landmark, accessInfo, housePictures fields.
+- **Customer create page**: Replaced GPS text inputs with LocationPicker button, replaced single ImageInput with ImageGalleryInput, added landmark/accessInfo fields.
+- **Customer edit page**: Same changes as create, plus LocationPicker pre-populated with existing coords.
+- **Customer detail page**: Shows landmark (blue card), accessInfo (amber card), multi-photo gallery (up to 4 thumbnails + count).
+- **Customers list page**: Shows landmark badge on each card (blue chip, truncated 20 chars).
+- **Share page** (`app/share/[token]/page.tsx`): Added landmark/accessInfo display, multi-photo grid hero (2-column for 2+ photos).
+- **i18n**: Added `customer.landmark`, `customer.landmark_placeholder`, `customer.access_info`, `customer.access_info_placeholder`, `customer.house_photos`, `customer.pin_on_map`, `customer.pin_map_desc`.
+- **AGENTS.md**: Updated app purpose clarification (problem, core purpose, what the app is NOT, feature rationale).
 
 ### 2026-06-09 — Session polish, PageHeader, spring animations, build fixes
 - **Migration fix**: Patched `sessions.postgis` → `geometry`, rewrote `session_deliveries.geometry` column from scratch; SQL applied directly via postgres driver.
