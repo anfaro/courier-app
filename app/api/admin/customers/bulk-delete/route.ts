@@ -1,6 +1,6 @@
 // app/api/admin/customers/bulk-delete/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { customers } from "@/lib/schema";
 import { inArray } from "drizzle-orm";
@@ -9,7 +9,7 @@ import { logActivity, logServerAccess, logError } from "@/lib/logger";
 export async function DELETE(req: NextRequest) {
   try {
     // 1. SECURITY FORTRESS: Decrypt the session token directly from the request
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
 
     // 2. BOUNCER CHECK: Are they logged in AND a superadmin?
     if (!token || token.role !== "superadmin") {

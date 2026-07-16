@@ -1,11 +1,11 @@
 // app/api/admin/system/logs/record-error/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { logError } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     const { name, message, stack, pathname } = await req.json();
 
     await logError({

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { savedRoutes } from "@/lib/schema";
 import { eq, and } from "drizzle-orm";
@@ -7,7 +7,7 @@ import { logServerAccess, logError } from "@/lib/logger";
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     if (token) await logServerAccess(req, token);
 

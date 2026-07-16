@@ -466,7 +466,7 @@ export default function DatabaseAdmin() {
                 <span className="text-[12px] font-mono text-[#8b949e] ml-2">backup — bash</span>
               </div>
 
-              <div className="font-mono text-[12px] leading-relaxed mb-4 max-h-[320px] overflow-y-auto custom-scrollbar" style={{ fontFamily: "'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace" }}>
+              <div className="font-mono text-[12px] leading-relaxed mb-4 max-h-[320px] overflow-y-auto no-scrollbar" style={{ fontFamily: "'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace" }}>
                 {backupLogs.length === 0 && !backupRunning && (
                   <div className="flex items-center gap-2 text-[#8b949e]">
                     <span>$</span>
@@ -537,7 +537,7 @@ export default function DatabaseAdmin() {
               </div>
 
               {/* Terminal output */}
-              <div className="font-mono text-[12px] leading-relaxed mb-4 max-h-[320px] overflow-y-auto custom-scrollbar" style={{ fontFamily: "'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace" }}>
+              <div className="font-mono text-[12px] leading-relaxed mb-4 max-h-[320px] overflow-y-auto no-scrollbar" style={{ fontFamily: "'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace" }}>
                 {restoreLogs.length === 0 && !restoreRunning && (
                   <div className="flex items-center gap-2 text-[#8b949e]">
                     <span>$</span>

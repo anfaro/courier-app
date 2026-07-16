@@ -104,7 +104,7 @@ export default function IncomingModal({
     let cancelled = false;
     async function fetchCustomers() {
       try {
-        const res = await fetch("/api/customers?limit=200&offset=0");
+        const res = await fetch("/api/customers?limit=9999");
         if (!cancelled && res.ok) {
           const data = await res.json();
           setAllCustomers(data.customers || []);
@@ -152,10 +152,8 @@ export default function IncomingModal({
         const res = await fetch(`/api/customers/search?q=${encodeURIComponent(customerSearch)}`);
         if (res.ok) {
           const data = await res.json();
-          if (data.length > 0) {
-            setAvailableCustomers(data);
-            return;
-          }
+          setAvailableCustomers(data);
+          return;
         }
       } catch {}
       const q = customerSearch.toLowerCase();
@@ -230,7 +228,7 @@ export default function IncomingModal({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="relative w-full max-w-lg bg-card rounded-t-[32px] sm:rounded-[32px] p-6 pb-24 max-h-[85vh] overflow-y-auto custom-scrollbar shadow-2xl"
+            className="relative w-full max-w-lg bg-card rounded-t-[32px] sm:rounded-[32px] p-6 pb-24 max-h-[85vh] overflow-y-auto no-scrollbar shadow-2xl"
           >
             <h2 className="text-xl font-extrabold text-primary mb-2">
               {t("session.incoming_title")}
@@ -384,7 +382,7 @@ export default function IncomingModal({
                 <Icon name="search" size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary" />
               </div>
 
-              <div className="h-[400px] overflow-y-auto custom-scrollbar space-y-1">
+              <div className="h-[400px] overflow-y-auto no-scrollbar space-y-1">
                 {filteredCustomers.length === 0 ? (
                   <p className="text-[13px] text-secondary py-4 text-center">
                     {customerSearch ? "No customers match your search" : "No customers available"}

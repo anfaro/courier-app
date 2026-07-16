@@ -369,7 +369,7 @@ export default function NewCustomerPage() {
                     <button onClick={() => setBulkList([])} className="text-[11px] font-black text-red-500 uppercase tracking-wider active:scale-90 transition-transform">{t("action.clear_all")}</button>
                   </div>
 
-                  <div className="max-h-[60vh] overflow-y-auto space-y-3 pb-20 pr-1 custom-scrollbar">
+                  <div className="max-h-[60vh] overflow-y-auto space-y-3 pb-20 pr-1 no-scrollbar">
                     {bulkList.map((c, i) => (
                       <div key={i} className="flex items-center gap-4 rounded-[2rem] bg-card border border-card-border p-3 shadow-sm">
                         <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-surface-hover border border-card-border flex items-center justify-center">

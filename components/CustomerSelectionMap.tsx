@@ -429,7 +429,7 @@ export default function CustomerSelectionMap({ customers, clusters }: { customer
                 <button onClick={deselectAll} className="text-[11px] font-bold text-secondary active:scale-90">None</button>
               </div>
             </div>
-            <div className="max-h-[calc(70vh-60px)] overflow-y-auto custom-scrollbar divide-y divide-card-border">
+            <div className="max-h-[calc(70vh-60px)] overflow-y-auto no-scrollbar divide-y divide-card-border">
               {filteredCustomers.map((c) => (
                 <button
                   key={c.id}
@@ -473,7 +473,7 @@ export default function CustomerSelectionMap({ customers, clusters }: { customer
                 {t("map.no_saved_routes")}
               </div>
             ) : (
-              <div className="max-h-[calc(70vh-60px)] overflow-y-auto custom-scrollbar divide-y divide-card-border">
+              <div className="max-h-[calc(70vh-60px)] overflow-y-auto no-scrollbar divide-y divide-card-border">
                 {savedTrips.map((trip: any) => (
                   <div key={trip.id} className="flex items-center gap-3 px-5 py-3">
                     <button

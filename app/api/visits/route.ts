@@ -9,6 +9,8 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const customerId = searchParams.get("customerId");
+    const limit = Math.min(Number(searchParams.get("limit")) || 50, 200);
+    const offset = Number(searchParams.get("offset")) || 0;
 
     if (customerId) {
       const visits = await db
@@ -16,7 +18,8 @@ export async function GET(req: NextRequest) {
         .from(customerVisits)
         .where(sql`${customerVisits.customerId} = ${customerId}`)
         .orderBy(desc(customerVisits.visitedAt))
-        .limit(1);
+        .limit(limit)
+        .offset(offset);
       return NextResponse.json({ visits });
     }
 
@@ -29,10 +32,13 @@ export async function GET(req: NextRequest) {
       FROM customer_visits cv
       LEFT JOIN customers c ON c.id = cv.customer_id
       ORDER BY cv.customer_id, cv.visited_at DESC
+      LIMIT ${limit + 1} OFFSET ${offset}
     `);
 
     const rows = Array.isArray(recentVisits) ? recentVisits : (recentVisits as any)?.rows || [];
-    return NextResponse.json({ visits: rows });
+    const hasMore = rows.length > limit;
+    if (hasMore) rows.pop();
+    return NextResponse.json({ visits: rows, hasMore, limit, offset });
   } catch (error) {
     await logError({
       errorName: "FetchVisitsError",

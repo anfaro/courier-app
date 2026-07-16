@@ -217,7 +217,7 @@ export default function Header() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                className="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-full sm:w-[450px] max-h-[70vh] overflow-y-auto rounded-[32px] bg-card/95 dark:bg-slate-900/95 p-2 shadow-2xl ring-1 ring-black/5 dark:ring-white/5 backdrop-blur-2xl z-[100] custom-scrollbar"
+                className="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-full sm:w-[450px] max-h-[70vh] overflow-y-auto rounded-[32px] bg-card/95 dark:bg-slate-900/95 p-2 shadow-2xl ring-1 ring-black/5 dark:ring-white/5 backdrop-blur-2xl z-[100] no-scrollbar"
               >
                 
                 {isSearching && (

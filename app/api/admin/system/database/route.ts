@@ -1,6 +1,6 @@
 // app/api/admin/system/database/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { count, sql } from "drizzle-orm";
 import { customers, clusters, customerClusters, users, logs, errorLogs, accessLogs, customerVisits, sessions, incomings, sessionDeliveries, savedRoutes, passwordResetTokens } from "@/lib/schema";
@@ -14,7 +14,7 @@ async function safeCount(table: any): Promise<number> {
 
 export async function GET(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token || token.role !== "superadmin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token || token.role !== "superadmin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

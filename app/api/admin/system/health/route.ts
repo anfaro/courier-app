@@ -1,13 +1,13 @@
 // app/api/admin/system/health/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { sql, count } from "drizzle-orm";
 import { customers, clusters, users, logs } from "@/lib/schema";
 
 export async function GET(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token || token.role !== "superadmin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

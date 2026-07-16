@@ -15,7 +15,7 @@ export default async function AdminUsersPage() {
         <PageHeader title="Fleet Management" />
       </div>
 
-      <main className="flex-1 overflow-y-auto custom-scrollbar pb-32">
+      <main className="flex-1 overflow-y-auto no-scrollbar pb-32">
         <div className="pt-4 px-4 sm:px-6 mb-6">
           <h1 className="text-3xl font-extrabold tracking-tight text-primary">Fleet Management</h1>
           <p className="text-[14px] font-medium text-secondary mt-1">Manage usernames, roles, and security for couriers.</p>

@@ -1,12 +1,13 @@
 // app/api/clusters/route.ts
 import { NextResponse, NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { clusters, customerClusters, customerVisits } from "@/lib/schema";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
 import { generateId } from "@/lib/utils";
 import { eq, sql } from "drizzle-orm";
 import { getCached, setCache } from "@/lib/cache";
+import { clusterSchema } from "@/lib/validation";
 
 export async function GET(req: NextRequest) {
   try {
@@ -58,14 +59,15 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (token) await logServerAccess(req, token);
     const body = await req.json();
-    const { name, notes, customerIds } = body;
-
-    if (!name || name.trim() === "") {
-      return NextResponse.json({ message: "Cluster name is required" }, { status: 400 });
+    const parsed = clusterSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ message: parsed.error.issues[0].message }, { status: 400 });
     }
+    const { name, notes } = parsed.data;
+    const { customerIds } = body;
 
     const [newCluster] = await db
       .insert(clusters)

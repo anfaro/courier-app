@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { sql, eq } from "drizzle-orm";
 import { sessions, incomings, sessionDeliveries, customerVisits } from "@/lib/schema";
 import { generateId } from "@/lib/utils";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
+import { deliveryStatusSchema } from "@/lib/validation";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string; deliveryId: string }> }) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     await logServerAccess(req, token);
 
@@ -25,11 +26,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     const body = await req.json();
-    const { status, splitCount, latitude, longitude } = body;
-
-    if (!["delivered", "returned", "rescheduled"].includes(status)) {
-      return NextResponse.json({ message: "Invalid status" }, { status: 400 });
+    const parsed = deliveryStatusSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ message: parsed.error.issues[0].message }, { status: 400 });
     }
+    const { status, splitCount, latitude, longitude } = parsed.data;
 
     const [delivery] = await db.select().from(sessionDeliveries)
       .where(eq(sessionDeliveries.id, deliveryId))
@@ -127,7 +128,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string; deliveryId: string }> }) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     await logServerAccess(req, token);
 

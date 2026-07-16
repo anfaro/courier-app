@@ -221,7 +221,7 @@ export default function VisitManager({ customerId, hideCheckIn }: { customerId: 
           <p className="text-[14px] font-medium text-secondary">{t("customer.no_visits")}</p>
         </div>
       ) : (
-        <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar pr-1">
+        <div className="space-y-3 max-h-64 overflow-y-auto no-scrollbar pr-1">
           {visits.map((v) => (
             <div key={v.id} className="flex items-start gap-3 p-3 rounded-2xl bg-surface-hover/50">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-sm font-black text-blue-700 dark:text-blue-400">

@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { sessions, incomings, sessionDeliveries } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
+import { sessionUpdateSchema } from "@/lib/validation";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
     const resolvedParams = await params;
@@ -50,13 +51,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     await logServerAccess(req, token);
 
     const resolvedParams = await params;
     const id = resolvedParams.id;
     const body = await req.json();
+    const parsed = sessionUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ message: parsed.error.issues[0].message }, { status: 400 });
+    }
 
     const existing = await db.select().from(sessions).where(eq(sessions.id, id)).limit(1);
     if (!existing.length) return NextResponse.json({ message: "Session not found" }, { status: 404 });
@@ -64,7 +69,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const isSuperAdmin = (token as any)?.role === "superadmin";
     if (body.finalized !== undefined) {
-      if (body.finalized === true) {
+      if (body.finalized) {
         await db.update(sessions)
           .set({ finalized: true, updatedAt: new Date() })
           .where(eq(sessions.id, id));
@@ -103,27 +108,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const updateData: Record<string, unknown> = { updatedAt: new Date() };
 
-    if (body.totalPackages !== undefined) {
-      const val = String(body.totalPackages);
-      if (val === "" || isNaN(Number(val))) {
-        return NextResponse.json({ message: "Invalid totalPackages" }, { status: 400 });
-      }
-      updateData.totalPackages = val;
+    if (parsed.data.totalPackages !== undefined) {
+      updateData.totalPackages = String(parsed.data.totalPackages);
     }
 
-    if (body.deliveredPackages !== undefined) {
-      const val = String(body.deliveredPackages);
-      if (val === "" || isNaN(Number(val))) {
-        return NextResponse.json({ message: "Invalid deliveredPackages" }, { status: 400 });
-      }
-      updateData.deliveredPackages = val;
+    if (parsed.data.deliveredPackages !== undefined) {
+      updateData.deliveredPackages = String(parsed.data.deliveredPackages);
     }
 
-    if (body.date !== undefined) {
-      if (typeof body.date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(body.date)) {
-        return NextResponse.json({ message: "Invalid date format. Use YYYY-MM-DD." }, { status: 400 });
-      }
-      updateData.date = body.date;
+    if (parsed.data.date !== undefined) {
+      updateData.date = parsed.data.date;
     }
 
     await db.update(sessions)
@@ -150,7 +144,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     await logServerAccess(req, token);
 

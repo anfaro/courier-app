@@ -2,13 +2,13 @@
 import { db } from "@/lib/db";
 import { customers } from "@/lib/schema";
 import { NextResponse, NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
 import { generateId } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (token) await logServerAccess(req, token);
     const body = await req.json();
 

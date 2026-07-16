@@ -80,7 +80,7 @@ export default function AdminAnalytics() {
           {activeTab === 'access' && !isLoading && <span className="text-[10px] font-mono text-emerald-500 animate-pulse uppercase">● Live_Connect</span>}
         </div>
         
-        <div className={`max-h-[500px] overflow-y-auto custom-scrollbar ${activeTab === 'access' ? 'divide-y divide-slate-800/50 p-2 font-mono overflow-x-auto' : ''}`}>
+        <div className={`max-h-[500px] overflow-y-auto no-scrollbar ${activeTab === 'access' ? 'divide-y divide-slate-800/50 p-2 font-mono overflow-x-auto' : ''}`}>
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -187,7 +187,7 @@ export default function AdminAnalytics() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              className="relative w-full max-w-lg rounded-[32px] bg-card p-6 shadow-2xl border border-card-border max-h-[85vh] overflow-y-auto custom-scrollbar"
+              className="relative w-full max-w-lg rounded-[32px] bg-card p-6 shadow-2xl border border-card-border max-h-[85vh] overflow-y-auto no-scrollbar"
             >
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
@@ -256,7 +256,7 @@ export default function AdminAnalytics() {
                     {selectedLog.stackTrace && (
                       <div>
                         <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">Stack Trace</p>
-                        <pre className="text-[11px] font-mono text-primary bg-surface-hover rounded-2xl p-4 overflow-x-auto whitespace-pre-wrap max-h-48 custom-scrollbar">{selectedLog.stackTrace}</pre>
+                        <pre className="text-[11px] font-mono text-primary bg-surface-hover rounded-2xl p-4 overflow-x-auto whitespace-pre-wrap max-h-48 no-scrollbar">{selectedLog.stackTrace}</pre>
                       </div>
                     )}
                     {selectedLog.pathname && (

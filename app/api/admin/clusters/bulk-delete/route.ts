@@ -1,6 +1,6 @@
 // app/api/admin/clusters/bulk-delete/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { clusters } from "@/lib/schema";
 import { inArray } from "drizzle-orm";
@@ -8,7 +8,7 @@ import { logActivity, logServerAccess, logError } from "@/lib/logger";
 
 export async function DELETE(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token || token.role !== "superadmin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     await logServerAccess(req, token);

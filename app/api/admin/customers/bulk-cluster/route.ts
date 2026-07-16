@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { customerClusters } from "@/lib/schema";
 import { eq, and, inArray } from "drizzle-orm";
@@ -7,7 +7,7 @@ import { logServerAccess, logActivity, logError } from "@/lib/logger";
 
 export async function PATCH(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token || (token.role as string) !== "superadmin") {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }

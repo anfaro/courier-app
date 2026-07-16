@@ -1,13 +1,13 @@
 // app/api/admin/wipe-data/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { customers, clusters, logs, passwordResetTokens } from "@/lib/schema";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     
     if (!token || token.role !== "superadmin") {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });

@@ -354,7 +354,7 @@ function CustomersListContent() {
         </div>
 
         {/* Quick Filters */}
-        <div className="flex gap-2 mb-4 overflow-x-auto custom-scrollbar pb-1">
+        <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar pb-1">
           {(["all", "hasPin", "noPin", "visited"] as const).map((f) => (
             <button
               key={f}

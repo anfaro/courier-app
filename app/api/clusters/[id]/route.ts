@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { clusters, customerClusters } from "@/lib/schema";
 import { eq, sql } from "drizzle-orm";
@@ -64,7 +64,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (token) await logServerAccess(req, token);
     const resolvedParams = await params;
     const id = resolvedParams.id;
@@ -109,7 +109,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (token) await logServerAccess(req, token);
     const resolvedParams = await params;
     const id = resolvedParams.id;

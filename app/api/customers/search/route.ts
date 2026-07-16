@@ -1,13 +1,13 @@
 import { db } from "@/lib/db";
 import { customers } from "@/lib/schema";
-import { ilike, or } from "drizzle-orm";
+import { or, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { logError } from "@/lib/logger";
 
 export async function GET(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
@@ -15,11 +15,13 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q") || "";
 
+    const pattern = `%${q}%`;
+
     const results = await db.select().from(customers)
       .where(or(
-        ilike(customers.name, `%${q}%`),
-        ilike(customers.phoneNumber, `%${q}%`),
-        ilike(customers.address, `%${q}%`)
+        sql`${customers.name} ILIKE ${pattern}`,
+        sql`${customers.phoneNumber} ILIKE ${pattern}`,
+        sql`${customers.address} ILIKE ${pattern}`
       ))
       .limit(10);
 

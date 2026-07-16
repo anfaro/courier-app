@@ -3,13 +3,13 @@
 import { motion } from "framer-motion";
 import { useLanguage } from "./LanguageProvider";
 
-interface DayData {
-  date: string;
+interface MonthData {
+  month: string;
   total: number;
   delivered: number;
 }
 
-export default function DeliveryChart({ data }: { data: DayData[] }) {
+export default function DeliveryChart({ data }: { data: MonthData[] }) {
   const { t, locale } = useLanguage();
 
   if (!data.length) return null;
@@ -19,18 +19,18 @@ export default function DeliveryChart({ data }: { data: DayData[] }) {
   const deliveredAll = data.reduce((s, d) => s + d.delivered, 0);
   const overallPct = totalAll > 0 ? Math.round((deliveredAll / totalAll) * 100) : 0;
 
-  const barGap = 6;
-  const barPairWidth = 36;
-  const barWidth = 14;
+  const barGap = 10;
+  const barPairWidth = 48;
+  const barWidth = 18;
   const chartHeight = 180;
   const labelHeight = 40;
   const svgWidth = data.length * (barPairWidth + barGap) + barGap;
 
   const dateLocale = locale === "id" ? "id-ID" : "en-GB";
 
-  function formatLabel(dateStr: string) {
-    const d = new Date(dateStr + "T00:00:00");
-    return d.toLocaleDateString(dateLocale, { day: "numeric", month: "short" });
+  function formatLabel(month: string) {
+    const d = new Date(month + "-01T00:00:00");
+    return d.toLocaleDateString(dateLocale, { month: "short", year: "2-digit" });
   }
 
   return (
@@ -56,7 +56,7 @@ export default function DeliveryChart({ data }: { data: DayData[] }) {
       </div>
 
       {/* Chart */}
-      <div className="overflow-x-auto custom-scrollbar -mx-1">
+      <div className="overflow-x-auto no-scrollbar -mx-1">
         <svg width={svgWidth} height={chartHeight + labelHeight} className="mx-1">
           {/* Grid lines */}
           {[0, 0.25, 0.5, 0.75, 1].map((frac) => {
@@ -77,7 +77,7 @@ export default function DeliveryChart({ data }: { data: DayData[] }) {
             const totalH = (d.total / maxVal) * (chartHeight - 10);
             const delH = (d.delivered / maxVal) * (chartHeight - 10);
             return (
-              <g key={d.date}>
+              <g key={d.month}>
                 {/* Total bar */}
                 <motion.rect
                   initial={{ height: 0, y: chartHeight }}
@@ -93,12 +93,12 @@ export default function DeliveryChart({ data }: { data: DayData[] }) {
                   initial={{ height: 0, y: chartHeight }}
                   animate={{ height: delH, y: chartHeight - delH }}
                   transition={{ delay: Math.min(i, 10) * 0.02 + 0.04, duration: 0.3, ease: "easeOut" }}
-                  x={x + barWidth + 2}
+                  x={x + barWidth + 4}
                   width={barWidth}
                   rx={4}
                   className="fill-emerald-400 dark:fill-emerald-500"
                 />
-                {/* Date label */}
+                {/* Month label */}
                 <text
                   x={x + barPairWidth / 2}
                   y={chartHeight + 15}
@@ -108,7 +108,7 @@ export default function DeliveryChart({ data }: { data: DayData[] }) {
                   fontSize={9}
                   fontWeight={600}
                 >
-                  {formatLabel(d.date)}
+                  {formatLabel(d.month)}
                 </text>
               </g>
             );

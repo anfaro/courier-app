@@ -202,6 +202,7 @@ export const translations: Translations = {
   "action.edit": { en: "Edit", id: "Ubah" },
   "action.view": { en: "View Details", id: "Lihat Detail" },
   "action.loading": { en: "Loading...", id: "Memuat..." },
+  "action.apply": { en: "Apply", id: "Terapkan" },
   "action.confirm": { en: "Confirm", id: "Konfirmasi" },
   "action.clear_all": { en: "Clear All", id: "Bersihkan Semua" },
   "action.resolve": { en: "Resolve", id: "Selesaikan" },
@@ -338,6 +339,7 @@ export const translations: Translations = {
   "session.packages": { en: "packages", id: "paket" },
   "session.pending": { en: "pending", id: "menunggu" },
   "session.map_empty": { en: "All deliveries completed! Map is empty.", id: "Semua pengiriman selesai! Peta kosong." },
+  "session.search_placeholder": { en: "Search by date...", id: "Cari berdasarkan tanggal..." },
 
   // Earnings
   "earnings.title": { en: "Earnings", id: "Pendapatan" },

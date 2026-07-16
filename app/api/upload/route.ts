@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { logServerAccess, logActivity, logError } from "@/lib/logger";
 import { uploadImage } from "@/lib/images";
 
@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }

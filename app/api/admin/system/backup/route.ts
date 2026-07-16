@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { customers, clusters, customerClusters, users, customerVisits, sessions, incomings, sessionDeliveries, savedRoutes, passwordResetTokens } from "@/lib/schema";
 import { generateId } from "@/lib/utils";
@@ -133,7 +133,7 @@ function getTableRef(table: string): any {
 
 export async function GET(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token || token.role !== "superadmin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -216,7 +216,7 @@ async function enableFkChecks() {
 export async function POST(req: NextRequest) {
   let fkDisabled = false;
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token || token.role !== "superadmin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

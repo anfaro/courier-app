@@ -1,7 +1,7 @@
 // app/customers/[id]/page.tsx
 import { db } from "@/lib/db";
-import { customers } from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import { customers, sessionDeliveries, sessions } from "@/lib/schema";
+import { eq, and, desc, sql } from "drizzle-orm";
 import PageHeader from "@/components/PageHeader";
 import SectionWrapper from "@/components/SectionWrapper";
 import Link from "next/link";
@@ -45,6 +45,19 @@ export default async function CustomerDetailsPage({
   if (!customerData) return notFound();
 
   const housePhotos = parseHousePictures(customerData.housePictures, customerData.housePictureUrl);
+
+  const sessionHistory = await db
+    .select({
+      sessionId: sessions.id,
+      date: sessions.date,
+      pkgCount: sql<number>`COALESCE(SUM(NULLIF(${sessionDeliveries.packages}, '')::int), 0)`,
+    })
+    .from(sessionDeliveries)
+    .innerJoin(sessions, eq(sessions.id, sessionDeliveries.sessionId))
+    .where(eq(sessionDeliveries.customerId, customerId))
+    .groupBy(sessions.id, sessions.date)
+    .orderBy(desc(sessions.date))
+    .limit(20);
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -181,6 +194,34 @@ export default async function CustomerDetailsPage({
               </div>
            </div>
         </SectionWrapper>
+
+        {/* --- DELIVERY HISTORY --- */}
+        {sessionHistory.length > 0 && (
+          <SectionWrapper delay={0.12} className="rounded-[2.5rem] bg-card p-6 sm:p-8 border border-card-border shadow-sm">
+            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-secondary mb-4 ml-1">
+              Delivery History
+            </p>
+            <div className="space-y-2">
+              {sessionHistory.map((sh) => (
+                <Link
+                  key={`${sh.sessionId}-${sh.date}`}
+                  href={`/progress/${sh.sessionId}`}
+                  className="flex items-center justify-between rounded-2xl border border-card-border bg-surface-hover/30 px-4 py-3 transition hover:bg-surface-hover active:scale-90"
+                >
+                  <p className="text-[13px] font-bold text-primary">
+                    {new Date(sh.date + "T00:00:00").toLocaleDateString("id-ID", {
+                      day: "numeric", month: "long", year: "numeric",
+                    })}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-medium text-secondary">{sh.pkgCount} pkg</span>
+                    <Icon name="chevron-right" size={16} className="text-secondary/40" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </SectionWrapper>
+        )}
 
         <SectionWrapper delay={0.15}>
           <VisitManager customerId={customerId} hideCheckIn={true} />

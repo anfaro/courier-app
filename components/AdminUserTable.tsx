@@ -361,7 +361,7 @@ export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }
         <div className="fixed inset-0 z-[250] flex items-end sm:items-center justify-center p-4">
             <div className="absolute inset-0 bg-gray-900/60 dark:bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300" onClick={() => !isLoading && setShowRoleModal(false)} />
             
-            <div className="relative w-full max-w-lg rounded-[40px] bg-card p-6 shadow-2xl border border-card-border dark:border-slate-800 animate-in slide-in-from-bottom-12 sm:zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar no-scrollbar">
+            <div className="relative w-full max-w-lg rounded-[40px] bg-card p-6 shadow-2xl border border-card-border dark:border-slate-800 animate-in slide-in-from-bottom-12 sm:zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto no-scrollbar no-scrollbar">
                 <div className="mx-auto mb-6 h-1.5 w-12 rounded-full bg-gray-200 dark:bg-slate-700 sm:hidden"></div>
 
                 <div className="mb-8 px-2">
@@ -481,7 +481,7 @@ export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }
         <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4">
             <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => !isAddingUser && setShowAddUserModal(false)} />
             
-            <div className="relative w-full max-w-md rounded-[32px] bg-card p-6 shadow-2xl border border-card-border dark:border-slate-800 animate-in slide-in-from-bottom-8 sm:zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div className="relative w-full max-w-md rounded-[32px] bg-card p-6 shadow-2xl border border-card-border dark:border-slate-800 animate-in slide-in-from-bottom-8 sm:zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto no-scrollbar">
                 <div className="mx-auto mb-6 h-1.5 w-12 rounded-full bg-gray-200 dark:bg-slate-700 sm:hidden"></div>
 
                 <h3 className="text-xl font-black text-primary">{t("admin.add_user")}</h3>

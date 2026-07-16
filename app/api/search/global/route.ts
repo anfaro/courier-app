@@ -1,14 +1,14 @@
 // app/api/search/global/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { customers, users, clusters } from "@/lib/schema";
-import { ilike, or, eq } from "drizzle-orm";
+import { or, eq, sql } from "drizzle-orm";
 import { logActivity, logError } from "@/lib/logger";
 
 export async function GET(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -32,20 +32,22 @@ export async function GET(req: NextRequest) {
     let foundClusters: any[] = [];
     let foundUsers: any[] = [];
 
+    const pattern = `%${q}%`;
+
     if (!type || type === "customer") {
       foundCustomers = await db.select().from(customers).where(
           or(
-            ilike(customers.name, `%${q}%`),
-            ilike(customers.phoneNumber, `%${q}%`),
-            ilike(customers.address, `%${q}%`),
-            ilike(customers.landmark, `%${q}%`)
+            sql`${customers.name} ILIKE ${pattern}`,
+            sql`${customers.phoneNumber} ILIKE ${pattern}`,
+            sql`${customers.address} ILIKE ${pattern}`,
+            sql`${customers.landmark} ILIKE ${pattern}`
           )
       ).limit(5);
     }
 
     if (!type || type === "cluster") {
       foundClusters = await db.select().from(clusters).where(
-          ilike(clusters.name, `%${q}%`)
+          sql`${clusters.name} ILIKE ${pattern}`
       ).limit(5);
     }
 
@@ -60,8 +62,8 @@ export async function GET(req: NextRequest) {
         .from(users)
         .where(
           or(
-            ilike(users.name, `%${q}%`),
-            ilike(users.email, `%${q}%`)
+            sql`${users.name} ILIKE ${pattern}`,
+            sql`${users.email} ILIKE ${pattern}`
           )
         )
         .limit(5);

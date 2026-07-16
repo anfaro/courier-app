@@ -1,6 +1,6 @@
 // app/api/dashboard/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { sessions, users } from "@/lib/schema";
 import { eq, desc, between, and, sql } from "drizzle-orm";
@@ -9,7 +9,7 @@ import { getCutoffPeriod } from "@/lib/earnings";
 
 export async function GET(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
     // Run all queries in parallel

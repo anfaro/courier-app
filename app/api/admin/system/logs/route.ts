@@ -1,6 +1,6 @@
 // app/api/admin/system/logs/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { logs, errorLogs, accessLogs } from "@/lib/schema";
 import { desc, and, gte, lte, or, like } from "drizzle-orm";
@@ -8,7 +8,7 @@ import { logError } from "@/lib/logger";
 
 export async function GET(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token || token.role !== "superadmin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

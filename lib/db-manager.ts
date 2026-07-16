@@ -104,7 +104,6 @@ export async function initializeDb() {
   const useConfig = config.databaseUrl || config.host;
   const url = useConfig ? connectionString : (envUrl || "");
   currentClient = createClient(url, useConfig ? config.ssl : undefined);
-  await currentClient`SELECT 1`.catch(() => {});
   currentDb = drizzle(currentClient, { schema });
 
   if (process.env.VERCEL) {
@@ -133,7 +132,6 @@ export async function updateDbConfig(config: Record<string, string>) {
 
   const connectionString = buildConnectionString(config);
   currentClient = createClient(connectionString, config.ssl);
-  await currentClient`SELECT 1`.catch(() => {});
   currentDb = drizzle(currentClient, { schema });
 
   if (process.env.VERCEL) {
@@ -160,7 +158,6 @@ export async function resetToEnvVar() {
   clearCachedClient();
 
   currentClient = createClient(envUrl, "require");
-  await currentClient`SELECT 1`.catch(() => {});
   currentDb = drizzle(currentClient, { schema });
 
   if (process.env.VERCEL) {

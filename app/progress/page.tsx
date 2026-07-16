@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useToast } from "@/components/ToastProvider";
@@ -9,7 +9,7 @@ import PageHeader from "@/components/PageHeader";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import Icon from "@/components/Icon";
-import DeliveryChart from "@/components/DeliveryChart";
+import SessionDayChart from "@/components/SessionDayChart";
 
 interface Session {
   id: string;
@@ -22,6 +22,7 @@ interface Session {
 
 interface DayData {
   date: string;
+  month: string;
   total: number;
   delivered: number;
 }
@@ -35,46 +36,95 @@ export default function ProgressDashboard() {
   const [chartData, setChartData] = useState<DayData[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" }).slice(0, 7);
+  });
+  const [searchText, setSearchText] = useState("");
 
   const dateLocale = locale === "id" ? "id-ID" : "en-GB";
 
+  function shiftMonth(month: string, direction: "prev" | "next"): string {
+    const [y, m] = month.split("-").map(Number);
+    if (direction === "prev") {
+      if (m === 1) return `${y - 1}-12`;
+      return `${y}-${String(m - 1).padStart(2, "0")}`;
+    }
+    if (m === 12) return `${y + 1}-01`;
+    return `${y}-${String(m + 1).padStart(2, "0")}`;
+  }
+
+  function isMonthFuture(month: string): boolean {
+    const current = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" }).slice(0, 7);
+    return month > current;
+  }
+
+  function getMonthRange(month: string) {
+    const [y, m] = month.split("-").map(Number);
+    const lastDay = new Date(y, m, 0).getDate();
+    return {
+      dateFrom: `${month}-01`,
+      dateEnd: `${month}-${String(lastDay).padStart(2, "0")}`,
+    };
+  }
+
+  function formatMonth(month: string): string {
+    const d = new Date(month + "-01T00:00:00");
+    return d.toLocaleDateString(dateLocale, { month: "long", year: "numeric" });
+  }
+
   useEffect(() => {
     fetchSessions();
-    fetchAnalytics();
-  }, []);
+  }, [currentMonth]);
 
   useEffect(() => {
     function handleFocus() {
-      fetchSessions();
-      fetchAnalytics();
+      fetchRef.current();
     }
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
   }, []);
 
+  useEffect(() => {
+    function handlePopState() {
+      fetchRef.current();
+    }
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  function handleFilterChange() {
+    fetchSessions();
+  }
+
+  function clearSearch() {
+    setSearchText("");
+    setTimeout(() => fetchSessions(), 0);
+  }
+
+  const fetchRef = useRef(fetchSessions);
+  fetchRef.current = fetchSessions;
+
   async function fetchSessions() {
+    setLoading(true);
     try {
-      const res = await fetch("/api/sessions");
+      const params = new URLSearchParams();
+      const range = getMonthRange(currentMonth);
+      params.set("dateFrom", range.dateFrom);
+      params.set("dateTo", range.dateEnd);
+      if (searchText) params.set("search", searchText);
+      const qs = params.toString();
+      const res = await fetch(`/api/sessions${qs ? `?${qs}` : ""}`, { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         setSessions(data.sessions || []);
+        setChartData(data.analytics || []);
+      } else {
+        showToast("Failed to fetch sessions", "error");
       }
-    } catch (err) {
-      console.warn("Failed to fetch sessions", err);
+    } catch {
+      showToast("Failed to fetch sessions", "error");
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function fetchAnalytics() {
-    try {
-      const res = await fetch("/api/sessions/analytics");
-      if (res.ok) {
-        const data = await res.json();
-        setChartData(data.data || []);
-      }
-    } catch (err) {
-      console.warn("Failed to fetch analytics", err);
     }
   }
 
@@ -144,6 +194,30 @@ export default function ProgressDashboard() {
           </motion.button>
         </div>
 
+        {/* Search */}
+        <div className="relative mb-4">
+          <input
+            type="text"
+            value={searchText}
+            onChange={(e) => { setSearchText(e.target.value); }}
+            onKeyDown={(e) => { if (e.key === "Enter") handleFilterChange(); }}
+            placeholder={t("session.search_placeholder")}
+            className="w-full rounded-2xl bg-card border border-card-border px-4 py-2.5 pl-10 text-[13px] font-medium text-primary placeholder:text-secondary/50 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+          />
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary/60">
+            <Icon name="search" size={16} />
+          </span>
+          {searchText && (
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={clearSearch}
+              className="absolute right-3 top-1/2 -translate-y-1/2 h-6 w-6 flex items-center justify-center rounded-full bg-surface-hover text-secondary/60"
+            >
+              <Icon name="close" size={12} />
+            </motion.button>
+          )}
+        </div>
+
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
@@ -171,7 +245,35 @@ export default function ProgressDashboard() {
           </div>
         ) : (
           <div className="space-y-4">
-            {chartData.length > 0 && <DeliveryChart data={chartData} />}
+            {chartData.length > 0 && (
+              <div className="rounded-[24px] bg-card border border-card-border p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <motion.button
+                    whileTap={{ scale: 0.85 }}
+                    onClick={() => setCurrentMonth(shiftMonth(currentMonth, "prev"))}
+                    className="h-8 w-8 flex items-center justify-center rounded-full bg-surface-hover text-secondary hover:bg-card-border transition-colors"
+                  >
+                    <Icon name="chevron-left" size={16} />
+                  </motion.button>
+                  <span className="text-[15px] font-bold text-primary">
+                    {formatMonth(currentMonth)}
+                  </span>
+                  <motion.button
+                    whileTap={{ scale: 0.85 }}
+                    onClick={() => setCurrentMonth(shiftMonth(currentMonth, "next"))}
+                    disabled={isMonthFuture(shiftMonth(currentMonth, "next"))}
+                    className={`h-8 w-8 flex items-center justify-center rounded-full transition-colors ${
+                      isMonthFuture(shiftMonth(currentMonth, "next"))
+                        ? "bg-surface-hover text-secondary/30 cursor-not-allowed"
+                        : "bg-surface-hover text-secondary hover:bg-card-border"
+                    }`}
+                  >
+                    <Icon name="chevron-right" size={16} />
+                  </motion.button>
+                </div>
+                <SessionDayChart data={chartData.filter(d => d.month === currentMonth)} />
+              </div>
+            )}
             {sessions.map((s, i) => {
               const progress = calcProgress(s);
               const total = Number(s.totalPackages) || 0;

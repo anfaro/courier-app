@@ -21,6 +21,7 @@ export const users = pgTable("users", {
   targetSystem: boolean("target_system").default(true).notNull(),
   getGeocode: boolean("get_geocode").default(true).notNull(),
   tokenVersion: integer("token_version").default(1).notNull(),
+  apiToken: text("api_token").unique(),
   isActive: boolean("is_active").default(false),
   lastActiveAt: timestamp("last_active_at"),
   createdAt: timestamp("created_at").defaultNow(),

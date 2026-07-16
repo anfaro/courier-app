@@ -686,7 +686,7 @@ export default function IncomingDetailPage() {
             </div>
 
             {/* Tab Bar */}
-            <div className="flex gap-1 mb-4 bg-surface-hover rounded-2xl p-1 overflow-x-auto custom-scrollbar">
+            <div className="flex gap-1 mb-4 bg-surface-hover rounded-2xl p-1 overflow-x-auto no-scrollbar">
               {(["pending", "returned", "rescheduled", "delivered"] as const).map((tab) => {
                 const countMap = { pending: pendingPackagesCount, returned: returnedDeliveries.length, rescheduled: rescheduledDeliveries.length, delivered: deliveredDeliveries.length };
                 const colorMap = { pending: "text-blue-600 dark:text-blue-400", returned: "text-orange-600 dark:text-orange-400", rescheduled: "text-purple-600 dark:text-purple-400", delivered: "text-emerald-600 dark:text-emerald-400" };
@@ -1130,7 +1130,7 @@ export default function IncomingDetailPage() {
                   </div>
 
                   {/* Customer List */}
-                  <div className="max-h-[300px] overflow-y-auto custom-scrollbar space-y-1 mb-4">
+                  <div className="max-h-[300px] overflow-y-auto no-scrollbar space-y-1 mb-4">
                     {availableCustomers.length === 0 ? (
                       <p className="text-[13px] text-secondary py-4 text-center">
                         {customerSearch ? "No customers match your search" : "No customers available"}

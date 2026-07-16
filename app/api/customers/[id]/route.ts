@@ -1,10 +1,11 @@
 // app/api/customers/[id]/route.ts
 import { NextResponse, NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { customers, customerClusters } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
+import { customerSchema } from "@/lib/validation";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -27,14 +28,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (token) await logServerAccess(req, token);
     const resolvedParams = await params;
     const id = resolvedParams.id;
     const body = await req.json();
-    const { name, phoneNumber, address, latitude, longitude, housePictureUrl, housePictures, landmark, accessInfo, notes, clusterIds } = body;
-
-    if (!name || !address) return NextResponse.json({ message: "Name and address are required" }, { status: 400 });
+    const parsed = customerSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ message: parsed.error.issues[0].message }, { status: 400 });
+    }
+    const { name, phoneNumber, address, latitude, longitude, housePictureUrl, housePictures, landmark, accessInfo, notes, clusterIds } = parsed.data;
 
     const photos = housePictures && Array.isArray(housePictures) ? housePictures : [];
     await db.update(customers)
@@ -84,7 +87,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (token) await logServerAccess(req, token);
     const resolvedParams = await params;
     const id = resolvedParams.id;

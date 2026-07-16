@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { sql, count } from "drizzle-orm";
 import { customers, customerVisits, clusters, sessionDeliveries } from "@/lib/schema";
@@ -14,7 +14,7 @@ async function safeQuery<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
 
 export async function GET(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
     const [

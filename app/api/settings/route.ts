@@ -1,14 +1,15 @@
 // app/api/settings/route.ts
 import { NextResponse, NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { users } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { logServerAccess, logActivity, logError } from "@/lib/logger";
+import { settingsSchema } from "@/lib/validation";
 
 export async function GET(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
@@ -37,37 +38,34 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     await logServerAccess(req, token);
-    const { newName, rate, targetSystem, getGeocode } = await req.json();
+    const body = await req.json();
+    const parsed = settingsSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ message: parsed.error.issues[0].message }, { status: 400 });
+    }
 
     const updateData: Record<string, unknown> = { updatedAt: new Date() };
 
-    if (newName !== undefined) {
-      if (!newName) {
-        return NextResponse.json({ message: "Name cannot be empty" }, { status: 400 });
-      }
-      updateData.name = newName;
+    if (parsed.data.newName !== undefined) {
+      updateData.name = parsed.data.newName;
     }
 
-    if (rate !== undefined) {
-      const parsed = Number(rate);
-      if (isNaN(parsed) || parsed < 0) {
-        return NextResponse.json({ message: "Invalid rate value" }, { status: 400 });
-      }
-      updateData.rate = parsed;
+    if (parsed.data.rate !== undefined) {
+      updateData.rate = parsed.data.rate;
     }
 
-    if (targetSystem !== undefined) {
-      updateData.targetSystem = Boolean(targetSystem);
+    if (parsed.data.targetSystem !== undefined) {
+      updateData.targetSystem = parsed.data.targetSystem;
     }
 
-    if (getGeocode !== undefined) {
-      updateData.getGeocode = Boolean(getGeocode);
+    if (parsed.data.getGeocode !== undefined) {
+      updateData.getGeocode = parsed.data.getGeocode;
     }
 
     await db.update(users)

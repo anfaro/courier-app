@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { users, sessions } from "@/lib/schema";
 import { eq, desc, between, and } from "drizzle-orm";
@@ -8,10 +8,12 @@ import { getCutoffPeriod } from "@/lib/earnings";
 
 export async function GET(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
     const { searchParams } = new URL(req.url);
+    const limit = Math.min(Number(searchParams.get("limit")) || 365, 1000);
+    const offset = Number(searchParams.get("offset")) || 0;
     const overrideStart = searchParams.get("start");
     const overrideEnd = searchParams.get("end");
 
@@ -44,7 +46,9 @@ export async function GET(req: NextRequest) {
           between(sessions.date, cutoffStart, cutoffEnd)
         )
       )
-      .orderBy(desc(sessions.date));
+      .orderBy(desc(sessions.date))
+      .limit(limit)
+      .offset(offset);
 
     let totalDelivered = 0;
     const dailyBreakdown: { date: string; delivered: number; earnings: number }[] = [];

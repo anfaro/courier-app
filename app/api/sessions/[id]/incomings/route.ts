@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { sessions, incomings, sessionDeliveries } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { generateId } from "@/lib/utils";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
+import { incomingCreateSchema } from "@/lib/validation";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     await logServerAccess(req, token);
 
@@ -25,23 +26,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const body = await req.json();
-    const { packages: packagesCount, customerAssignments = [] } = body;
-    const pkgCount = packagesCount ? Number(packagesCount) : 0;
-
-    if (customerAssignments.length > 0) {
-      if (!Array.isArray(customerAssignments)) {
-        return NextResponse.json({ message: "Customer assignments must be an array" }, { status: 400 });
-      }
-      const totalAssigned = customerAssignments.reduce((sum: number, a: any) => sum + (Number(a.packages) || 0), 0);
-      if (totalAssigned !== pkgCount) {
-        return NextResponse.json({ message: "Sum of assigned packages must match total packages count" }, { status: 400 });
-      }
-      for (const a of customerAssignments) {
-        if (!a.customerId || !a.packages || Number(a.packages) < 1) {
-          return NextResponse.json({ message: "Each assignment must have customerId and packages >= 1" }, { status: 400 });
-        }
-      }
+    const parsed = incomingCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ message: parsed.error.issues[0].message }, { status: 400 });
     }
+    const { packages: packagesCount, customerAssignments } = parsed.data;
+    const pkgCount = packagesCount ? Number(packagesCount) : 0;
 
     const now = new Date();
     const [sy, sm, sd] = existing[0].date.split("-").map(Number);

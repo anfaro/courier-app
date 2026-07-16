@@ -2,10 +2,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { customerClusters, customers } from "@/lib/schema";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
 import { generateId } from "@/lib/utils";
 import { getCached, setCache } from "@/lib/cache";
+import { customerSchema } from "@/lib/validation";
 import { sql, eq, inArray } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const limit = Math.min(Number(searchParams.get("limit")) || 30, 200);
+    const limit = Math.min(Number(searchParams.get("limit")) || 30, 9999);
     const offset = Number(searchParams.get("offset")) || 0;
     const clusterId = searchParams.get("clusterId");
     const sort = searchParams.get("sort") || "newest";
@@ -122,14 +123,14 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (token) await logServerAccess(req, token);
     const body = await req.json();
-    const { name, phoneNumber, address, latitude, longitude, housePictureUrl, housePictures, landmark, accessInfo, notes, clusterIds } = body;
-
-    if (!name || !address) {
-      return NextResponse.json({ message: "Name and address are required" }, { status: 400 });
+    const parsed = customerSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ message: parsed.error.issues[0].message }, { status: 400 });
     }
+    const { name, phoneNumber, address, latitude, longitude, housePictureUrl, housePictures, landmark, accessInfo, notes, clusterIds } = parsed.data;
 
     const photos = housePictures && Array.isArray(housePictures) ? housePictures : [];
     const [newCustomer] = await db.insert(customers).values({

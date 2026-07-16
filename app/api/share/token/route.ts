@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { customers } from "@/lib/schema";
 import { eq } from "drizzle-orm";
@@ -11,7 +11,7 @@ const TOKEN_TTL_MS = 4 * 60 * 60 * 1000;
 
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getCLIToken(req);
     if (!token) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
