@@ -59,6 +59,46 @@ export default async function CustomerDetailsPage({
     .orderBy(desc(sessions.date))
     .limit(20);
 
+  const [deliveryStats] = await db
+    .select({
+      totalPackages: sql<number>`COALESCE(SUM(NULLIF(${sessionDeliveries.packages}, '')::int), 0)`,
+      deliveredPackages: sql<number>`COALESCE(SUM(CASE WHEN ${sessionDeliveries.status} = 'delivered' THEN NULLIF(${sessionDeliveries.packages}, '')::int ELSE 0 END), 0)`,
+    })
+    .from(sessionDeliveries)
+    .where(eq(sessionDeliveries.customerId, customerId));
+
+  const totalPackages = deliveryStats.totalPackages;
+  const deliveredPackages = deliveryStats.deliveredPackages;
+  const deliveredPercentage = totalPackages > 0 ? Math.round((deliveredPackages / totalPackages) * 100) : 0;
+
+  const tierKey = deliveredPercentage >= 85 ? 'high' : deliveredPercentage >= 50 ? 'medium' : 'low';
+  const tierConfig = {
+    high: {
+      bg: 'bg-emerald-500/10 dark:bg-emerald-500/15',
+      border: 'border-emerald-500/30 dark:border-emerald-400/20',
+      text: 'text-emerald-700 dark:text-emerald-400',
+      circleBg: 'bg-emerald-500/20 dark:bg-emerald-400/20',
+      badge: 'bg-emerald-500',
+      label: 'High',
+    },
+    medium: {
+      bg: 'bg-amber-500/10 dark:bg-amber-500/15',
+      border: 'border-amber-500/30 dark:border-amber-400/20',
+      text: 'text-amber-700 dark:text-amber-400',
+      circleBg: 'bg-amber-500/20 dark:bg-amber-400/20',
+      badge: 'bg-amber-500',
+      label: 'Medium',
+    },
+    low: {
+      bg: 'bg-red-500/10 dark:bg-red-500/15',
+      border: 'border-red-500/30 dark:border-red-400/20',
+      text: 'text-red-700 dark:text-red-400',
+      circleBg: 'bg-red-500/20 dark:bg-red-400/20',
+      badge: 'bg-red-500',
+      label: 'Low',
+    },
+  }[tierKey];
+
   return (
     <div className="min-h-screen bg-background pb-24">
       
@@ -160,6 +200,29 @@ export default async function CustomerDetailsPage({
                 <span className="text-[11px] font-black uppercase tracking-widest text-secondary opacity-40">No clusters assigned</span>
               )}
             </div>
+          </div>
+        </SectionWrapper>
+
+        {/* --- DELIVERY PERFORMANCE --- */}
+        <SectionWrapper delay={0.08} className={`rounded-[2.5rem] border ${tierConfig.border} ${tierConfig.bg} p-6 sm:p-8 shadow-sm`}>
+          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-secondary mb-6 ml-1">
+            📊 Delivery Performance
+          </p>
+          <div className="flex flex-col items-center gap-3">
+            <div className={`flex h-28 w-28 items-center justify-center rounded-full ${tierConfig.circleBg} border-4 ${tierConfig.border}`}>
+              <span className={`text-3xl font-black ${tierConfig.text}`}>{deliveredPercentage}%</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`inline-block h-2.5 w-2.5 rounded-full ${tierConfig.badge}`} />
+              <span className={`text-[13px] font-bold ${tierConfig.text}`}>{tierConfig.label}</span>
+            </div>
+            {totalPackages > 0 ? (
+              <p className="text-[13px] font-medium text-secondary text-center">
+                {deliveredPackages} of {totalPackages} packages delivered
+              </p>
+            ) : (
+              <p className="text-[13px] font-medium text-secondary text-center">No delivery data yet</p>
+            )}
           </div>
         </SectionWrapper>
 

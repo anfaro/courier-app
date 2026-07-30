@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useScrollLock } from "@/lib/useScrollLock";
 import { useToast } from "@/components/ToastProvider";
 import Icon from "@/components/Icon";
+import CopySessionModal from "@/components/CopySessionModal";
+import ScanModal from "@/components/ScanModal";
 interface Customer {
   id: string;
   name: string;
@@ -55,6 +57,8 @@ export default function IncomingModal({
   const [quickAddSaving, setQuickAddSaving] = useState(false);
   const [incomingTime, setIncomingTime] = useState("");
   const [savingIncoming, setSavingIncoming] = useState(false);
+  const [showCopyModal, setShowCopyModal] = useState(false);
+  const [showScanModal, setShowScanModal] = useState(false);
 
   const DRAFT_KEY = `incoming-draft-${sessionId}`;
   const DRAFT_TTL = 30 * 60 * 1000;
@@ -170,6 +174,51 @@ export default function IncomingModal({
 
   function clearDraft() {
     try { sessionStorage.removeItem(DRAFT_KEY); } catch {}
+  }
+
+  function handleCopy(assignments: Record<string, number>, customerNames: Record<string, string>) {
+    setCustomerAssignments({ ...customerAssignments, ...assignments });
+    if (Object.keys(assignments).length > 0) {
+      const count = Object.values(assignments).reduce((s, v) => s + v, 0);
+      showToast(t("session.copy_loaded").replace("[N]", String(Object.keys(assignments).length)), "success");
+    }
+  }
+
+  async function handleScan(assignments: Record<string, number>, customerNames: Record<string, string>) {
+    const finalAssignments = { ...customerAssignments };
+    const newCustomers: Customer[] = [];
+    let unmatchedCount = 0;
+    for (const [key, qty] of Object.entries(assignments)) {
+      const name = customerNames[key];
+      if (!name) continue;
+      let existing = allCustomers.find((c) => c.id === key)
+        || newCustomers.find(c => c.id === key);
+      if (!existing) {
+        try {
+          const checkRes = await fetch(`/api/customers/${key}`);
+          if (checkRes.ok) {
+            existing = await checkRes.json();
+            newCustomers.push(existing);
+          }
+        } catch {}
+      }
+      if (existing) {
+        finalAssignments[key] = (finalAssignments[key] || 0) + qty;
+      } else {
+        unmatchedCount++;
+      }
+    }
+    if (newCustomers.length > 0) {
+      setAllCustomers((prev) => [...newCustomers.filter(nc => !prev.find(c => c.id === nc.id)), ...prev]);
+    }
+    if (unmatchedCount > 0) {
+      showToast(`${unmatchedCount} unmatched entr${unmatchedCount > 1 ? "ies" : "y"} skipped. Match them in the manifest scan first.`, "warning");
+    }
+    setCustomerAssignments(finalAssignments);
+    const count = Object.keys(assignments).length;
+    if (count > 0) {
+      showToast(t("session.scan_parsed").replace("[N]", String(count)), "success");
+    }
   }
 
   async function handleSave() {
@@ -347,6 +396,7 @@ export default function IncomingModal({
                               const data = await res.json();
                               const newCustomer = data.customer;
                               setAvailableCustomers(prev => [newCustomer, ...prev]);
+                              setAllCustomers(prev => [newCustomer, ...prev]);
                               setCustomerAssignments(prev => ({ ...prev, [newCustomer.id]: 1 }));
                               setShowQuickAdd(false);
                             } else {
@@ -485,6 +535,26 @@ export default function IncomingModal({
               )}
             </div>
 
+            {/* Quick Actions */}
+            <div className="flex gap-2 mt-2 mb-4">
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setShowCopyModal(true)}
+                className="flex-1 rounded-2xl bg-surface-hover border border-card-border px-3 py-2.5 text-[11px] font-black text-primary uppercase tracking-widest active:scale-90 flex items-center justify-center gap-1.5"
+              >
+                <Icon name="refresh" size={14} />
+                {t("session.copy_from_previous")}
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setShowScanModal(true)}
+                className="flex-1 rounded-2xl bg-surface-hover border border-card-border px-3 py-2.5 text-[11px] font-black text-primary uppercase tracking-widest active:scale-90 flex items-center justify-center gap-1.5"
+              >
+                <Icon name="camera" size={14} />
+                {t("session.scan_manifest")}
+              </motion.button>
+            </div>
+
             {/* Action Buttons */}
             <div className="flex gap-3">
               <motion.button
@@ -508,6 +578,19 @@ export default function IncomingModal({
               </motion.button>
             </div>
           </motion.div>
+
+          <CopySessionModal
+            show={showCopyModal}
+            onClose={() => setShowCopyModal(false)}
+            onCopy={handleCopy}
+            t={t}
+          />
+          <ScanModal
+            show={showScanModal}
+            onClose={() => setShowScanModal(false)}
+            onScan={handleScan}
+            t={t}
+          />
         </div>
       )}
     </AnimatePresence>

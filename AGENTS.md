@@ -329,3 +329,45 @@ npm run lint
 - **Spring animations**: Added Framer Motion spring entrances to `template.tsx` (page transition), `page.tsx` (earnings/widgets), `customers/page.tsx` (staggered `motion.li`), `clusters/page.tsx` (staggered list), `customers/[id]/page.tsx` (section delays), `customers/[id]/edit/page.tsx` (form card), `customers/new/page.tsx` (tabs/content), `settings/page.tsx` (4 sections), `progress/page.tsx` (`whileTap`), `VisitManager.tsx` (AnimatePresence modal).
 - **Build fixes**: Fixed mismatched `</div>`/`</motion.div>` and missing `>` in settings & customer detail pages; build now succeeds.
 
+### 2026-07-17 — ScanModal, CopySessionModal, OCR, multi-image, image review, security audit
+
+#### Features
+- **Copy from Previous Session**: `components/CopySessionModal.tsx` — picker for 5 most recent sessions; one tap copies all customer+package assignments into IncomingModal. API: `GET /api/sessions/recent`.
+- **Scan Manifest (OCR)**: `components/ScanModal.tsx` — camera/gallery pick → OCR.space (WebP via sharp) → extract names → inline match/create per entry. Image carousel with left/right arrows when multiple images; entries update per image. API: `POST /api/incoming/scan`.
+- **OCR improvements**: addresses parsed via block-based heuristics (`isCustomerName`, `isAddress`, `isWaybill`, `isPhone`); single-word names supported; dedup; divider cleanup.
+- **Multi-image support**: sequential processing with progress (N/M); swapped `URL.createObjectURL` for `FileReader.readAsDataURL` for reliable preview.
+- **Inline customer matching**: tap entry to expand → search existing customers or Quick Add new one; package stepper; remove button.
+
+#### Security audit — 23 findings, planned fixes
+Addressed in review; categorized by severity:
+
+**🔴 Critical (fix immediately):**
+- `app/api/customers-page/route.ts` — add `getCLIToken()` auth check (currently none)
+- `app/api/visits/route.ts` — add `getCLIToken()` auth check (currently none)
+- `.env.local` — rotate exposed DB passwords + API keys; add to `.gitignore`
+- `app/api/forgot-password/route.ts:49` — remove `token` from response body
+- `next.config.ts` — add security headers (CSP, HSTS, X-Frame-Options, etc.)
+- `lib/logger.ts:179` — fix IP spoofing via `x-forwarded-for` header
+
+**🟠 High:**
+- Harden "soft auth" CRUD routes to require valid token (customers, clusters, settings)
+- Stop leaking `error.message` to clients in admin API routes
+- Add rate limiting (auth endpoints, mutation routes, geocode)
+- Add CSRF protection (Origin/Referer validation on mutations)
+- Exclude password hashes + reset tokens from admin backup export
+- Add ownership check on customer visits endpoint
+
+**🟡 Medium:**
+- Hash password reset tokens before DB storage
+- Sanitize LIKE wildcards in search inputs (`%`, `_`)
+- Strengthen password policy (min 8 chars, uppercase, digit)
+- Add password change endpoint to settings
+- Remove `dangerouslySetInnerHTML` from ScannerModal
+- Fix user enumeration via forgot-password timing
+- Fix mobile-only User-Agent bypass
+
+**🔵 Low:**
+- Remove `error.stack` from client error boundary
+- Remove sensitive `console.warn` calls
+- Use Drizzle query builder instead of raw SQL for ordering
+
