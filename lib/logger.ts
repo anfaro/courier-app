@@ -36,7 +36,8 @@ export type LogAction =
   | "IMAGE_UPLOADED"
   | "SEARCH_QUERIED"
   | "SESSION_FINALIZED"
-  | "SESSION_UNFINALIZED";
+  | "SESSION_UNFINALIZED"
+  | "LOGS_PRUNED";
 
 export async function logActivity({
   userId,
