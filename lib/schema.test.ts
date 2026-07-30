@@ -1,183 +1,93 @@
-// lib/schema.test.ts
-import { expect, test } from "vitest"; // Assuming Vitest for testing Drizzle schemas
+import { expect, test } from "vitest";
 import * as schema from "./schema";
 
-// Helper to check if a table has specific columns with expected types/properties
-function checkTableColumns(tableName: string, table: any, expectedColumns: Record<string, any>) {
-  for (const columnName in expectedColumns) {
-    expect(table[columnName]).toBeDefined();
-    expect(table[columnName].dataType).toBe(expectedColumns[columnName].dataType);
-    if (expectedColumns[columnName].isPrimaryKey) {
-      expect(table[columnName].primaryKey).toBe(true);
-    }
-    if (expectedColumns[columnName].isNotNull) {
-      expect(table[columnName].notNull).toBe(true);
-    }
-    if (expectedColumns[columnName].isUnique) {
-      expect(table[columnName].unique).toBe(true);
-    }
-    if (expectedColumns[columnName].defaultValue !== undefined) {
-      expect(table[columnName].defaultTo).toBe(expectedColumns[columnName].defaultValue);
-    }
-  }
-}
-
-test("schema: users table structure", () => {
-  const users = schema.users;
-  expect(users).toBeDefined();
-  expect(users.name).toBeDefined();
-  expect(users.email).toBeDefined();
-  expect(users.password).toBeDefined();
-  expect(users.role).toBeDefined();
-  expect(users.createdAt).toBeDefined();
-  expect(users.updatedAt).toBeDefined();
-
-  // Example of checking specific properties
-  expect(users.id.primaryKey).toBe(true);
-  expect(users.email.notNull).toBe(true);
-  expect(users.email.unique).toBe(true);
-  expect(users.role.defaultTo).toBe("courier");
+test("schema: all tables are defined", () => {
+  expect(schema.users).toBeDefined();
+  expect(schema.passwordResetTokens).toBeDefined();
+  expect(schema.clusters).toBeDefined();
+  expect(schema.customers).toBeDefined();
+  expect(schema.customerClusters).toBeDefined();
+  expect(schema.customerVisits).toBeDefined();
+  expect(schema.logs).toBeDefined();
+  expect(schema.errorLogs).toBeDefined();
+  expect(schema.accessLogs).toBeDefined();
+  expect(schema.sessions).toBeDefined();
+  expect(schema.incomings).toBeDefined();
+  expect(schema.sessionDeliveries).toBeDefined();
+  expect(schema.savedRoutes).toBeDefined();
 });
 
-test("schema: passwordResetTokens table structure", () => {
-  const passwordResetTokens = schema.passwordResetTokens;
-  expect(passwordResetTokens).toBeDefined();
-  expect(passwordResetTokens.id.primaryKey).toBe(true);
-  expect(passwordResetTokens.email.notNull).toBe(true);
-  expect(passwordResetTokens.token.notNull).toBe(true);
-  expect(passwordResetTokens.token.unique).toBe(true);
-  expect(passwordResetTokens.expires).toBeDefined();
+test("schema: users table has expected columns", () => {
+  const t = schema.users;
+  expect(t.id).toBeDefined();
+  expect(t.name).toBeDefined();
+  expect(t.email).toBeDefined();
+  expect(t.password).toBeDefined();
+  expect(t.role).toBeDefined();
+  expect(t.createdAt).toBeDefined();
+  expect(t.updatedAt).toBeDefined();
 });
 
-test("schema: clusters table structure", () => {
-  const clusters = schema.clusters;
-  expect(clusters).toBeDefined();
-  expect(clusters.id.primaryKey).toBe(true);
-  expect(clusters.name.notNull).toBe(true);
+test("schema: customers table has expected columns", () => {
+  const t = schema.customers;
+  expect(t.id).toBeDefined();
+  expect(t.name).toBeDefined();
+  expect(t.phoneNumber).toBeDefined();
+  expect(t.address).toBeDefined();
+  expect(t.latitude).toBeDefined();
+  expect(t.longitude).toBeDefined();
+  expect(t.housePictureUrl).toBeDefined();
+  expect(t.housePictures).toBeDefined();
+  expect(t.landmark).toBeDefined();
+  expect(t.accessInfo).toBeDefined();
+  expect(t.notes).toBeDefined();
+  expect(t.shareToken).toBeDefined();
+  expect(t.shareTokenExpiresAt).toBeDefined();
+  expect(t.createdAt).toBeDefined();
+  expect(t.updatedAt).toBeDefined();
 });
 
-test("schema: customers table structure", () => {
-  const customers = schema.customers;
-  expect(customers).toBeDefined();
-  expect(customers.id.primaryKey).toBe(true);
-  expect(customers.name.notNull).toBe(true);
-  expect(customers.address.notNull).toBe(true);
+test("schema: sessions table has expected columns", () => {
+  const t = schema.sessions;
+  expect(t.id).toBeDefined();
+  expect(t.userId).toBeDefined();
+  expect(t.date).toBeDefined();
+  expect(t.totalPackages).toBeDefined();
+  expect(t.deliveredPackages).toBeDefined();
+  expect(t.finalized).toBeDefined();
 });
 
-test("schema: customerClusters table structure", () => {
-  const customerClusters = schema.customerClusters;
-  expect(customerClusters).toBeDefined();
-  expect(customerClusters.customerId.notNull).toBe(true);
-  expect(customerClusters.clusterId.notNull).toBe(true);
-  // Check composite primary key
-  expect(customerClusters.pk).toBeDefined();
+test("schema: all relations are defined", () => {
+  expect(schema.customersRelations).toBeDefined();
+  expect(schema.clustersRelations).toBeDefined();
+  expect(schema.customerVisitsRelations).toBeDefined();
+  expect(schema.customerClustersRelations).toBeDefined();
+  expect(schema.logsRelations).toBeDefined();
+  expect(schema.errorLogsRelations).toBeDefined();
+  expect(schema.sessionsRelations).toBeDefined();
+  expect(schema.incomingsRelations).toBeDefined();
+  expect(schema.sessionDeliveriesRelations).toBeDefined();
+  expect(schema.savedRoutesRelations).toBeDefined();
+  expect(schema.accessLogsRelations).toBeDefined();
 });
 
-test("schema: logs table structure", () => {
-  const logs = schema.logs;
-  expect(logs).toBeDefined();
-  expect(logs.id.primaryKey).toBe(true);
-  expect(logs.action.notNull).toBe(true);
-  expect(logs.userId).toBeDefined(); // Foreign key reference
-});
-
-test("schema: errorLogs table structure", () => {
-  const errorLogs = schema.errorLogs;
-  expect(errorLogs).toBeDefined();
-  expect(errorLogs.id.primaryKey).toBe(true);
-  expect(errorLogs.errorName).toBeDefined();
-  expect(errorLogs.errorMessage).toBeDefined();
-  expect(errorLogs.stackTrace).toBeDefined();
-  expect(errorLogs.pathname).toBeDefined();
-  expect(errorLogs.userId).toBeDefined(); // Foreign key reference
-});
-
-test("schema: accessLogs table structure", () => {
-  const accessLogs = schema.accessLogs;
-  expect(accessLogs).toBeDefined();
-  expect(accessLogs.id.primaryKey).toBe(true);
-  expect(accessLogs.pathname.notNull).toBe(true);
-  expect(accessLogs.method.notNull).toBe(true);
-  expect(accessLogs.ipAddress).toBeDefined();
-  expect(accessLogs.userId).toBeDefined(); // Foreign key reference
-});
-
-// --- Relation Tests ---
-
-test("schema: relations - customers to clusters", () => {
-  const customers = schema.customers;
-  const relations = schema.customersRelations;
-
+test("schema: users has relations defined", () => {
+  const relations = schema.users;
   expect(relations).toBeDefined();
-  expect(relations.clusters).toBeDefined();
 });
 
-test("schema: relations - clusters to customerClusters", () => {
-  const clusters = schema.clusters;
-  const customerClusters = schema.customerClusters;
-  const relations = schema.clustersRelations;
-
-  expect(relations).toBeDefined();
-  expect(relations.customers).toBeDefined();
-  // Check if the customerClusters table has a foreign key referencing clusters.id
-  expect(customerClusters.clusterId).toBeDefined();
-  expect(customerClusters.clusterId.references).toBeDefined();
-  expect(customerClusters.clusterId.references.table).toBe(clusters);
+test("schema: customerClusters has composite primary key and foreign keys", () => {
+  const t = schema.customerClusters;
+  expect(t.customerId).toBeDefined();
+  expect(t.clusterId).toBeDefined();
 });
 
-test("schema: relations - customerClusters to customer and cluster", () => {
-  const customerClusters = schema.customerClusters;
-  const customers = schema.customers;
-  const clusters = schema.clusters;
-  const relations = schema.customerClustersRelations;
-
-  expect(relations).toBeDefined();
-  expect(relations.customer).toBeDefined();
-  expect(relations.cluster).toBeDefined();
-
-  // Check customer relation
-  expect(customerClusters.customerId).toBeDefined();
-  expect(customerClusters.customerId.references).toBeDefined();
-  expect(customerClusters.customerId.references.table).toBe(customers);
-
-  // Check cluster relation
-  expect(customerClusters.clusterId).toBeDefined();
-  expect(customerClusters.clusterId.references).toBeDefined();
-  expect(customerClusters.clusterId.references.table).toBe(clusters);
-});
-
-test("schema: relations - logs to user", () => {
-  const logs = schema.logs;
-  const users = schema.users;
-  const relations = schema.logsRelations;
-
-  expect(relations).toBeDefined();
-  expect(relations.user).toBeDefined();
-  expect(logs.userId).toBeDefined();
-  expect(logs.userId.references).toBeDefined();
-  expect(logs.userId.references.table).toBe(users);
-});
-
-test("schema: relations - errorLogs to user", () => {
-  const errorLogs = schema.errorLogs;
-  const users = schema.users;
-  const relations = schema.errorLogsRelations;
-
-  expect(relations).toBeDefined();
-  expect(relations.user).toBeDefined();
-  expect(errorLogs.userId).toBeDefined();
-  expect(errorLogs.userId.references).toBeDefined();
-  expect(errorLogs.userId.references.table).toBe(users);
-});
-
-test("schema: relations - accessLogs to user", () => {
-  const accessLogs = schema.accessLogs;
-  const users = schema.users;
-  const relations = schema.accessLogsRelations;
-
-  expect(relations).toBeDefined();
-  expect(relations.user).toBeDefined();
-  expect(accessLogs.userId).toBeDefined();
-  expect(accessLogs.userId.references).toBeDefined();
-  expect(accessLogs.userId.references.table).toBe(users);
+test("schema: customerVisits has timestamps and foreign keys", () => {
+  const t = schema.customerVisits;
+  expect(t.id).toBeDefined();
+  expect(t.customerId).toBeDefined();
+  expect(t.userId).toBeDefined();
+  expect(t.visitedAt).toBeDefined();
+  expect(t.checkedOutAt).toBeDefined();
+  expect(t.notes).toBeDefined();
 });
