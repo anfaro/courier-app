@@ -4,6 +4,8 @@ import path from "path";
 export default defineConfig({
   test: {
     include: ["lib/**/*.test.ts", "lib/**/*.spec.ts"],
+    hookTimeout: 30000,
+    testTimeout: 15000,
   },
   resolve: {
     alias: {

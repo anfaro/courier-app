@@ -15,6 +15,7 @@
     "migrate:images": "node node_modules/tsx/dist/cli.mjs scripts/migrate-images.ts"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.5.4",
     "@img/sharp-wasm32": "^0.35.2",
     "@resvg/resvg-js": "^2.6.2",
     "bcryptjs": "^3.0.3",
