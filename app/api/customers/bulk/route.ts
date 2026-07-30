@@ -9,7 +9,8 @@ import { generateId } from "@/lib/utils";
 export async function POST(req: NextRequest) {
   try {
     const token = await getCLIToken(req);
-    if (token) await logServerAccess(req, token);
+    if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    await logServerAccess(req, token);
     const body = await req.json();
 
     if (!Array.isArray(body)) {
@@ -35,27 +36,25 @@ export async function POST(req: NextRequest) {
 
     const result = await db.insert(customers).values(formattedData).returning();
 
-    if (token) {
-      await logActivity({
-        userId: token.id as string,
-        userName: token.name as string,
-        action: "CUSTOMER_CREATED",
-        details: `Bulk added ${body.length} customers`,
-      });
-    }
+    await logActivity({
+      userId: token.id as string,
+      userName: token.name as string,
+      action: "CUSTOMER_CREATED",
+      details: `Bulk added ${body.length} customers`,
+    });
 
     return NextResponse.json({
       message: `Successfully added ${body.length} customers`,
       customers: result,
     });
 
-  } catch (error: any) {
+  } catch (error) {
     await logError({
       errorName: "BulkInsertError",
-      errorMessage: error.message,
+      errorMessage: error instanceof Error ? error.message : String(error),
     });
     return NextResponse.json(
-      { message: error.message || "Failed to process bulk upload." },
+      { message: "Failed to process bulk upload." },
       { status: 500 }
     );
   }

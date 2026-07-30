@@ -157,7 +157,10 @@ export async function GET(req: NextRequest) {
         version: BACKUP_VERSION,
         exportedAt: new Date().toISOString(),
         data: {
-          users: Array.isArray(usr) ? usr : [],
+          users: (Array.isArray(usr) ? usr : []).map((u: any) => {
+            const { password, ...safe } = u;
+            return { ...safe, password: "[REDACTED]" };
+          }),
           customers: Array.isArray(cust) ? cust : [],
           clusters: Array.isArray(cl) ? cl : [],
           customerClusters: Array.isArray(cc) ? cc : [],
@@ -166,7 +169,10 @@ export async function GET(req: NextRequest) {
           incomings: Array.isArray(inc) ? inc : [],
           sessionDeliveries: Array.isArray(sdel) ? sdel : [],
           savedRoutes: Array.isArray(sroute) ? sroute : [],
-          passwordResetTokens: Array.isArray(prt) ? prt : [],
+          passwordResetTokens: (Array.isArray(prt) ? prt : []).map((t: any) => {
+            const { token, ...safe } = t;
+            return { ...safe, token: "[REDACTED]" };
+          }),
         },
       };
     });
@@ -289,6 +295,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: `Restored ${totalRestored} records.` });
   } catch (error: any) {
     await logError({ errorName: "RestoreError", errorMessage: error.message, stackTrace: error.stack });
-    return NextResponse.json({ error: error.message || "Restore failed" }, { status: 500 });
+    return NextResponse.json({ error: "Restore failed" }, { status: 500 });
   }
 }

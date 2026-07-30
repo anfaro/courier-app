@@ -28,7 +28,8 @@ export async function GET(req: NextRequest) {
       details: `Global search query: "${q}"${type ? ` (filter: ${type})` : ""}`,
     });
 
-    const pattern = `%${q}%`;
+    const sanitized = q.replace(/[%_\\]/g, '\\$&');
+    const pattern = `%${sanitized}%`;
     const limit = 20;
 
     let foundCustomers: any[] = [];

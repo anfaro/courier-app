@@ -11,6 +11,8 @@ import { sql, eq, inArray } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
   try {
+    const token = await getCLIToken(req);
+    if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     const cacheKey = req.url;
     const cached = getCached<{ customers: any[]; hasMore: boolean; limit: number; offset: number; total: number }>(cacheKey);
     if (cached) {
@@ -124,7 +126,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const token = await getCLIToken(req);
-    if (token) await logServerAccess(req, token);
+    if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    await logServerAccess(req, token);
     const body = await req.json();
     const parsed = customerSchema.safeParse(body);
     if (!parsed.success) {

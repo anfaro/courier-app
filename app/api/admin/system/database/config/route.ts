@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     const status = await getDbStatus();
     return NextResponse.json(status);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Failed to get status" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to get status" }, { status: 500 });
   }
 }
 
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     const status = await getDbStatus();
     return NextResponse.json({ message: "Connection updated and hot-reloaded.", status });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Failed to update config" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update config" }, { status: 500 });
   }
 }
 
@@ -84,6 +84,6 @@ export async function DELETE(req: NextRequest) {
     const status = await getDbStatus();
     return NextResponse.json({ message: "Reset to DATABASE_URL env var.", status });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Failed to reset" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to reset" }, { status: 500 });
   }
 }

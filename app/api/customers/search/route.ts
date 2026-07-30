@@ -15,7 +15,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q") || "";
 
-    const pattern = `%${q}%`;
+    const sanitized = q.replace(/[%_\\]/g, '\\$&');
+    const pattern = `%${sanitized}%`;
 
     const results = await db.select().from(customers)
       .where(or(

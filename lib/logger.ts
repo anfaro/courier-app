@@ -177,7 +177,9 @@ export async function logServerAccess(req: NextRequest, token: any) {
   const pathname = req.nextUrl.pathname;
   const method = req.method;
   const userAgent = req.headers.get("user-agent") || "Unknown";
-  const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
+  const xRealIp = req.headers.get("x-real-ip");
+  const xForwardedFor = req.headers.get("x-forwarded-for");
+  const ip = xRealIp || (xForwardedFor ? xForwardedFor.split(",")[0].trim() : "127.0.0.1");
 
   await logAccess({
     userId: token?.id ? (token.id as string) : undefined,

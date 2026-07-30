@@ -77,6 +77,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Maintenance action failed" }, { status: 500 });
+    return NextResponse.json({ error: "Maintenance action failed" }, { status: 500 });
   }
 }

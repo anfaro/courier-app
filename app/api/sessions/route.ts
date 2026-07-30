@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     const filters = [eq(sessions.userId, token.id as string)];
     if (dateFrom) filters.push(gte(sessions.date, dateFrom));
     if (dateTo) filters.push(lte(sessions.date, dateTo));
-    if (search) filters.push(like(sessions.date, `%${search}%`));
+    if (search) filters.push(like(sessions.date, `%${search.replace(/[%_\\]/g, '\\$&')}%`));
 
     const allSessions = await db
       .select({

@@ -5,8 +5,10 @@ import { clusters, customerClusters } from "@/lib/schema";
 import { eq, sql } from "drizzle-orm";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
 
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const token = await getCLIToken(req);
+    if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     const resolvedParams = await params;
     const id = resolvedParams.id;
     const { searchParams } = new URL(req.url);
@@ -65,7 +67,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const token = await getCLIToken(req);
-    if (token) await logServerAccess(req, token);
+    if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    await logServerAccess(req, token);
     const resolvedParams = await params;
     const id = resolvedParams.id;
     const { name, notes, customerIds } = await req.json();
@@ -87,15 +90,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       await db.insert(customerClusters).values(newLinks);
     }
 
-    if (token) {
-      await logActivity({
-        userId: token.id as string,
-        userName: token.name as string,
-        action: "CLUSTER_UPDATED",
-        details: `Updated cluster ${name} (ID: ${id})`,
-        targetId: id
-      });
-    }
+    await logActivity({
+      userId: token.id as string,
+      userName: token.name as string,
+      action: "CLUSTER_UPDATED",
+      details: `Updated cluster ${name} (ID: ${id})`,
+      targetId: id
+    });
 
     return NextResponse.json({ message: "Cluster updated successfully" }, { status: 200 });
   } catch (error) {
@@ -110,21 +111,20 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const token = await getCLIToken(req);
-    if (token) await logServerAccess(req, token);
+    if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    await logServerAccess(req, token);
     const resolvedParams = await params;
     const id = resolvedParams.id;
 
     await db.delete(clusters).where(eq(clusters.id, id));
 
-    if (token) {
-      await logActivity({
-        userId: token.id as string,
-        userName: token.name as string,
-        action: "CLUSTER_DELETED",
-        details: `Deleted cluster ID: ${id}`,
-        targetId: id
-      });
-    }
+    await logActivity({
+      userId: token.id as string,
+      userName: token.name as string,
+      action: "CLUSTER_DELETED",
+      details: `Deleted cluster ID: ${id}`,
+      targetId: id
+    });
 
     return NextResponse.json({ message: "Cluster deleted successfully" }, { status: 200 });
   } catch (error) {

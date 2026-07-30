@@ -4,9 +4,12 @@ import { db } from "@/lib/db";
 import { customerClusters, customers, clusters as clustersTable } from "@/lib/schema";
 import { sql, eq, inArray } from "drizzle-orm";
 import { logError } from "@/lib/logger";
+import { getCLIToken } from "@/lib/getCLIToken";
 
 export async function GET(req: NextRequest) {
   try {
+    const token = await getCLIToken(req);
+    if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     const { searchParams } = new URL(req.url);
     const limit = Math.min(Number(searchParams.get("limit")) || 30, 200);
     const offset = Number(searchParams.get("offset")) || 0;

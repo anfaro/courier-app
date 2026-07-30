@@ -68,6 +68,6 @@ export async function POST(req: NextRequest) {
       errorName: "ScanError",
       errorMessage: msg,
     });
-    return NextResponse.json({ message: msg }, { status: 500 });
+    return NextResponse.json({ message: "Scan failed" }, { status: 500 });
   }
 }

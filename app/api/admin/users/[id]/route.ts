@@ -66,7 +66,7 @@ export async function PATCH(
       errorName: "UserUpdateError",
       errorMessage: error.message,
     });
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
   }
 }
 
@@ -107,6 +107,6 @@ export async function DELETE(
       errorName: "UserDeleteError",
       errorMessage: error.message,
     });
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
   }
 }

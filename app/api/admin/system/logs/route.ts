@@ -23,12 +23,13 @@ export async function GET(req: NextRequest) {
 
     const whereClauses: any[] = [];
     if (q) {
+      const sq = q.replace(/[%_\\]/g, '\\$&');
       if (type === "errors") {
-        whereClauses.push(or(like(errorLogs.errorName, `%${q}%`), like(errorLogs.errorMessage, `%${q}%`)));
+        whereClauses.push(or(like(errorLogs.errorName, `%${sq}%`), like(errorLogs.errorMessage, `%${sq}%`)));
       } else if (type === "access") {
-        whereClauses.push(or(like(accessLogs.pathname, `%${q}%`), like(accessLogs.ipAddress, `%${q}%`), like(accessLogs.userName, `%${q}%`)));
+        whereClauses.push(or(like(accessLogs.pathname, `%${sq}%`), like(accessLogs.ipAddress, `%${sq}%`), like(accessLogs.userName, `%${sq}%`)));
       } else {
-        whereClauses.push(or(like(logs.action, `%${q}%`), like(logs.details, `%${q}%`), like(logs.userName, `%${q}%`)));
+        whereClauses.push(or(like(logs.action, `%${sq}%`), like(logs.details, `%${sq}%`), like(logs.userName, `%${sq}%`)));
       }
     }
     if (from) whereClauses.push(gte(

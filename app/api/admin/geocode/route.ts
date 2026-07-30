@@ -92,6 +92,6 @@ export async function POST(req: NextRequest) {
       errorName: "BulkGeocodeError",
       errorMessage: error.message,
     });
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Geocoding failed" }, { status: 500 });
   }
 }

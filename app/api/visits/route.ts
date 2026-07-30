@@ -4,9 +4,12 @@ import { db } from "@/lib/db";
 import { customerVisits } from "@/lib/schema";
 import { desc, sql } from "drizzle-orm";
 import { logError } from "@/lib/logger";
+import { getCLIToken } from "@/lib/getCLIToken";
 
 export async function GET(req: NextRequest) {
   try {
+    const token = await getCLIToken(req);
+    if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     const { searchParams } = new URL(req.url);
     const customerId = searchParams.get("customerId");
     const limit = Math.min(Number(searchParams.get("limit")) || 50, 200);

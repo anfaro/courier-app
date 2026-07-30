@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { users, passwordResetTokens } from "@/lib/schema";
 import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { logActivity, logError } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
@@ -11,7 +12,12 @@ export async function POST(req: NextRequest) {
     const { token, newPassword } = await req.json();
     if (!token || !newPassword) return NextResponse.json({ message: "Missing token or password" }, { status: 400 });
 
-    const tokenResult = await db.select().from(passwordResetTokens).where(eq(passwordResetTokens.token, token)).limit(1);
+    if (newPassword.length < 8) {
+      return NextResponse.json({ message: "Password must be at least 8 characters" }, { status: 400 });
+    }
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    const tokenResult = await db.select().from(passwordResetTokens).where(eq(passwordResetTokens.token, hashedToken)).limit(1);
     const resetToken = tokenResult[0];
 
     if (!resetToken) return NextResponse.json({ message: "Invalid token" }, { status: 400 });
@@ -24,7 +30,6 @@ export async function POST(req: NextRequest) {
     await db.update(users).set({ password: hashedPassword, tokenVersion: sql`token_version + 1` }).where(eq(users.email, resetToken.email));
     await db.delete(passwordResetTokens).where(eq(passwordResetTokens.id, resetToken.id));
 
-    // Log the successful reset
     await logActivity({
       action: "USER_UPDATED",
       details: `Password successfully reset for ${resetToken.email}`,

@@ -8,6 +8,8 @@ import { logServerAccess, logActivity, logError } from "@/lib/logger";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const token = await getCLIToken(req);
+    if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     const resolvedParams = await params;
     const id = resolvedParams.id;
 
@@ -38,7 +40,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const token = await getCLIToken(req);
-    if (token) await logServerAccess(req, token);
+    if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    await logServerAccess(req, token);
 
     const resolvedParams = await params;
     const customerId = resolvedParams.id;
@@ -48,8 +51,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const visit = {
       id: generateId(),
       customerId,
-      userId: (token?.id as string) || null,
-      userName: (token?.name as string) || null,
+      userId: token.id as string,
+      userName: token.name as string,
       visitedAt: new Date(),
       checkedOutAt: null,
       notes: notes || null,
@@ -57,15 +60,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     await db.insert(customerVisits).values(visit);
 
-    if (token) {
-      await logActivity({
-        userId: token.id as string,
-        userName: token.name as string,
-        action: "CUSTOMER_CHECKED_IN",
-        details: `Checked in at customer ${customerId}${notes ? `: ${notes}` : ""}`,
-        targetId: customerId,
-      });
-    }
+    await logActivity({
+      userId: token.id as string,
+      userName: token.name as string,
+      action: "CUSTOMER_CHECKED_IN",
+      details: `Checked in at customer ${customerId}${notes ? `: ${notes}` : ""}`,
+      targetId: customerId,
+    });
 
     return NextResponse.json(visit, { status: 201 });
   } catch (error) {
@@ -80,7 +81,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const token = await getCLIToken(req);
-    if (token) await logServerAccess(req, token);
+    if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    await logServerAccess(req, token);
 
     const resolvedParams = await params;
     const customerId = resolvedParams.id;
@@ -103,16 +105,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       .set({ checkedOutAt: now })
       .where(eq(customerVisits.id, activeVisit.id));
 
-    if (token) {
-      const duration = Math.round((now.getTime() - new Date(activeVisit.visitedAt).getTime()) / 60000);
-      await logActivity({
-        userId: token.id as string,
-        userName: token.name as string,
-        action: "CUSTOMER_CHECKED_OUT",
-        details: `Checked out at customer ${customerId} (${duration} min visit)`,
-        targetId: customerId,
-      });
-    }
+    const duration = Math.round((now.getTime() - new Date(activeVisit.visitedAt).getTime()) / 60000);
+    await logActivity({
+      userId: token.id as string,
+      userName: token.name as string,
+      action: "CUSTOMER_CHECKED_OUT",
+      details: `Checked out at customer ${customerId} (${duration} min visit)`,
+      targetId: customerId,
+    });
 
     return NextResponse.json({ ...activeVisit, checkedOutAt: now });
   } catch (error) {

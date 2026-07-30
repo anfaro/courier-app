@@ -11,6 +11,8 @@ import { clusterSchema } from "@/lib/validation";
 
 export async function GET(req: NextRequest) {
   try {
+    const token = await getCLIToken(req);
+    if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     const cacheKey = req.url;
     const cached = getCached<{ clusters: any[]; hasMore: boolean; limit: number; offset: number }>(cacheKey);
     if (cached) {
@@ -60,7 +62,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const token = await getCLIToken(req);
-    if (token) await logServerAccess(req, token);
+    if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    await logServerAccess(req, token);
     const body = await req.json();
     const parsed = clusterSchema.safeParse(body);
     if (!parsed.success) {
@@ -86,15 +89,13 @@ export async function POST(req: NextRequest) {
       await db.insert(customerClusters).values(joinRecords);
     }
 
-    if (token) {
-      await logActivity({
-        userId: token.id as string,
-        userName: token.name as string,
-        action: "CLUSTER_CREATED",
-        details: `Created new cluster: ${name}`,
-        targetId: newCluster.id
-      });
-    }
+    await logActivity({
+      userId: token.id as string,
+      userName: token.name as string,
+      action: "CLUSTER_CREATED",
+      details: `Created new cluster: ${name}`,
+      targetId: newCluster.id
+    });
 
     return NextResponse.json({ message: "Cluster created successfully" }, { status: 201 });
   } catch (error) {

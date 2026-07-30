@@ -20,25 +20,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "If that email exists, a reset link was sent." }, { status: 200 });
     }
 
-    const token = crypto.randomBytes(32).toString("hex");
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
     const expires = new Date(Date.now() + 3600 * 1000);
 
-    // CLEANUP: Delete any existing tokens for this email before creating a new one
     await db.delete(passwordResetTokens).where(eq(passwordResetTokens.email, email));
 
     await db.insert(passwordResetTokens).values({ 
       id: generateId(),
       email, 
-      token, 
+      token: hashedToken, 
       expires 
     });
-    const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`;
+
+    const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${rawToken}`;
 
     console.warn("=========================================");
     console.warn(`PASSWORD RESET LINK FOR ${email}: ${resetUrl}`);
     console.warn("=========================================");
 
-    // Log the request (anonymized/targeted by email)
     await logActivity({
       action: "PASSWORD_RESET_REQUESTED",
       details: `Password reset requested for ${email}`,
@@ -46,12 +46,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ 
       message: "If that email exists, a reset link was sent.",
-      token: token // Return token for dev auto-redirect
     }, { status: 200 });
   } catch (error) {
     await logError({
       errorName: "ForgotPasswordError",
-      errorMessage: error.message,
+      errorMessage: error instanceof Error ? error.message : String(error),
     });
     return NextResponse.json({ message: "An error occurred" }, { status: 500 });
   }
