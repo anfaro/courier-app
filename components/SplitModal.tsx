@@ -40,7 +40,7 @@ export default function SplitModal({ data, onClose, onChange, onConfirm, t }: Sp
             className="relative w-full max-w-sm bg-card rounded-[32px] p-6 shadow-2xl"
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-lg">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[18px]">
                 📦
               </div>
               <div>
@@ -62,7 +62,7 @@ export default function SplitModal({ data, onClose, onChange, onConfirm, t }: Sp
                 whileTap={{ scale: 0.85 }}
                 disabled={data.splitCount <= 0}
                 onClick={() => onChange(prev => prev ? { ...prev, splitCount: Math.max(0, prev.splitCount - 1) } : null)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-hover text-primary font-black text-xl disabled:opacity-30 border border-card-border active:scale-90"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-hover text-primary font-black text-[20px] disabled:opacity-30 border border-card-border active:scale-90"
               >
                 –
               </motion.button>
@@ -76,7 +76,7 @@ export default function SplitModal({ data, onClose, onChange, onConfirm, t }: Sp
                 whileTap={{ scale: 0.85 }}
                 disabled={data.splitCount >= data.currentPackages}
                 onClick={() => onChange(prev => prev ? { ...prev, splitCount: Math.min(prev.currentPackages, prev.splitCount + 1) } : null)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-black text-xl disabled:opacity-30 active:scale-90"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-black text-[20px] disabled:opacity-30 active:scale-90"
               >
                 +
               </motion.button>

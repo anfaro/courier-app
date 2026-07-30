@@ -10,24 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useScrollLock } from "@/lib/useScrollLock";
 import Icon from "@/components/Icon";
-
-// --- CUSTOM COURIER LOGO SVG ---
-const AppLogo = () => (
-  <svg width="34" height="34" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-sm">
-    <path d="M4 14H12" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="text-blue-400 opacity-40" />
-    <path d="M2 20H10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="text-blue-500 opacity-60" />
-    <path d="M5 26H13" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="text-blue-600 opacity-80" />
-    <path d="M18 12L28 8L38 12V28L28 32L18 28V12Z" fill="url(#logo-gradient)" />
-    <path d="M18 12L28 16L38 12" stroke="white" strokeWidth="1.5" strokeLinejoin="round" opacity="0.4" />
-    <path d="M28 16V32" stroke="white" strokeWidth="1.5" strokeLinejoin="round" opacity="0.4" />
-    <defs>
-      <linearGradient id="logo-gradient" x1="18" y1="8" x2="38" y2="32" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#2563EB" />
-        <stop offset="100%" stopColor="#4F46E5" />
-      </linearGradient>
-    </defs>
-  </svg>
-);
+import Logo from "@/components/Logo";
 
 import { createPortal } from "react-dom";
 
@@ -64,8 +47,8 @@ export default function Header() {
       <header className="sticky top-0 z-50 w-full border-b border-card-border/50 dark:border-slate-800 bg-background/80 dark:bg-slate-950/80 px-4 py-3 sm:px-6 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex items-center gap-2">
-            <AppLogo />
-            <span className="text-lg font-black tracking-tighter text-primary dark:text-slate-100 hidden xs:block">Courier</span>
+            <Logo />
+            <span> className="text-[18px] font-black tracking-tighter text-primary dark:text-slate-100 hidden xs:block">Courier</span>
           </div>
           <div className="h-11 w-11 rounded-full bg-gray-200 dark:bg-slate-800 animate-pulse" />
         </div>
@@ -83,8 +66,8 @@ export default function Header() {
 
         {/* App Logo & Title */}
         <Link href="/" className="flex items-center gap-2 shrink-0 active:scale-90 transition-transform">
-          <AppLogo />
-          <span className="text-xl font-black tracking-tighter text-primary dark:text-slate-100 hidden sm:block">Courier</span>
+          <Logo />
+          <span className="text-[20px] font-black tracking-tighter text-primary dark:text-slate-100 hidden sm:block">Courier</span>
         </Link>
 
         {/* Search Bar or Branding on /search */}
@@ -131,7 +114,7 @@ export default function Header() {
           <button
             ref={profileRef}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600/10 dark:bg-blue-400/10 text-lg font-black text-blue-700 dark:text-blue-400 shadow-sm ring-1 ring-blue-600/20 dark:ring-blue-400/20 transition-all hover:bg-blue-600/20 dark:hover:bg-blue-400/20 active:scale-90"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600/10 dark:bg-blue-400/10 text-[18px] font-black text-blue-700 dark:text-blue-400 shadow-sm ring-1 ring-blue-600/20 dark:ring-blue-400/20 transition-all hover:bg-blue-600/20 dark:hover:bg-blue-400/20 active:scale-90"
           >
             {initial}
           </button>

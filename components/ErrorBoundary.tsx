@@ -38,10 +38,10 @@ class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-background p-6 text-center">
-          <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-red-100 text-4xl shadow-inner">
+          <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-red-100 text-[36px] shadow-inner">
             ⚠️
           </div>
-          <h1 className="mb-2 text-2xl font-black text-primary tracking-tight">Something went wrong</h1>
+          <h1 className="mb-2 text-[24px] font-black text-primary tracking-tight">Something went wrong</h1>
           <p className="mb-8 max-w-xs text-[15px] font-medium text-secondary">
             An unexpected error occurred. Our engineers have been notified.
           </p>

@@ -172,7 +172,7 @@ export default function ProgressDashboard() {
       <main className="mx-auto max-w-3xl p-4 sm:p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-primary">
+            <h1 className="text-[24px] font-extrabold tracking-tight text-primary">
               {t("session.dashboard_title")}
             </h1>
             <p className="text-[13px] font-medium text-secondary mt-1">

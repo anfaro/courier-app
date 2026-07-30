@@ -72,7 +72,7 @@ export default function AdminWipeData() {
     <div className="px-4 sm:px-6 mb-12">
       <div className="rounded-[32px] bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900 p-6 sm:p-8">
         <div className="flex items-center gap-4 mb-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-100 dark:bg-red-900 text-2xl shadow-inner">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-100 dark:bg-red-900 text-[24px] shadow-inner">
             ☢️
           </div>
           <div>
@@ -103,7 +103,7 @@ export default function AdminWipeData() {
               initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
               className="relative w-full max-w-sm rounded-[40px] bg-card p-8 shadow-2xl border border-red-500/30"
             >
-              <h3 className="text-2xl font-black text-primary mb-2">{t("admin.wipe_verification")}</h3>
+              <h3 className="text-[24px] font-black text-primary mb-2">{t("admin.wipe_verification")}</h3>
               <p className="text-[14px] font-medium text-secondary mb-6 leading-relaxed">
                 {t("admin.wipe_type_code").replace("[CODE]", "CONFIRM-WIPE")}
               </p>

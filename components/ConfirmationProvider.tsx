@@ -69,7 +69,7 @@ export function ConfirmationProvider({ children }: { children: React.ReactNode }
               className="relative w-full max-w-sm rounded-[32px] bg-card p-8 shadow-2xl border border-card-border dark:border-slate-800"
             >
               {/* Type Icon */}
-              <div className={`mb-6 flex h-14 w-14 items-center justify-center rounded-2xl text-2xl ${
+              <div className={`mb-6 flex h-14 w-14 items-center justify-center rounded-2xl text-[24px] ${
                 dialogConfig.type === 'danger' ? 'bg-red-50 dark:bg-red-900/30 text-red-600' :
                 dialogConfig.type === 'warning' ? 'bg-orange-50 dark:bg-orange-900/30 text-orange-600' :
                 'bg-blue-50 dark:bg-blue-900/30 text-blue-600'
@@ -78,7 +78,7 @@ export function ConfirmationProvider({ children }: { children: React.ReactNode }
                  dialogConfig.type === 'warning' ? '⚠️' : 'ℹ️'}
               </div>
 
-              <h2 className="text-xl font-black text-primary tracking-tight mb-2">
+              <h2 className="text-[20px] font-black text-primary tracking-tight mb-2">
                 {dialogConfig.title}
               </h2>
               <p className="text-[15px] font-medium text-secondary leading-relaxed mb-8">

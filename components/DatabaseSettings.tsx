@@ -401,7 +401,7 @@ export default function DatabaseSettings() {
           <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-md" onClick={() => !savingProfile && setShowProfileDialog(false)} />
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-sm rounded-[32px] bg-card p-6 shadow-2xl border border-card-border">
-              <h3 className="text-xl font-black text-primary mb-1">Save as Profile</h3>
+              <h3 className="text-[20px] font-black text-primary mb-1">Save as Profile</h3>
               <p className="text-[13px] text-secondary mb-5">Name this connection to reuse it later.</p>
               <input
                 value={profileName}

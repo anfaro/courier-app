@@ -373,11 +373,11 @@ export default function DatabaseAdmin() {
         {statsError && <p className="text-[12px] font-bold text-red-500 mb-4">{statsError}</p>}
         <div className="grid grid-cols-2 gap-4 mb-5">
           <div className="rounded-2xl bg-surface-hover p-4 text-center">
-            <p className="text-xl font-black text-primary">{stats?.tables?.length ?? "—"}</p>
+            <p className="text-[20px] font-black text-primary">{stats?.tables?.length ?? "—"}</p>
             <p className="text-[11px] font-bold text-secondary mt-1">Tables</p>
           </div>
           <div className="rounded-2xl bg-surface-hover p-4 text-center">
-            <p className="text-xl font-black text-primary">{stats?.totalRows?.toLocaleString() || "—"}</p>
+            <p className="text-[20px] font-black text-primary">{stats?.totalRows?.toLocaleString() || "—"}</p>
             <p className="text-[11px] font-bold text-secondary mt-1">Total Rows</p>
           </div>
         </div>
@@ -424,7 +424,7 @@ export default function DatabaseAdmin() {
       {/* Wipe */}
       <div className="rounded-[24px] bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900 p-5">
         <div className="flex items-center gap-4 mb-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-100 dark:bg-red-900 text-xl shadow-inner">☢️</div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-100 dark:bg-red-900 text-[20px] shadow-inner">☢️</div>
           <div>
             <h3 className="font-black text-red-900 dark:text-red-200 text-[15px]">{t("admin.danger_zone")}</h3>
             <p className="text-[12px] font-medium text-red-700 dark:text-red-400">{t("admin.wipe_desc")}</p>
@@ -439,7 +439,7 @@ export default function DatabaseAdmin() {
           <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-md" onClick={() => !isWiping && setShowCodeStep(false)} />
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-sm rounded-[40px] bg-card p-8 shadow-2xl border border-red-500/30">
-              <h3 className="text-2xl font-black text-primary mb-2">{t("admin.wipe_verification")}</h3>
+              <h3 className="text-[24px] font-black text-primary mb-2">{t("admin.wipe_verification")}</h3>
               <p className="text-[14px] font-medium text-secondary mb-6 leading-relaxed">{t("admin.wipe_type_code").replace("[CODE]", "CONFIRM-WIPE")}</p>
               <input type="text" value={userInput} onChange={(e) => setUserInput(e.target.value.toUpperCase())} placeholder="Type the code here..." className="w-full rounded-2xl border border-red-200 dark:border-red-900 bg-background px-5 py-4 text-[16px] font-black tracking-widest text-primary focus:ring-4 focus:ring-red-500/10 outline-none transition-all mb-6" autoFocus />
               <div className="flex flex-col gap-3">
@@ -603,7 +603,7 @@ export default function DatabaseAdmin() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={(e) => { e.preventDefault(); setDragOver(false); handleImportFile(e.dataTransfer.files[0]); }} className={`relative rounded-2xl border-2 border-dashed p-6 text-center transition-colors ${dragOver ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/10" : "border-card-border"}`}>
             <input ref={importFileRef} type="file" accept=".csv" onChange={(e) => handleImportFile(e.target.files?.[0] || null)} className="absolute inset-0 opacity-0 cursor-pointer" />
-            <p className="text-2xl mb-2">📄</p>
+            <p className="text-[24px] mb-2">📄</p>
             <p className="text-[13px] font-bold text-primary">Drop CSV here or click</p>
             <p className="text-[11px] text-secondary mt-1">Headers must match field names</p>
           </div>
@@ -641,7 +641,7 @@ export default function DatabaseAdmin() {
         <div className="relative rounded-2xl border-2 border-dashed border-card-border p-6 text-center hover:border-blue-400 transition-colors">
           <label className="block cursor-pointer">
             <input type="file" accept=".json,.json.gz,.gz" onChange={(e) => handleRestore(e.target.files?.[0] || null)} className="hidden" />
-            <span className="text-2xl mb-2 block">📤</span>
+            <span className="text-[24px] mb-2 block">📤</span>
             <p className="text-[13px] font-bold text-primary">Click to restore backup</p>
             <p className="text-[11px] text-secondary mt-1">Accepts .json or .json.gz backup files</p>
           </label>

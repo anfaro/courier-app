@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   try {
     const token = await getCLIToken(req);
     if (!token || token.role !== "superadmin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     await logServerAccess(req, token);
@@ -92,6 +92,6 @@ export async function POST(req: NextRequest) {
       errorName: "BulkGeocodeError",
       errorMessage: error.message,
     });
-    return NextResponse.json({ error: "Geocoding failed" }, { status: 500 });
+    return NextResponse.json({ message: "Geocoding failed" }, { status: 500 });
   }
 }

@@ -185,7 +185,7 @@ function SearchContent() {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col items-center justify-center py-20 text-center"
               >
-                <div className="h-16 w-16 rounded-full bg-surface-hover flex items-center justify-center mb-4 text-2xl">
+                <div className="h-16 w-16 rounded-full bg-surface-hover flex items-center justify-center mb-4 text-[24px]">
                   🔍
                 </div>
                 <p className="text-[16px] font-bold text-primary mb-1">No matches found</p>

@@ -94,8 +94,8 @@ export default function NewClusterPage() {
       <main className="mx-auto max-w-2xl p-4 sm:p-6">
         <div className="mt-4 rounded-[2.5rem] bg-card p-6 sm:p-10 shadow-sm border border-card-border">
           <div className="mb-8">
-            <h1 className="text-3xl font-extrabold tracking-tight text-primary">New Cluster</h1>
-            <p className="mt-2 text-base text-secondary">Group your customers into a new region.</p>
+            <h1 className="text-[30px] font-extrabold tracking-tight text-primary">New Cluster</h1>
+            <p className="mt-2 text-[16px] text-secondary">Group your customers into a new region.</p>
           </div>
 
           {error && <p className="mb-6 rounded-2xl bg-red-50 dark:bg-red-950/20 p-4 text-[15px] font-medium text-red-700 dark:text-red-400 border border-red-100 dark:border-red-900/50">{error}</p>}
@@ -127,14 +127,14 @@ export default function NewClusterPage() {
             <hr className="border-card-border" />
 
             <div className="relative">
-              <h3 className="mb-4 text-xl font-bold text-primary">
-                Assign Customers <span className="ml-2 rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 text-sm text-blue-800 dark:text-blue-300">{selectedCustomerIds.length}</span>
+              <h3 className="mb-4 text-[20px] font-bold text-primary">
+                Assign Customers <span className="ml-2 rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 text-[14px] text-blue-800 dark:text-blue-300">{selectedCustomerIds.length}</span>
               </h3>
 
               <div className="relative min-h-[120px] rounded-[2rem] overflow-hidden p-2">
                 {fetchingCustomers && (
                   <div className="absolute inset-0 z-20 flex items-center justify-center bg-card/60 backdrop-blur-sm rounded-[2rem]">
-                    <div className="flex h-12 w-12 animate-spin items-center justify-center rounded-full bg-surface-hover text-2xl border border-card-border">
+                    <div className="flex h-12 w-12 animate-spin items-center justify-center rounded-full bg-surface-hover text-[24px] border border-card-border">
                       ⏳
                     </div>
                   </div>
@@ -170,7 +170,7 @@ export default function NewClusterPage() {
                                 <p className={`text-[17px] font-bold truncate ${isSelected ? "text-blue-900 dark:text-blue-200" : "text-primary"}`}>
                                   {customer.name}
                                 </p>
-                                <p className="text-sm text-secondary truncate mt-0.5">
+                                <p className="text-[14px] text-secondary truncate mt-0.5">
                                   {customer.address}
                                 </p>
                               </div>

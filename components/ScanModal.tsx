@@ -368,7 +368,7 @@ export default function ScanModal({ show, onClose, onScan, t }: ScanModalProps) 
           >
             {/* Header */}
             <div className="shrink-0 p-6 pb-3">
-              <h2 className="text-xl font-extrabold text-primary mb-1">
+              <h2 className="text-[20px] font-extrabold text-primary mb-1">
                 {step === "match" ? t("session.scan_title") : t("session.scan_title")}
               </h2>
             </div>

@@ -40,7 +40,7 @@ export default function DateEditModal({
             className="relative w-full max-w-sm bg-card rounded-[32px] p-6 shadow-2xl"
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-lg">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[18px]">
                 📅
               </div>
               <div>

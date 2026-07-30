@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   try {
     const token = await getCLIToken(req);
     if (!token || token.role !== "superadmin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     const [[{ total: cust }], [{ total: cl }], [{ total: usr }], [{ total: log }]] =
@@ -29,6 +29,6 @@ export async function GET(req: NextRequest) {
       ],
     });
   } catch {
-    return NextResponse.json({ error: "Health check failed" }, { status: 500 });
+    return NextResponse.json({ message: "Health check failed" }, { status: 500 });
   }
 }

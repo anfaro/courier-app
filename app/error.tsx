@@ -28,10 +28,10 @@ export default function Error({
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center p-6">
       <div className="mx-auto w-full max-w-sm rounded-[2.5rem] bg-card p-8 text-center shadow-sm border border-card-border">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/20 text-3xl">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/20 text-[30px]">
           ⚠️
         </div>
-        <h2 className="mb-2 text-xl font-black text-primary">Something went wrong</h2>
+        <h2 className="mb-2 text-[20px] font-black text-primary">Something went wrong</h2>
         <p className="mb-4 text-[14px] font-medium text-secondary">
           {error.message || "An unexpected error occurred. Please try again."}
         </p>

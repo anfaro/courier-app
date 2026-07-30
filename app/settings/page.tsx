@@ -58,7 +58,7 @@ export default function SettingsPage() {
         <PageHeader title="Settings" />
         <main className="mx-auto max-w-2xl p-4 sm:p-6">
           <div className="flex min-h-[50vh] flex-col items-center justify-center rounded-[2.5rem] bg-card p-6 shadow-sm border border-card-border">
-            <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-[1.5rem] bg-surface-hover text-3xl border border-card-border mb-4">⏳</div>
+            <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-[1.5rem] bg-surface-hover text-[30px] border border-card-border mb-4">⏳</div>
             <p className="text-[16px] font-bold text-secondary animate-pulse">Loading...</p>
           </div>
         </main>
@@ -72,8 +72,8 @@ export default function SettingsPage() {
         <PageHeader title="Settings" />
         <main className="mx-auto max-w-2xl p-4 sm:p-6">
           <div className="flex flex-col items-center justify-center rounded-[2.5rem] bg-card p-10 text-center shadow-sm border border-card-border">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 dark:bg-red-950 text-2xl">🔒</div>
-            <p className="text-lg font-bold text-primary">Please log in to view settings.</p>
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 dark:bg-red-950 text-[24px]">🔒</div>
+            <p className="text-[18px] font-bold text-primary">Please log in to view settings.</p>
           </div>
         </main>
       </div>
@@ -129,11 +129,11 @@ export default function SettingsPage() {
         >
           <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
           <div className="relative p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[1.5rem] bg-blue-100 dark:bg-blue-900/60 text-3xl font-extrabold text-blue-700 dark:text-blue-300 shadow-sm border border-blue-200/50 dark:border-blue-800/50">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[1.5rem] bg-blue-100 dark:bg-blue-900/60 text-[30px] font-extrabold text-blue-700 dark:text-blue-300 shadow-sm border border-blue-200/50 dark:border-blue-800/50">
               {initial}
             </div>
             <div className="flex-1 text-center sm:text-left">
-              <h1 className="text-2xl font-extrabold tracking-tight text-primary">{session.user.name}</h1>
+              <h1 className="text-[24px] font-extrabold tracking-tight text-primary">{session.user.name}</h1>
               <p className="text-[15px] font-medium text-secondary mt-0.5">{session.user.email}</p>
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-3">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 dark:bg-purple-900/40 px-3.5 py-1 text-[11px] font-black text-purple-700 dark:text-purple-300 uppercase tracking-wider border border-purple-200/50 dark:border-purple-800/50">
@@ -159,7 +159,7 @@ export default function SettingsPage() {
           className="rounded-[2.5rem] bg-card border border-card-border shadow-sm p-6 sm:p-8"
         >
           <h2 className="text-[14px] font-black uppercase tracking-widest text-secondary mb-6 flex items-center gap-2">
-            <span className="text-base">🎨</span> {t("settings.appearance")}
+            <span className="text-[16px]">🎨</span> {t("settings.appearance")}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -243,14 +243,14 @@ export default function SettingsPage() {
           className="rounded-[2.5rem] bg-card border border-card-border shadow-sm p-6 sm:p-8"
         >
           <h2 className="text-[14px] font-black uppercase tracking-widest text-secondary mb-6 flex items-center gap-2">
-            <span className="text-base">👤</span> {t("settings.title")}
+            <span className="text-[16px]">👤</span> {t("settings.title")}
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="mb-2 block text-[13px] font-bold text-secondary">{t("settings.email_label")}</label>
               <div className="flex items-center gap-3 rounded-2xl border border-card-border bg-surface-hover px-5 py-3.5">
-                <span className="text-lg">📧</span>
+                <span className="text-[18px]">📧</span>
                 <span className="text-[15px] font-medium text-secondary flex-1 truncate">{session.user.email}</span>
                 <span className="text-[10px] font-black text-secondary/40 uppercase">{t("settings.readonly")}</span>
               </div>
@@ -305,7 +305,7 @@ export default function SettingsPage() {
           className="rounded-[2.5rem] bg-card border border-card-border shadow-sm p-6 sm:p-8"
         >
           <h2 className="text-[14px] font-black uppercase tracking-widest text-secondary mb-6 flex items-center gap-2">
-            <span className="text-base">ℹ️</span> About
+            <span className="text-[16px]">ℹ️</span> About
           </h2>
           <div className="flex flex-wrap items-center gap-3">
             <span className="rounded-full bg-blue-50 dark:bg-blue-900/30 px-4 py-1.5 text-[11px] font-black text-blue-700 dark:text-blue-300 tracking-wider uppercase border border-blue-100/50 dark:border-blue-800/50">

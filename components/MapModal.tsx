@@ -9,7 +9,7 @@ const MapComponent = dynamic(() => import("./LeafletMap"), {
   ssr: false,
   loading: () => (
     <div className="flex h-full w-full items-center justify-center bg-blue-50 text-blue-400">
-      <span className="animate-pulse font-bold text-sm">Loading Map...</span>
+      <span className="animate-pulse font-bold text-[14px]">Loading Map...</span>
     </div>
   ),
 });
@@ -52,7 +52,7 @@ export default function MapModal({ latitude, longitude, address }: MapModalProps
         className="group relative mt-2 mb-4 h-28 w-full sm:w-64 overflow-hidden rounded-[1.5rem] border border-card-border shadow-sm transition-all active:scale-90 focus:outline-none focus:ring-4 focus:ring-blue-500/20"
       >
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/5 transition-colors group-hover:bg-black/10">
-          <div className="pointer-events-none rounded-full bg-card/90 px-3 py-1.5 text-xs font-bold text-blue-700 shadow-sm backdrop-blur-md transition-transform group-hover:scale-105">
+          <div className="pointer-events-none rounded-full bg-card/90 px-3 py-1.5 text-[12px] font-bold text-blue-700 shadow-sm backdrop-blur-md transition-transform group-hover:scale-105">
             📍 Tap to expand map
           </div>
         </div>
@@ -84,10 +84,10 @@ export default function MapModal({ latitude, longitude, address }: MapModalProps
                 ✕
               </button>
 
-              <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-xl">
+              <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-[20px]">
                 🗺️
               </div>
-              <h3 className="px-6 text-center text-[15px] font-bold leading-snug text-primary sm:text-lg">
+              <h3 className="px-6 text-center text-[15px] font-bold leading-snug text-primary sm:text-[18px]">
                 {address || "Customer Location"}
               </h3>
             </div>

@@ -197,7 +197,7 @@ export default function NewCustomerPage() {
         </div>
 
         <div className="rounded-[2.5rem] bg-card p-6 sm:p-10 shadow-sm border border-card-border">
-          <h1 className="text-3xl font-extrabold tracking-tight text-primary">
+          <h1 className="text-[30px] font-extrabold tracking-tight text-primary">
             {activeTab === "single" ? t("customer.add") : t("home.manage_db")}
           </h1>
           {error && <p className="mt-4 rounded-2xl bg-red-50 dark:bg-red-950/20 p-4 text-[14px] font-bold text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/50">{error}</p>}
@@ -237,7 +237,7 @@ export default function NewCustomerPage() {
                 >
                   {latitude && longitude ? (
                     <div className="flex flex-col items-center gap-1">
-                      <span className="text-2xl">📍</span>
+                      <span className="text-[24px]">📍</span>
                       <span className="text-[12px] font-mono font-bold text-blue-600 dark:text-blue-400">
                         {latitude}, {longitude}
                       </span>
@@ -245,7 +245,7 @@ export default function NewCustomerPage() {
                     </div>
                   ) : (
                     <div className="flex flex-col items-center gap-1">
-                      <span className="text-3xl mb-1">🗺️</span>
+                      <span className="text-[30px] mb-1">🗺️</span>
                       <span className="text-[14px] font-bold text-primary">{t("customer.pin_on_map")}</span>
                       <span className="text-[11px] font-medium text-secondary">{t("customer.pin_map_desc")}</span>
                     </div>
@@ -373,7 +373,7 @@ export default function NewCustomerPage() {
                     {bulkList.map((c, i) => (
                       <div key={i} className="flex items-center gap-4 rounded-[2rem] bg-card border border-card-border p-3 shadow-sm">
                         <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-surface-hover border border-card-border flex items-center justify-center">
-                          {c.housePictureUrl ? <img src={c.housePictureUrl} loading="lazy" referrerPolicy="no-referrer" className="h-full w-full object-cover" /> : <span className="text-xl">🏠</span>}
+                          {c.housePictureUrl ? <img src={c.housePictureUrl} loading="lazy" referrerPolicy="no-referrer" className="h-full w-full object-cover" /> : <span className="text-[20px]">🏠</span>}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-black text-primary truncate text-[15px] leading-tight">{c.name}</p>

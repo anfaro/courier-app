@@ -160,7 +160,7 @@ function ClustersListContent() {
       <main className="mx-auto max-w-3xl p-4 sm:p-6">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-primary">{t("cluster.title")}</h1>
+            <h1 className="text-[30px] font-extrabold tracking-tight text-primary">{t("cluster.title")}</h1>
           </div>
           <div className="flex items-center gap-2">
             {isSuperAdmin && (
@@ -178,7 +178,7 @@ function ClustersListContent() {
               href="/clusters/new"
               className="btn-primary !py-2.5 !px-5"
             >
-              <span className="mr-2 text-lg leading-none">+</span> {t("cluster.add")}
+              <span className="mr-2 text-[18px] leading-none">+</span> {t("cluster.add")}
             </Link>
           </div>
         </div>
@@ -272,10 +272,10 @@ function ClustersListContent() {
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
             className="rounded-[2.5rem] bg-card p-12 text-center shadow-sm border border-card-border"
           >
-            <div className="mb-5 inline-flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-4xl shadow-lg shadow-purple-500/20">
+            <div className="mb-5 inline-flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-[36px] shadow-lg shadow-purple-500/20">
               📦
             </div>
-            <p className="text-xl font-extrabold tracking-tight text-primary">{t("cluster.empty")}</p>
+            <p className="text-[20px] font-extrabold tracking-tight text-primary">{t("cluster.empty")}</p>
             <p className="mt-2 text-[14px] font-medium text-secondary max-w-xs mx-auto">
               Group your customers into regions, routes, or areas for better organization.
             </p>
@@ -283,7 +283,7 @@ function ClustersListContent() {
               href="/clusters/new"
               className="btn-primary mt-8 inline-flex items-center gap-2"
             >
-              <span className="text-lg leading-none">+</span> {t("cluster.add")}
+              <span className="text-[18px] leading-none">+</span> {t("cluster.add")}
             </Link>
           </motion.div>
         ) : (
@@ -337,7 +337,7 @@ function ClustersListContent() {
                         </div>
                       </motion.div>
                     )}
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] bg-gradient-to-br from-purple-500 to-indigo-600 text-xl text-white shadow-sm">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] bg-gradient-to-br from-purple-500 to-indigo-600 text-[20px] text-white shadow-sm">
                       📦
                     </div>
                     <div className="min-w-0 flex-1">
@@ -524,7 +524,7 @@ export default function ClustersListPage() {
     <Suspense fallback={
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="flex flex-col items-center justify-center rounded-[2.5rem] bg-card border border-card-border shadow-sm px-8 py-12">
-          <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-[1.5rem] bg-surface-hover text-3xl mb-4 border border-card-border">
+          <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-[1.5rem] bg-surface-hover text-[30px] mb-4 border border-card-border">
             ⏳
           </div>
           <p className="text-[14px] font-bold text-secondary animate-pulse">Loading...</p>

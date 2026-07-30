@@ -212,7 +212,7 @@ export default function SessionDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-primary flex items-center gap-2">
+            <h1 className="text-[24px] font-extrabold tracking-tight text-primary flex items-center gap-2">
               {(() => {
                 const [y, m, d] = sessionData.date.split("-").map(Number);
                 return new Date(y, m - 1, d).toLocaleDateString(dateLocale, {
@@ -384,7 +384,7 @@ export default function SessionDashboard() {
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-lg">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[18px]">
                             🚛
                           </div>
                           <div>

@@ -7,11 +7,11 @@ export async function POST(req: NextRequest) {
   try {
     const token = await getCLIToken(req);
     if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     const { url } = await req.json();
-    if (!url) return NextResponse.json({ error: "No URL provided" }, { status: 400 });
+    if (!url) return NextResponse.json({ message: "No URL provided" }, { status: 400 });
 
     const response = await fetch(url, {
       method: "GET",
@@ -65,14 +65,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       error: "Could not find coordinates in the generated Google URL.",
       debugUrl: finalUrl
-    }, { status: 422 });
+      }, { status: 400 });
 
   } catch (error) {
     await logError({
       errorName: "ResolveMapsError",
       errorMessage: error instanceof Error ? error.message : String(error),
     });
-    return NextResponse.json({ error: "Failed to connect to Google" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to connect to Google" }, { status: 500 });
   }
 }
 

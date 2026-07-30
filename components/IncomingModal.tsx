@@ -279,7 +279,7 @@ export default function IncomingModal({
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
             className="relative w-full max-w-lg bg-card rounded-t-[32px] sm:rounded-[32px] p-6 pb-24 max-h-[85vh] overflow-y-auto no-scrollbar shadow-2xl"
           >
-            <h2 className="text-xl font-extrabold text-primary mb-2">
+            <h2 className="text-[20px] font-extrabold text-primary mb-2">
               {t("session.incoming_title")}
             </h2>
             <p className="text-[13px] font-medium text-secondary mb-6">

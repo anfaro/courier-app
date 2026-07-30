@@ -156,7 +156,7 @@ export default function ImageInput({
             type="button"
             disabled={isUploading}
             onClick={() => galleryInputRef.current?.click()}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-4 py-4 text-sm text-secondary transition-all hover:bg-gray-100 active:scale-90 disabled:opacity-50 dark:border-gray-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-4 py-4 text-[14px] text-secondary transition-all hover:bg-gray-100 active:scale-90 disabled:opacity-50 dark:border-gray-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
           >
             {isUploading ? (
               <div className="h-5 w-5 animate-spin rounded-full border-[2.5px] border-blue-500 border-t-transparent" />
@@ -169,7 +169,7 @@ export default function ImageInput({
             type="button"
             disabled={isUploading}
             onClick={handleCameraClick}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-4 py-4 text-sm text-secondary transition-all hover:bg-gray-100 active:scale-90 disabled:opacity-50 dark:border-gray-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-4 py-4 text-[14px] text-secondary transition-all hover:bg-gray-100 active:scale-90 disabled:opacity-50 dark:border-gray-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
           >
             <Icon name="camera" size={20} strokeWidth={2.5} />
             {t("image.camera")}

@@ -69,10 +69,10 @@ function ResetPasswordForm() {
   if (success) {
     return (
       <div className="text-center animate-[fadeIn_0.3s_ease-out]">
-        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-green-50 dark:bg-green-900/30 text-4xl shadow-sm border border-green-100 dark:border-green-800">
+        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-green-50 dark:bg-green-900/30 text-[36px] shadow-sm border border-green-100 dark:border-green-800">
           ✅
         </div>
-        <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-primary">{t("auth.pw_reset_success")}</h2>
+        <h2 className="mb-2 text-[24px] font-extrabold tracking-tight text-primary">{t("auth.pw_reset_success")}</h2>
         <p className="mb-8 text-[15px] text-secondary leading-relaxed">
           {t("auth.pw_updated")}
         </p>
@@ -89,7 +89,7 @@ function ResetPasswordForm() {
   return (
     <>
       <div className="mb-8">
-        <h2 className="text-center text-3xl font-extrabold tracking-tight text-primary">{t("auth.reset_pw")}</h2>
+        <h2 className="text-center text-[30px] font-extrabold tracking-tight text-primary">{t("auth.reset_pw")}</h2>
         <p className="mt-2 text-center text-[15px] text-secondary">
           {t("auth.reset_pw_subtitle")}
         </p>
@@ -123,7 +123,7 @@ function ResetPasswordForm() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 rounded-xl bg-gray-200/50 dark:bg-slate-700/50 px-3 py-1.5 text-sm font-bold text-secondary transition hover:bg-gray-200 dark:hover:bg-slate-700 hover:text-primary active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="absolute right-3 rounded-xl bg-gray-200/50 dark:bg-slate-700/50 px-3 py-1.5 text-[14px] font-bold text-secondary transition hover:bg-gray-200 dark:hover:bg-slate-700 hover:text-primary active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {showPassword ? t("auth.hide") : t("auth.show")}
               </button>
@@ -166,7 +166,7 @@ export default function ResetPasswordPage() {
       <AuthLanguageSelector />
       <AuthThemeSelector />
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-blue-100 dark:bg-blue-900/30 text-3xl shadow-sm border border-blue-200 dark:border-blue-800">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-blue-100 dark:bg-blue-900/30 text-[30px] shadow-sm border border-blue-200 dark:border-blue-800">
           🔑
         </div>
       </div>

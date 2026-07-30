@@ -69,7 +69,7 @@ export default function ScannerModal({ onScanSuccess, onClose }: ScannerModalPro
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm px-4">
 
       <div className="absolute top-12 left-0 right-0 text-center z-10 px-6">
-        <h2 className="text-2xl font-black text-white tracking-tight mb-2">Scan Barcode</h2>
+        <h2 className="text-[24px] font-black text-white tracking-tight mb-2">Scan Barcode</h2>
         <p className="text-[14px] font-medium text-gray-300">
           Position the barcode inside the frame.
         </p>
@@ -77,7 +77,7 @@ export default function ScannerModal({ onScanSuccess, onClose }: ScannerModalPro
 
       {error && (
         <div className="absolute top-32 z-20 mx-4 rounded-2xl bg-red-500/20 p-4 border border-red-500/50 backdrop-blur-md">
-          <p className="text-sm font-bold text-red-200">{error}</p>
+          <p className="text-[14px] font-bold text-red-200">{error}</p>
         </div>
       )}
 

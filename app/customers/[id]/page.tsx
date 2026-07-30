@@ -107,7 +107,7 @@ export default async function CustomerDetailsPage({
       <main className="mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
         <SectionWrapper className="flex flex-wrap items-center justify-between gap-4"
         >
-          <h1 className="text-3xl font-extrabold tracking-tight text-primary">{customerData.name}</h1>
+          <h1 className="text-[30px] font-extrabold tracking-tight text-primary">{customerData.name}</h1>
 
           <div className="flex items-center gap-3">
             <ShareButton customerId={customerId} />
@@ -146,7 +146,7 @@ export default async function CustomerDetailsPage({
               )}
             </div>
           ) : (
-            <div className="flex h-32 w-full shrink-0 items-center justify-center rounded-[1.5rem] bg-secondary text-4xl sm:w-32 text-primary">🏠</div>
+            <div className="flex h-32 w-full shrink-0 items-center justify-center rounded-[1.5rem] bg-secondary text-[36px] sm:w-32 text-primary">🏠</div>
           )}
           <div className="flex-1">
             <p className="mb-1 text-[11px] font-black uppercase tracking-widest text-secondary opacity-60">Address</p>
@@ -190,7 +190,7 @@ export default async function CustomerDetailsPage({
                   <Link
                     key={cItem.cluster.id}
                     href={`/clusters/${cItem.cluster.id}`}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-purple-100 dark:border-purple-900/50 bg-purple-50 dark:bg-purple-950/30 px-4 py-2 text-sm font-bold text-purple-700 dark:text-purple-300 transition hover:bg-purple-100 active:scale-90"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-purple-100 dark:border-purple-900/50 bg-purple-50 dark:bg-purple-950/30 px-4 py-2 text-[14px] font-bold text-purple-700 dark:text-purple-300 transition hover:bg-purple-100 active:scale-90"
                     title={`Go to ${cItem.cluster.name}`}
                   >
                     <span>📦</span> {cItem.cluster.name}
@@ -210,7 +210,7 @@ export default async function CustomerDetailsPage({
           </p>
           <div className="flex flex-col items-center gap-3">
             <div className={`flex h-28 w-28 items-center justify-center rounded-full ${tierConfig.circleBg} border-4 ${tierConfig.border}`}>
-              <span className={`text-3xl font-black ${tierConfig.text}`}>{deliveredPercentage}%</span>
+              <span className={`text-[30px] font-black ${tierConfig.text}`}>{deliveredPercentage}%</span>
             </div>
             <div className="flex items-center gap-2">
               <span className={`inline-block h-2.5 w-2.5 rounded-full ${tierConfig.badge}`} />

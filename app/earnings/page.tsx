@@ -140,7 +140,7 @@ export default function EarningsPage() {
       <PageHeader title="Earnings" />
       <main className="mx-auto max-w-3xl p-4 sm:p-6 space-y-6">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-primary">
+          <h1 className="text-[24px] font-extrabold tracking-tight text-primary">
             {t("earnings.title")}
           </h1>
           <p className="text-[13px] font-medium text-secondary mt-1">
@@ -214,7 +214,7 @@ export default function EarningsPage() {
                   </motion.button>
                 </div>
               </div>
-              <p className="text-4xl sm:text-5xl font-black tracking-tight">
+              <p className="text-[36px] sm:text-5xl font-black tracking-tight">
                 {formatCurrency(data.totalEarnings)}
               </p>
               <p className="text-[13px] font-medium text-emerald-200 mt-2">

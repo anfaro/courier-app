@@ -15,7 +15,7 @@ export async function DELETE(req: NextRequest) {
     if (!token || token.role !== "superadmin") {
       console.warn(`Unauthorized bulk delete attempt by: ${token?.email || 'Unknown'}`);
       return NextResponse.json(
-        { error: "Forbidden: Only Superadmins can perform bulk deletions." },
+        { message: "Forbidden: Only Superadmins can perform bulk deletions." },
         { status: 403 }
       );
     }
@@ -29,7 +29,7 @@ export async function DELETE(req: NextRequest) {
     // Validate the data
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return NextResponse.json(
-        { error: "Bad Request: No customer IDs provided." },
+        { message: "Bad Request: No customer IDs provided." },
         { status: 400 }
       );
     }
@@ -57,7 +57,7 @@ export async function DELETE(req: NextRequest) {
       errorMessage: error.message,
     });
     return NextResponse.json(
-      { error: "Internal Server Error while deleting records." },
+      { message: "Internal Server Error while deleting records." },
       { status: 500 }
     );
   }

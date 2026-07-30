@@ -67,7 +67,7 @@ export default async function SharePage({
                 {housePhotos.slice(1, 3).map((url, i) => (
                   <ImageModal key={i} src={url} alt={`House ${i + 2}`} thumbnailClassName="w-full h-full object-cover" />
                 ))}
-                {housePhotos.length < 3 && <div className="flex items-center justify-center bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700"><span className="text-3xl font-black text-white/90">{initials}</span></div>}
+                {housePhotos.length < 3 && <div className="flex items-center justify-center bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700"><span className="text-[30px] font-black text-white/90">{initials}</span></div>}
               </div>
             </div>
           )
@@ -81,7 +81,7 @@ export default async function SharePage({
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
 
         <div className="absolute bottom-0 left-0 right-0 p-6 pb-8">
-          <h1 className="text-3xl font-extrabold text-white drop-shadow-lg mb-1">
+          <h1 className="text-[30px] font-extrabold text-white drop-shadow-lg mb-1">
             {customerData.name}
           </h1>
           {customerData.address && (
@@ -181,7 +181,7 @@ export default async function SharePage({
                 rel="noopener noreferrer"
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 active:scale-90 transition"
               >
-                <span className="text-lg">📍</span>
+                <span className="text-[18px]">📍</span>
               </a>
             )}
           </div>
@@ -233,7 +233,7 @@ export default async function SharePage({
         {customerData.landmark && (
           <div className="rounded-[1.75rem] border border-blue-100 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/20 p-5 shadow-sm">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-lg">📍</span>
+              <span className="text-[18px]">📍</span>
               <p className="text-[11px] font-black uppercase tracking-widest text-blue-800 dark:text-blue-400">Landmark / Patokan</p>
             </div>
             <p className="whitespace-pre-wrap text-[15px] text-primary leading-relaxed">{customerData.landmark}</p>
@@ -244,7 +244,7 @@ export default async function SharePage({
         {customerData.accessInfo && (
           <div className="rounded-[1.75rem] border border-amber-100 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/20 p-5 shadow-sm">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-lg">🚪</span>
+              <span className="text-[18px]">🚪</span>
               <p className="text-[11px] font-black uppercase tracking-widest text-amber-800 dark:text-amber-400">Access</p>
             </div>
             <p className="whitespace-pre-wrap text-[15px] text-primary leading-relaxed">{customerData.accessInfo}</p>
@@ -255,7 +255,7 @@ export default async function SharePage({
         {customerData.notes ? (
           <div className="rounded-[1.75rem] border border-orange-100 dark:border-orange-900/40 bg-orange-50/50 dark:bg-orange-950/20 p-5 shadow-sm">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-lg">📌</span>
+              <span className="text-[18px]">📌</span>
               <p className="text-[11px] font-black uppercase tracking-widest text-orange-800 dark:text-orange-400">Notes</p>
             </div>
             <p className="whitespace-pre-wrap text-[15px] text-primary leading-relaxed">{customerData.notes}</p>

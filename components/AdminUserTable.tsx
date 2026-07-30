@@ -196,7 +196,7 @@ export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }
   };
 
   const inputClass = "w-full rounded-2xl border border-card-border dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-5 py-4 text-[15px] font-medium text-primary dark:text-slate-100 focus:border-blue-500 focus:bg-card dark:focus:bg-slate-900 outline-none transition-all shadow-sm placeholder:text-gray-400";
-  const toggleBtnClass = "absolute right-3 rounded-xl bg-gray-200/50 dark:bg-slate-700/50 px-3 py-1.5 text-sm font-bold text-secondary dark:text-slate-300 transition hover:bg-gray-200 dark:hover:bg-slate-700 hover:text-primary dark:hover:text-white active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500";
+  const toggleBtnClass = "absolute right-3 rounded-xl bg-gray-200/50 dark:bg-slate-700/50 px-3 py-1.5 text-[14px] font-bold text-secondary dark:text-slate-300 transition hover:bg-gray-200 dark:hover:bg-slate-700 hover:text-primary dark:hover:text-white active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500";
 
   const roles = [
     { 
@@ -249,7 +249,7 @@ export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }
           onClick={() => { setShowAddUserModal(true); setShowAddPassword(false); setShowAddConfirmPassword(false); setError(""); }}
           className="btn-primary whitespace-nowrap"
         >
-          <span className="text-xl leading-none">+</span>
+          <span className="text-[20px] leading-none">+</span>
           {t("admin.add_user")}
         </button>
       </div>
@@ -269,7 +269,7 @@ export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }
             <div key={user.id} className="flex flex-col rounded-[32px] bg-card shadow-sm border border-card-border dark:border-slate-800 transition-all hover:shadow-md">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 p-6 pb-0">
                 <div className="flex items-center gap-4">
-                    <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-xl font-black shadow-inner border ${
+                    <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-[20px] font-black shadow-inner border ${
                     user.role === 'superadmin' ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-100 dark:border-purple-800' : 
                     user.role === 'hubmanager' ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800' :
                     user.role === 'dispatcher' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800' :
@@ -316,7 +316,7 @@ export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }
                         className="flex-1 min-w-[160px] flex items-center justify-between rounded-2xl bg-surface-hover px-5 py-3.5 text-[14px] font-bold text-primary border border-card-border outline-none hover:bg-gray-100 dark:hover:bg-slate-800 transition-all active:scale-90 disabled:opacity-50"
                     >
                         <div className="flex items-center gap-2">
-                            <span className="text-lg">{roles.find(r => r.value === user.role)?.icon || "👤"}</span>
+                            <span className="text-[18px]">{roles.find(r => r.value === user.role)?.icon || "👤"}</span>
                             <span>{roles.find(r => r.value === user.role)?.label || user.role}</span>
                         </div>
                         <Icon name="chevron-down" size={16} strokeWidth={2.5} className="text-secondary opacity-50" />
@@ -327,7 +327,7 @@ export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }
                     onClick={() => handleOpenPasswordModal({ id: user.id, name: user.name })}
                     className="btn-secondary flex-1 min-w-[140px] disabled:opacity-50"
                     >
-                    <span className="text-lg">🔑</span>
+                    <span className="text-[18px]">🔑</span>
                     {t("admin.change_pw")}
                     </button>
                 </div>
@@ -340,7 +340,7 @@ export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }
                     {isWorking && isLoading === user.id ? (
                         <span className="h-5 w-5 rounded-full border-2 border-red-600 border-t-transparent animate-spin" />
                     ) : (
-                        <span className="text-lg">🗑️</span>
+                        <span className="text-[18px]">🗑️</span>
                     )}
                     {t("admin.offboard")}
                 </button>
@@ -365,7 +365,7 @@ export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }
                 <div className="mx-auto mb-6 h-1.5 w-12 rounded-full bg-gray-200 dark:bg-slate-700 sm:hidden"></div>
 
                 <div className="mb-8 px-2">
-                    <h3 className="text-2xl font-black text-primary tracking-tight">Assign Authority</h3>
+                    <h3 className="text-[24px] font-black text-primary tracking-tight">Assign Authority</h3>
                     <p className="mt-1 text-[15px] font-medium text-secondary">
                         Select a new role for <strong className="text-primary">{userToEditRole?.name}</strong>.
                     </p>
@@ -384,7 +384,7 @@ export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }
                                     : "bg-surface-hover border-transparent hover:border-gray-200 dark:hover:border-slate-700"
                                 }`}
                             >
-                                <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-[22px] text-2xl shadow-sm border ${
+                                <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-[22px] text-[24px] shadow-sm border ${
                                     role.color === 'purple' ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-purple-200' :
                                     role.color === 'amber' ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200' :
                                     role.color === 'emerald' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200' :
@@ -425,10 +425,10 @@ export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }
                 <div className="mx-auto mb-6 h-1.5 w-12 rounded-full bg-gray-200 dark:bg-slate-700 sm:hidden"></div>
 
                 <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                    <span className="text-2xl">🔑</span>
+                    <span className="text-[24px]">🔑</span>
                 </div>
 
-                <h3 className="text-xl font-black text-primary">{t("admin.change_pw")}</h3>
+                <h3 className="text-[20px] font-black text-primary">{t("admin.change_pw")}</h3>
                 <p className="mt-1 mb-6 text-[14px] font-medium text-secondary">
                     Assign a new login password for <strong className="text-primary">{targetUser?.name}</strong>.
                 </p>
@@ -484,7 +484,7 @@ export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }
             <div className="relative w-full max-w-md rounded-[32px] bg-card p-6 shadow-2xl border border-card-border dark:border-slate-800 animate-in slide-in-from-bottom-8 sm:zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto no-scrollbar">
                 <div className="mx-auto mb-6 h-1.5 w-12 rounded-full bg-gray-200 dark:bg-slate-700 sm:hidden"></div>
 
-                <h3 className="text-xl font-black text-primary">{t("admin.add_user")}</h3>
+                <h3 className="text-[20px] font-black text-primary">{t("admin.add_user")}</h3>
                 <p className="mt-1 mb-6 text-[14px] font-medium text-secondary">
                     Create a new courier or admin account for your fleet.
                 </p>
@@ -570,7 +570,7 @@ export default function AdminUserTable({ initialUsers }: { initialUsers: any[] }
                                             : "bg-surface-hover border-transparent hover:border-gray-200 dark:hover:border-slate-700"
                                         }`}
                                     >
-                                        <span className="text-2xl mb-1">{role.icon}</span>
+                                        <span className="text-[24px] mb-1">{role.icon}</span>
                                         <span className={`text-[11px] font-black uppercase tracking-tight ${isSelected ? "text-blue-700 dark:text-blue-300" : "text-secondary"}`}>
                                             {role.label}
                                         </span>

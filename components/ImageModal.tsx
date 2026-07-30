@@ -46,7 +46,7 @@ export default function ImageModal({
         />
       ) : (
         <div className={`flex items-center justify-center bg-secondary/30 ${thumbnailClassName}`}>
-          <span className="text-3xl opacity-50">🖼️</span>
+          <span className="text-[30px] opacity-50">🖼️</span>
         </div>
       )}
 

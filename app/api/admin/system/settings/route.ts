@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   try {
     const token = await getCLIToken(req);
     if (!token || token.role !== "superadmin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     const settings = await readSettings();
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: any) {
     await logError({ errorName: "SettingsReadError", errorMessage: error.message });
-    return NextResponse.json({ error: "Failed to read settings" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to read settings" }, { status: 500 });
   }
 }
 
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
   try {
     const token = await getCLIToken(req);
     if (!token || token.role !== "superadmin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     const body = await req.json();
@@ -72,6 +72,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "Settings saved. Restart the server to apply changes." });
   } catch (error: any) {
     await logError({ errorName: "SettingsWriteError", errorMessage: error.message });
-    return NextResponse.json({ error: "Failed to save settings" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to save settings" }, { status: 500 });
   }
 }

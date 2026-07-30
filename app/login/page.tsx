@@ -44,10 +44,10 @@ export default function LoginPage() {
       <AuthThemeSelector />
       {/* M3 Header Section */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-blue-600 text-3xl shadow-md border border-blue-700">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-blue-600 text-[30px] shadow-md border border-blue-700">
           📦
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold tracking-tight text-primary">
+        <h2 className="mt-6 text-center text-[30px] font-extrabold tracking-tight text-primary">
           {t("auth.welcome")}
         </h2>
         <p className="mt-2 text-center text-[15px] text-secondary">
@@ -98,7 +98,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 rounded-xl bg-surface-hover/80 dark:bg-slate-700/50 px-3 py-1.5 text-sm font-bold text-secondary transition hover:bg-surface-hover dark:hover:bg-slate-700 hover:text-primary active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="absolute right-3 rounded-xl bg-surface-hover/80 dark:bg-slate-700/50 px-3 py-1.5 text-[14px] font-bold text-secondary transition hover:bg-surface-hover dark:hover:bg-slate-700 hover:text-primary active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {showPassword ? t("auth.hide") : t("auth.show")}
                 </button>

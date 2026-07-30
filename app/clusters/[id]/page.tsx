@@ -43,11 +43,11 @@ export default async function ClusterDetailsPage({
         </div>
         <div className="rounded-[2.5rem] bg-card border border-card-border p-6 shadow-sm sm:p-8">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1rem] bg-purple-100 dark:bg-purple-900/30 text-2xl shadow-sm border border-purple-200 dark:border-purple-800">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1rem] bg-purple-100 dark:bg-purple-900/30 text-[24px] shadow-sm border border-purple-200 dark:border-purple-800">
               📦
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-primary">
+              <h1 className="text-[24px] sm:text-[30px] font-extrabold tracking-tight text-primary">
                 {cluster.name}
               </h1>
               <p className="mt-1 text-[14px] font-medium text-secondary">{totalCustomers} customer{totalCustomers !== 1 ? "s" : ""}</p>
@@ -62,7 +62,7 @@ export default async function ClusterDetailsPage({
           )}
         </div>
 
-        <h2 className="text-xl font-bold tracking-tight text-primary flex items-center gap-2">
+        <h2 className="text-[20px] font-bold tracking-tight text-primary flex items-center gap-2">
           Customers
           <span className="rounded-full bg-surface-hover px-3 py-0.5 text-[13px] font-bold text-secondary">{totalCustomers}</span>
         </h2>

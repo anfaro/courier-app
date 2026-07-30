@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   try {
     const token = await getCLIToken(req);
     if (!token || token.role !== "superadmin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     const results = await Promise.allSettled([
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
       totalRows: tables.reduce((s, t) => s + t.row_count, 0),
     });
   } catch {
-    return NextResponse.json({ error: "Failed to fetch database stats" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to fetch database stats" }, { status: 500 });
   }
 }
 
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
   try {
     const token = await getCLIToken(req);
     if (!token || token.role !== "superadmin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     const { action, table } = await req.json();
@@ -75,8 +75,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "ANALYZE completed on all tables." });
     }
 
-    return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+    return NextResponse.json({ message: "Unknown action" }, { status: 400 });
   } catch (error: any) {
-    return NextResponse.json({ error: "Maintenance action failed" }, { status: 500 });
+    return NextResponse.json({ message: "Maintenance action failed" }, { status: 500 });
   }
 }

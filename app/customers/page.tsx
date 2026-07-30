@@ -211,10 +211,10 @@ function CustomersListContent() {
       <main className="mx-auto max-w-3xl p-4 sm:p-6">
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-primary">
+            <h1 className="text-[30px] font-extrabold tracking-tight text-primary">
               {t("customer.db_title")}
             </h1>
-            <p className="mt-1 text-sm font-medium text-secondary">
+            <p className="mt-1 text-[14px] font-medium text-secondary">
               {t("customer.db_subtitle")}
             </p>
           </div>
@@ -241,7 +241,7 @@ function CustomersListContent() {
               href="/customers/new"
               className="btn-primary !py-2.5 !px-5"
             >
-              <span className="mr-2 text-lg leading-none">+</span> {t("customer.add")}
+              <span className="mr-2 text-[18px] leading-none">+</span> {t("customer.add")}
             </Link>
           </div>
         </div>
@@ -399,10 +399,10 @@ function CustomersListContent() {
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
             className="rounded-[2.5rem] bg-card p-12 text-center shadow-sm border border-card-border"
           >
-            <div className="mb-5 inline-flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-4xl shadow-lg shadow-blue-500/20">
+            <div className="mb-5 inline-flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-[36px] shadow-lg shadow-blue-500/20">
               {query ? '🔍' : '👤'}
             </div>
-            <p className="text-xl font-extrabold tracking-tight text-primary">
+            <p className="text-[20px] font-extrabold tracking-tight text-primary">
               {query ? t("search.no_results") : "It's quiet here"}
             </p>
             <p className="mt-2 text-[14px] font-medium text-secondary max-w-xs mx-auto">
@@ -413,7 +413,7 @@ function CustomersListContent() {
                 href="/customers/new"
                 className="btn-primary mt-8 inline-flex items-center gap-2"
               >
-                <span className="text-lg leading-none">+</span> Add your first customer
+                <span className="text-[18px] leading-none">+</span> Add your first customer
               </Link>
             )}
           </motion.div>
@@ -473,7 +473,7 @@ function CustomersListContent() {
                     )}
                     
                     <div className="relative h-14 w-14 shrink-0">
-                      <div className={`absolute inset-0 flex items-center justify-center rounded-[1rem] bg-gradient-to-br ${avatarGradients[gradientIndex]} text-lg font-bold text-white shadow-sm`}>
+                      <div className={`absolute inset-0 flex items-center justify-center rounded-[1rem] bg-gradient-to-br ${avatarGradients[gradientIndex]} text-[18px] font-bold text-white shadow-sm`}>
                         {customer.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="absolute -top-1.5 -left-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[9px] font-black text-white shadow-sm border-2 border-card leading-none">
@@ -571,7 +571,7 @@ function CustomersListContent() {
                           className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 shadow-sm transition-all hover:bg-blue-200 dark:hover:bg-blue-800/60 hover:shadow-md hover:scale-105 active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
                           title={t("customer.pin")}
                         >
-                          <span className="text-base">📍</span>
+                          <span className="text-[16px]">📍</span>
                         </a>
                       )}
                     </div>
@@ -651,7 +651,7 @@ export default function CustomersListPage() {
     <Suspense fallback={
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="flex flex-col items-center justify-center rounded-[2rem] bg-card border border-card-border shadow-sm px-8 py-12">
-          <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-[1.5rem] bg-surface-hover text-3xl mb-4 border border-card-border">
+          <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-[1.5rem] bg-surface-hover text-[30px] mb-4 border border-card-border">
             ⏳
           </div>
           <p className="text-[14px] font-bold text-secondary animate-pulse">Loading...</p>

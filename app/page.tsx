@@ -59,7 +59,7 @@ export default function HomePage() {
           <p className="text-[13px] font-black uppercase tracking-widest text-secondary mb-1">
             {today}
           </p>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-primary">
+          <h1 className="text-[30px] sm:text-[36px] font-extrabold tracking-tight text-primary">
             {t("home.good_morning")}<br />
             <span className="text-blue-600 dark:text-blue-400">{userName}</span>
           </h1>
@@ -113,7 +113,7 @@ export default function HomePage() {
                     {earningsData.totalDelivered} {t("session.packages")} {t("session.delivered")}
                   </p>
                 </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-200 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-300 text-xl group-hover:scale-110 transition-transform">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-200 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-300 text-[20px] group-hover:scale-110 transition-transform">
                   💰
                 </div>
               </div>
@@ -179,7 +179,7 @@ export default function HomePage() {
                     </p>
                   </div>
                   <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white text-[#0A2FFF] shadow-md transition-transform duration-500 group-hover:rotate-12 group-active:scale-90">
-                    <span className="text-3xl">➕</span>
+                    <span className="text-[30px]">➕</span>
                   </div>
                 </div>
               </div>
@@ -199,7 +199,7 @@ export default function HomePage() {
                     </p>
                   </div>
                   <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white text-[#059669] shadow-md transition-transform duration-500 group-hover:-rotate-12 group-active:scale-90">
-                    <span className="text-3xl">📋</span>
+                    <span className="text-[30px]">📋</span>
                   </div>
                 </div>
               </div>
@@ -219,7 +219,7 @@ export default function HomePage() {
             <div className="rounded-[20px] bg-card border border-card-border shadow-sm overflow-hidden">
               {(showAllVisits ? recentVisits : recentVisits.slice(0, 3)).map((v: any, i: number) => (
                 <div key={v.id || i} className="flex items-center gap-3 px-4 py-3 border-b border-card-border last:border-0">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-sm font-bold">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-[14px] font-bold">
                     ✓
                   </div>
                   <div className="flex-1 min-w-0">
@@ -264,7 +264,7 @@ export default function HomePage() {
             {/* Customers Link */}
             <Link href="/customers" className="flex items-center justify-between rounded-2xl bg-card p-4 shadow-sm border border-card-border hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:border-blue-100 dark:hover:border-blue-900/50 transition-colors active:scale-90 group">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xl group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-colors">👥</div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[20px] group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-colors">👥</div>
                 <div>
                   <span className="block text-[15px] font-bold text-primary leading-tight">{t("home.manage_db")}</span>
                   <span className="text-[12px] font-medium text-secondary">{t("home.manage_db_desc")}</span>
@@ -276,7 +276,7 @@ export default function HomePage() {
             {/* Clusters Link */}
             <Link href="/clusters" className="flex items-center justify-between rounded-2xl bg-card p-4 shadow-sm border border-card-border hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:border-orange-100 dark:hover:border-orange-900/50 transition-colors active:scale-90 group">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xl group-hover:bg-orange-100 dark:group-hover:bg-orange-900/50 transition-colors">📍</div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-[20px] group-hover:bg-orange-100 dark:group-hover:bg-orange-900/50 transition-colors">📍</div>
                 <div>
                   <span className="block text-[15px] font-bold text-primary leading-tight">{t("home.clusters")}</span>
                   <span className="text-[12px] font-medium text-secondary">{t("home.clusters_desc")}</span>

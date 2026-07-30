@@ -6,7 +6,7 @@ const DynamicMap = dynamic(() => import("@/components/CustomerSelectionMap"), {
   ssr: false,
   loading: () => (
     <div className="flex h-full items-center justify-center bg-card">
-      <span className="animate-pulse font-bold text-gray-400 text-lg">Initializing Map Engine...</span>
+      <span className="animate-pulse font-bold text-gray-400 text-[18px]">Initializing Map Engine...</span>
     </div>
   ),
 });

@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
       ))
       .limit(10);
 
-    return NextResponse.json(results);
+    return NextResponse.json({ customers: results });
   } catch (error) {
     await logError({
       errorName: "CustomerSearchError",

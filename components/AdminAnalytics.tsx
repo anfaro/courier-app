@@ -38,8 +38,8 @@ export default function AdminAnalytics() {
           const s = stats?.[key];
           return (
             <div key={key} className="rounded-2xl bg-card border border-card-border p-3 text-center">
-              <span className="text-xl">{icon}</span>
-              <p className={`text-xl font-black mt-0.5 ${color}`}>
+              <span className="text-[20px]">{icon}</span>
+              <p className={`text-[20px] font-black mt-0.5 ${color}`}>
                 {loading ? "…" : s?.today ?? 0}
               </p>
               <p className="text-[10px] font-bold uppercase tracking-wider text-secondary mt-0.5">{label}</p>
@@ -66,7 +66,7 @@ export default function AdminAnalytics() {
         className="flex items-center justify-between rounded-[24px] bg-blue-600 p-4 text-white shadow-lg shadow-blue-500/20 active:scale-90 transition-all hover:bg-blue-700"
       >
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center text-lg">📊</div>
+          <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center text-[18px]">📊</div>
           <div className="flex flex-col items-start">
             <span className="font-black leading-tight text-[15px]">View Full Logs</span>
             <span className="text-[10px] font-bold opacity-70 uppercase tracking-tighter">

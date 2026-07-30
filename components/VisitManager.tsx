@@ -217,14 +217,14 @@ export default function VisitManager({ customerId, hideCheckIn }: { customerId: 
         </div>
       ) : visits.length === 0 ? (
         <div className="py-8 text-center">
-          <span className="text-4xl block mb-2">📍</span>
+          <span className="text-[36px] block mb-2">📍</span>
           <p className="text-[14px] font-medium text-secondary">{t("customer.no_visits")}</p>
         </div>
       ) : (
         <div className="space-y-3 max-h-64 overflow-y-auto no-scrollbar pr-1">
           {visits.map((v) => (
             <div key={v.id} className="flex items-start gap-3 p-3 rounded-2xl bg-surface-hover/50">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-sm font-black text-blue-700 dark:text-blue-400">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-[14px] font-black text-blue-700 dark:text-blue-400">
                 {v.userName?.charAt(0).toUpperCase() || "?"}
               </div>
               <div className="flex-1 min-w-0">
@@ -266,7 +266,7 @@ export default function VisitManager({ customerId, hideCheckIn }: { customerId: 
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
             className="relative w-full max-w-sm rounded-[32px] bg-card p-6 shadow-2xl border border-card-border"
           >
-            <h3 className="text-xl font-black text-primary mb-1">{t("customer.check_in")}</h3>
+            <h3 className="text-[20px] font-black text-primary mb-1">{t("customer.check_in")}</h3>
             <p className="text-[13px] text-secondary mb-5">{t("customer.visit_notes")}</p>
 
             <div className="relative">

@@ -223,7 +223,7 @@ export default function LogViewer() {
                 isActive ? "ring-2 ring-blue-500 dark:ring-blue-400 shadow-sm " + colors : colors + " opacity-70 hover:opacity-100"
               }`}
             >
-              <p className="text-lg font-black text-primary">{s ? s.total : "…"}</p>
+              <p className="text-[18px] font-black text-primary">{s ? s.total : "…"}</p>
               <p className="text-[10px] font-bold uppercase tracking-wider text-secondary mt-0.5">{type}</p>
               {s && (
                 <p className="text-[9px] font-mono text-secondary mt-0.5">
@@ -355,7 +355,7 @@ export default function LogViewer() {
             >
               {isLoading && logs.length === 0 ? (
                 <div className="p-16 text-center text-secondary font-bold">
-                  <div className="flex h-10 w-10 animate-spin items-center justify-center rounded-full bg-surface-hover text-xl border border-card-border mx-auto mb-3">
+                  <div className="flex h-10 w-10 animate-spin items-center justify-center rounded-full bg-surface-hover text-[20px] border border-card-border mx-auto mb-3">
                     ⏳
                   </div>
                   {t("action.loading")}
@@ -622,7 +622,7 @@ export default function LogViewer() {
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
               className="relative w-full max-w-sm rounded-[32px] bg-card p-6 shadow-2xl border border-card-border"
             >
-              <h3 className="text-lg font-black text-primary mb-1">Prune Logs</h3>
+              <h3 className="text-[18px] font-black text-primary mb-1">Prune Logs</h3>
               <p className="text-[13px] text-secondary mb-5">Delete log entries older than N days to free up space.</p>
 
               <div className="space-y-4">

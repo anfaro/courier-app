@@ -56,7 +56,7 @@ export default function ClusterCustomerList({
     <div className="relative overflow-hidden rounded-[2rem] border border-card-border bg-card shadow-sm">
       {loading && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-card/60 backdrop-blur-sm rounded-[2rem]">
-          <div className="flex h-12 w-12 animate-spin items-center justify-center rounded-full bg-surface-hover text-2xl border border-card-border">
+          <div className="flex h-12 w-12 animate-spin items-center justify-center rounded-full bg-surface-hover text-[24px] border border-card-border">
             ⏳
           </div>
         </div>
@@ -66,7 +66,7 @@ export default function ClusterCustomerList({
           <li key={customer.id} className="group relative flex items-center justify-between p-4 transition-all hover:bg-surface-hover active:bg-surface-hover sm:p-5">
             <Link href={`/customers/${customer.id}`} className="absolute inset-0 z-0 focus:outline-none" />
             <div className="z-10 flex min-w-0 flex-1 items-center gap-3 pointer-events-none transition-transform duration-200 group-active:scale-[0.98]">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-surface-hover text-sm font-bold text-primary">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-surface-hover text-[14px] font-bold text-primary">
                 {customer.name.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">

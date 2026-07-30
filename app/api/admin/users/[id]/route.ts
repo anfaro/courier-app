@@ -14,12 +14,13 @@ export async function PATCH(
   try {
     const token = await getCLIToken(req);
     if (!token || token.role !== "superadmin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     await logServerAccess(req, token);
 
-    const { id } = await params;
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
     const body = await req.json();
     const { role, password } = body;
 
@@ -29,14 +30,14 @@ export async function PATCH(
     if (role) {
       const validRoles = ["courier", "dispatcher", "hubmanager", "superadmin"];
       if (!validRoles.includes(role)) {
-        return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+        return NextResponse.json({ message: "Invalid role" }, { status: 400 });
       }
       updateData.role = role;
     }
 
     if (password) {
       if (password.length < 6) {
-        return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
+        return NextResponse.json({ message: "Password must be at least 6 characters" }, { status: 400 });
       }
       const hashedPassword = await bcrypt.hash(password, 10);
       updateData.password = hashedPassword;
@@ -44,7 +45,7 @@ export async function PATCH(
     }
 
     if (Object.keys(updateData).length === 0) {
-      return NextResponse.json({ error: "No data provided for update" }, { status: 400 });
+      return NextResponse.json({ message: "No data provided for update" }, { status: 400 });
     }
 
     updateData.updatedAt = new Date();
@@ -66,7 +67,7 @@ export async function PATCH(
       errorName: "UserUpdateError",
       errorMessage: error.message,
     });
-    return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to update user" }, { status: 500 });
   }
 }
 
@@ -77,17 +78,18 @@ export async function DELETE(
   try {
     const token = await getCLIToken(req);
     if (!token || token.role !== "superadmin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     await logServerAccess(req, token);
 
-    const { id } = await params;
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
     const userId = id;
 
     // Prevent deleting yourself
     if (token.sub && token.sub === userId) {
-        return NextResponse.json({ error: "You cannot delete yourself." }, { status: 400 });
+        return NextResponse.json({ message: "You cannot delete yourself." }, { status: 400 });
     }
 
     await db.delete(users).where(eq(users.id, userId));
@@ -107,6 +109,6 @@ export async function DELETE(
       errorName: "UserDeleteError",
       errorMessage: error.message,
     });
-    return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to delete user" }, { status: 500 });
   }
 }

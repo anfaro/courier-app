@@ -164,7 +164,7 @@ export default function EditClusterPage({ params }: { params: Promise<{ id: stri
       <div className="min-h-screen bg-background pb-20">
         <main className="mx-auto max-w-2xl p-4 sm:p-6">
           <div className="mt-4 flex min-h-[40vh] flex-col items-center justify-center rounded-[2.5rem] bg-card p-6 shadow-sm border border-card-border">
-            <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-[1.5rem] bg-surface-hover text-3xl mb-4 border border-card-border">
+            <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-[1.5rem] bg-surface-hover text-[30px] mb-4 border border-card-border">
               ⏳
             </div>
             <p className="text-[16px] font-bold text-secondary animate-pulse">Loading Cluster...</p>
@@ -181,8 +181,8 @@ export default function EditClusterPage({ params }: { params: Promise<{ id: stri
       <main className="mx-auto max-w-2xl p-4 sm:p-6">
         <div className="mt-4 rounded-[2.5rem] bg-card p-6 sm:p-10 shadow-sm border border-card-border">
           <div className="mb-8">
-            <h1 className="text-3xl font-extrabold tracking-tight text-primary">Edit Cluster</h1>
-            <p className="mt-2 text-base text-secondary">Update details and manage customer list.</p>
+            <h1 className="text-[30px] font-extrabold tracking-tight text-primary">Edit Cluster</h1>
+            <p className="mt-2 text-[16px] text-secondary">Update details and manage customer list.</p>
           </div>
 
           {error && <p className="mb-6 rounded-2xl bg-red-50 dark:bg-red-950/20 p-4 text-[15px] font-medium text-red-700 dark:text-red-400 border border-red-100 dark:border-red-900/50">{error}</p>}
@@ -198,14 +198,14 @@ export default function EditClusterPage({ params }: { params: Promise<{ id: stri
               <div className="relative rounded-3xl border border-card-border bg-surface-hover/50 p-2 space-y-2 min-h-[120px] overflow-hidden">
                 {fetchingCustomers && (
                   <div className="absolute inset-0 z-20 flex items-center justify-center bg-card/60 backdrop-blur-sm rounded-[1.5rem]">
-                    <div className="flex h-12 w-12 animate-spin items-center justify-center rounded-full bg-surface-hover text-2xl border border-card-border">
+                    <div className="flex h-12 w-12 animate-spin items-center justify-center rounded-full bg-surface-hover text-[24px] border border-card-border">
                       ⏳
                     </div>
                   </div>
                 )}
 
                 {customers.length === 0 ? (
-                  <p className="p-4 text-center text-sm text-secondary">No customers available</p>
+                  <p className="p-4 text-center text-[14px] text-secondary">No customers available</p>
                 ) : (
                   <>
                     {customers.map((customer) => {
@@ -224,7 +224,7 @@ export default function EditClusterPage({ params }: { params: Promise<{ id: stri
                             {isSelected && <span className="text-[10px]">✔</span>}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className={`truncate text-sm font-bold ${isSelected ? "text-white" : "text-primary"}`}>{customer.name}</p>
+                            <p className={`truncate text-[14px] font-bold ${isSelected ? "text-white" : "text-primary"}`}>{customer.name}</p>
                             <p className={`truncate text-[11px] ${isSelected ? "text-purple-100" : "text-secondary"}`}>{customer.address}</p>
                           </div>
                         </button>

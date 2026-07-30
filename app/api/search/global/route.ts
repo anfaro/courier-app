@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   try {
     const token = await getCLIToken(req);
     if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);
@@ -109,6 +109,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ customers: foundCustomers, clusters: foundClusters, users: foundUsers });
   } catch (error: any) {
     await logError({ errorName: "GlobalSearchError", errorMessage: error.message });
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
   }
 }

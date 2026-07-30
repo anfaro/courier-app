@@ -50,8 +50,8 @@ export default function SystemHealth() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {stats.map((s) => (
           <div key={s.label} className="rounded-2xl bg-card border border-card-border p-4 shadow-sm flex flex-col items-center text-center">
-            <span className="text-2xl mb-2">{s.icon}</span>
-            <p className="text-xl font-black text-primary">{s.value.toLocaleString()}</p>
+            <span className="text-[24px] mb-2">{s.icon}</span>
+            <p className="text-[20px] font-black text-primary">{s.value.toLocaleString()}</p>
             <p className="text-[11px] font-bold text-secondary mt-1">{s.label}</p>
           </div>
         ))}

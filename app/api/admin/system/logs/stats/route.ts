@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   try {
     const token = await getCLIToken(req);
     if (!token || token.role !== "superadmin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     const today = new Date();
@@ -37,6 +37,6 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: any) {
     await logError({ errorName: "LogStatsFetchError", errorMessage: error.message });
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
   }
 }

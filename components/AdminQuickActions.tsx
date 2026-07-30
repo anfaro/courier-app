@@ -79,7 +79,7 @@ export default function AdminQuickActions() {
           onClick={() => setShowModal(true)}
           className="flex-1 flex items-center gap-3 rounded-[24px] bg-blue-600 p-4 text-white shadow-lg shadow-blue-500/20 active:scale-90 transition-all hover:bg-blue-700"
         >
-          <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center text-xl">👤</div>
+          <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center text-[20px]">👤</div>
           <div className="flex flex-col items-start">
             <span className="font-black leading-tight text-[15px]">New User</span>
             <span className="text-[10px] font-bold opacity-70 uppercase tracking-tighter">Instant Onboarding</span>
@@ -91,7 +91,7 @@ export default function AdminQuickActions() {
           disabled={geocoding}
           className="flex-1 flex items-center gap-3 rounded-[24px] bg-emerald-600 p-4 text-white shadow-lg shadow-emerald-500/20 active:scale-90 transition-all hover:bg-emerald-700 disabled:opacity-50"
         >
-          <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center text-xl">🌍</div>
+          <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center text-[20px]">🌍</div>
           <div className="flex flex-col items-start">
             <span className="font-black leading-tight text-[15px]">{geocoding ? t("admin.geocode_processing") : t("admin.geocode_button")}</span>
             <span className="text-[10px] font-bold opacity-70 uppercase tracking-tighter">{t("admin.geocode_desc")}</span>
@@ -102,7 +102,7 @@ export default function AdminQuickActions() {
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="relative w-full max-w-md rounded-[32px] bg-card p-6 shadow-2xl border border-card-border dark:border-slate-800 animate-in zoom-in-95 duration-200">
-            <h3 className="text-xl font-black text-primary mb-1">Onboard New Staff</h3>
+            <h3 className="text-[20px] font-black text-primary mb-1">Onboard New Staff</h3>
             <p className="text-secondary text-[13px] mb-6">Create credentials for a new courier or administrator.</p>
             
             <form onSubmit={handleCreate} className="space-y-4">
@@ -149,7 +149,7 @@ export default function AdminQuickActions() {
                         : "bg-surface-hover border-transparent hover:border-gray-200 dark:hover:border-slate-700"
                       }`}
                     >
-                      <span className="text-2xl mb-1">{role.icon}</span>
+                      <span className="text-[24px] mb-1">{role.icon}</span>
                       <span className={`text-[11px] font-black uppercase tracking-tight ${isSelected ? "text-blue-700 dark:text-blue-300" : "text-secondary"}`}>
                         {role.label}
                       </span>

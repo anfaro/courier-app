@@ -135,7 +135,7 @@ export async function GET(req: NextRequest) {
   try {
     const token = await getCLIToken(req);
     if (!token || token.role !== "superadmin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     // Consistent snapshot: all SELECTs in a single transaction
@@ -190,7 +190,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: any) {
     await logError({ errorName: "BackupError", errorMessage: error.message });
-    return NextResponse.json({ error: "Backup failed" }, { status: 500 });
+    return NextResponse.json({ message: "Backup failed" }, { status: 500 });
   }
 }
 
@@ -224,7 +224,7 @@ export async function POST(req: NextRequest) {
   try {
     const token = await getCLIToken(req);
     if (!token || token.role !== "superadmin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     const body = await req.json();
@@ -248,7 +248,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!body?.data) {
-      return NextResponse.json({ error: "Invalid backup file" }, { status: 400 });
+      return NextResponse.json({ message: "Invalid backup file" }, { status: 400 });
     }
 
     // Full restore mode
@@ -295,6 +295,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: `Restored ${totalRestored} records.` });
   } catch (error: any) {
     await logError({ errorName: "RestoreError", errorMessage: error.message, stackTrace: error.stack });
-    return NextResponse.json({ error: "Restore failed" }, { status: 500 });
+    return NextResponse.json({ message: "Restore failed" }, { status: 500 });
   }
 }

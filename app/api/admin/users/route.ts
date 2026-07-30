@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   try {
     const token = await getCLIToken(req);
     if (!token || token.role !== "superadmin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     await logServerAccess(req, token);
@@ -23,15 +23,15 @@ export async function POST(req: NextRequest) {
     const validRoles = ["courier", "dispatcher", "hubmanager", "superadmin"];
 
     if (!name || !email || !password || !role) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+      return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
     }
 
     if (!validRoles.includes(role)) {
-      return NextResponse.json({ error: "Invalid role selected" }, { status: 400 });
+      return NextResponse.json({ message: "Invalid role selected" }, { status: 400 });
     }
 
     if (password.length < 6) {
-      return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
+      return NextResponse.json({ message: "Password must be at least 6 characters" }, { status: 400 });
     }
 
     // Check if user already exists
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (existingUser) {
-      return NextResponse.json({ error: "User with this email already exists" }, { status: 400 });
+      return NextResponse.json({ message: "User with this email already exists" }, { status: 400 });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -71,6 +71,6 @@ export async function POST(req: NextRequest) {
       errorName: "UserCreationError",
       errorMessage: error.message,
     });
-    return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to create user" }, { status: 500 });
   }
 }

@@ -60,10 +60,10 @@ export default function ForgotPasswordPage() {
       <AuthThemeSelector />
       {/* M3 Header Section */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-orange-100 dark:bg-orange-900/30 text-3xl shadow-sm border border-orange-200 dark:border-orange-800">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-orange-100 dark:bg-orange-900/30 text-[30px] shadow-sm border border-orange-200 dark:border-orange-800">
           🔐
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold tracking-tight text-primary">
+        <h2 className="mt-6 text-center text-[30px] font-extrabold tracking-tight text-primary">
           {t("auth.forgot_pw_title")}
         </h2>
         <p className="mt-2 text-center text-[15px] text-secondary px-4">

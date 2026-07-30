@@ -138,7 +138,7 @@ export default function CustomerStatsPage() {
         <motion.h1
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-2xl font-extrabold tracking-tight text-primary"
+          className="text-[24px] font-extrabold tracking-tight text-primary"
         >
           {t("customer.stats_title")}
         </motion.h1>
@@ -151,7 +151,7 @@ export default function CustomerStatsPage() {
               variants={item}
               className="rounded-[24px] bg-card border border-card-border p-5 shadow-sm"
             >
-              <div className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br ${card.color} text-white text-lg mb-3`}>
+              <div className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br ${card.color} text-white text-[18px] mb-3`}>
                 {card.icon}
               </div>
               <p className="text-[28px] font-black text-primary">{card.value}</p>

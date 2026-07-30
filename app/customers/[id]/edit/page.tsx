@@ -192,7 +192,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
         {isFetching ? (
           <main className="mx-auto max-w-2xl p-4 sm:p-6">
             <div className="mt-4 flex min-h-[50vh] flex-col items-center justify-center rounded-[2.5rem] bg-card p-6 shadow-sm border border-card-border">
-              <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-[1.5rem] bg-surface-hover text-3xl mb-4 border border-card-border">
+              <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-[1.5rem] bg-surface-hover text-[30px] mb-4 border border-card-border">
                 ⏳
               </div>
               <p className="text-[16px] font-bold text-secondary animate-pulse">Loading customer...</p>
@@ -207,7 +207,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
             className="mt-4 rounded-[2.5rem] bg-card p-6 sm:p-10 shadow-sm border border-card-border"
           >
-            <h1 className="text-3xl font-bold text-primary mb-8">Edit Customer</h1>
+            <h1 className="text-[30px] font-bold text-primary mb-8">Edit Customer</h1>
 
             {error && <p className="mb-6 rounded-2xl bg-red-50 dark:bg-red-950/30 p-4 text-[15px] font-medium text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900">{error}</p>}
 
@@ -274,7 +274,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
                 >
                   {latitude && longitude ? (
                     <div className="flex flex-col items-center gap-1">
-                      <span className="text-2xl">📍</span>
+                      <span className="text-[24px]">📍</span>
                       <span className="text-[12px] font-mono font-bold text-blue-600 dark:text-blue-400">
                         {latitude}, {longitude}
                       </span>
@@ -282,7 +282,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
                     </div>
                   ) : (
                     <div className="flex flex-col items-center gap-1">
-                      <span className="text-3xl mb-1">🗺️</span>
+                      <span className="text-[30px] mb-1">🗺️</span>
                       <span className="text-[14px] font-bold text-primary">{t("customer.pin_on_map")}</span>
                       <span className="text-[11px] font-medium text-secondary">{t("customer.pin_map_desc")}</span>
                     </div>

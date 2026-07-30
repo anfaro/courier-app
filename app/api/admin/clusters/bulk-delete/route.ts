@@ -9,12 +9,12 @@ import { logActivity, logServerAccess, logError } from "@/lib/logger";
 export async function DELETE(req: NextRequest) {
   try {
     const token = await getCLIToken(req);
-    if (!token || token.role !== "superadmin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (!token || token.role !== "superadmin") return NextResponse.json({ message: "Forbidden" }, { status: 403 });
 
     await logServerAccess(req, token);
 
     const { ids } = await req.json();
-    if (!ids || !Array.isArray(ids) || ids.length === 0) return NextResponse.json({ error: "Bad Request" }, { status: 400 });
+    if (!ids || !Array.isArray(ids) || ids.length === 0) return NextResponse.json({ message: "Bad Request" }, { status: 400 });
 
     await db.delete(clusters).where(inArray(clusters.id, ids));
 
@@ -31,6 +31,6 @@ export async function DELETE(req: NextRequest) {
       errorName: "BulkDeleteClustersError",
       errorMessage: error instanceof Error ? error.message : String(error),
     });
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
   }
 }

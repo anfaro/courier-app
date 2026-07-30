@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   try {
     const token = await getCLIToken(req);
     if (!token || token.role !== "superadmin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     const body = await req.json();
@@ -51,6 +51,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ deleted, message: `Deleted ${deleted} log entries` });
   } catch (error: any) {
     await logError({ errorName: "LogPruneError", errorMessage: error.message });
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
   }
 }

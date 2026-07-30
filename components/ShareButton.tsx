@@ -76,7 +76,7 @@ export default function ShareButton({ customerId }: { customerId: string }) {
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
               className="relative w-full max-w-sm rounded-[32px] bg-card p-6 shadow-2xl border border-card-border"
             >
-              <h3 className="text-xl font-black text-primary mb-1">
+              <h3 className="text-[20px] font-black text-primary mb-1">
                 {t("customer.share")}
               </h3>
               <p className="text-[13px] font-medium text-secondary mb-5">

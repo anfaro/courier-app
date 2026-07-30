@@ -9,7 +9,7 @@ export default function NotMobilePage() {
         📱
       </div>
       
-      <h1 className="mb-3 text-3xl font-black tracking-tight text-gray-900">Mobile Only Experience</h1>
+      <h1 className="mb-3 text-[30px] font-black tracking-tight text-gray-900">Mobile Only Experience</h1>
       <p className="mb-8 max-w-sm text-[15px] font-medium leading-relaxed text-gray-500">
         Our Courier Superapp is currently optimized strictly for field operations on mobile devices. 
         <br/><br/>
