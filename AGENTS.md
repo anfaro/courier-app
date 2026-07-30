@@ -289,7 +289,20 @@ npx drizzle-kit push
 
 # Lint (may not work in Termux)
 npm run lint
+
+# Test
+npm run test
+npm run test:watch
 ```
+
+# Testing Policy
+
+**Every new function or module must include corresponding unit tests.** Tests live in `lib/__tests__/` (or alongside the file as `*.test.ts`). Pure functions (no DB, no network) should be tested first since they require no mocking. Follow existing test patterns in `lib/__tests__/`.
+
+- **Validation schemas**: Test all Zod schemas with valid inputs, invalid inputs, and edge cases
+- **Business logic** (e.g. earnings cutoff): Test boundary conditions, month/year transitions, all branches
+- **Utility functions** (e.g. cache, utils): Test round-trips, TTL, uniqueness, edge cases
+- **Existing tests must not break**: Run `npm test` before committing
 
 # Session Change Log
 
