@@ -49,9 +49,9 @@ export default function ThemeStyleSelector({ variant = "full" }: { variant?: Var
       desc: t("settings.style_clay_desc"),
       active: style === "clay",
       preview: (
-        <div className="h-16 rounded-2xl bg-[#e4ddf0] shadow-[6px_6px_14px_rgba(120,100,160,0.28),-6px_-6px_14px_rgba(255,255,255,0.7),inset_2px_2px_4px_rgba(255,255,255,0.5),inset_-2px_-2px_4px_rgba(120,100,160,0.15)]">
+        <div className="h-16 rounded-2xl bg-[#f3eefc] shadow-[8px_8px_18px_rgba(105,90,155,0.32),-8px_-8px_18px_rgba(255,255,255,0.75),inset_3px_3px_6px_rgba(255,255,255,0.6),inset_-3px_-3px_6px_rgba(105,90,155,0.18)]">
           <div className="flex h-full items-end justify-center pb-2">
-            <div className="h-4 w-20 rounded-full bg-[#c9bfe3] shadow-[3px_3px_6px_rgba(120,100,160,0.25),-3px_-3px_6px_rgba(255,255,255,0.6)]" />
+            <div className="h-4 w-20 rounded-full bg-[#c9bfe3] shadow-[3px_3px_6px_rgba(105,90,155,0.3),-3px_-3px_6px_rgba(255,255,255,0.7)]" />
           </div>
         </div>
       ),

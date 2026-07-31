@@ -313,7 +313,7 @@ export default function HomePage() {
             </div>
             <div className="flex-1 min-w-0">
               <span className="block text-[14px] font-bold text-primary leading-tight">{t("home.manage_db")}</span>
-              <span className="text-[11px] font-medium text-secondary truncate">{t("home.manage_db_desc")}</span>
+              <span className="block text-[11px] font-medium text-secondary line-clamp-2">{t("home.manage_db_desc")}</span>
             </div>
             <Icon name="chevron-right" size={18} strokeWidth={3} className="text-gray-300 dark:text-slate-600 group-hover:text-blue-500 shrink-0" />
           </Link>
@@ -326,7 +326,7 @@ export default function HomePage() {
             </div>
             <div className="flex-1 min-w-0">
               <span className="block text-[14px] font-bold text-primary leading-tight">{t("home.clusters")}</span>
-              <span className="text-[11px] font-medium text-secondary truncate">{t("home.clusters_desc")}</span>
+              <span className="block text-[11px] font-medium text-secondary line-clamp-2">{t("home.clusters_desc")}</span>
             </div>
             <Icon name="chevron-right" size={18} strokeWidth={3} className="text-gray-300 dark:text-slate-600 group-hover:text-orange-500 shrink-0" />
           </Link>

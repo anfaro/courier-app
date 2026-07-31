@@ -51,12 +51,12 @@
    CLAYMORPHISM — Light (pastel purple, opaque clay)
    ============================================================ */
 .clay {
-  --background: #efeaf6;
+  --background: #e8e1f2;
   --foreground: #2e2a35;
-  --card-bg: #e4ddf0;
-  --card-border: rgba(255, 255, 255, 0.45);
-  --input-bg: #d9d1e8;
-  --surface-hover: #dcd4ea;
+  --card-bg: #f3eefc;
+  --card-border: rgba(255, 255, 255, 0.55);
+  --input-bg: #ded5ee;
+  --surface-hover: #e6def5;
   --text-primary: #2e2a35;
   --text-secondary: #6f6791;
 }
@@ -227,10 +227,10 @@ body {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-shadow:
-    10px 10px 28px rgba(120, 100, 160, 0.22),
-    -10px -10px 28px rgba(255, 255, 255, 0.65),
-    inset 3px 3px 6px rgba(255, 255, 255, 0.45),
-    inset -3px -3px 6px rgba(120, 100, 160, 0.12);
+    12px 12px 30px rgba(105, 90, 155, 0.35),
+    -12px -12px 30px rgba(255, 255, 255, 0.7),
+    inset 4px 4px 10px rgba(255, 255, 255, 0.6),
+    inset -5px -5px 12px rgba(105, 90, 155, 0.18);
 }
 .clay.dark .bg-card {
   box-shadow:
@@ -246,10 +246,10 @@ body {
   color: #2e2a35;
   border: none;
   box-shadow:
-    6px 6px 14px rgba(120, 100, 160, 0.3),
-    -6px -6px 14px rgba(255, 255, 255, 0.6),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.4),
-    inset -2px -2px 4px rgba(120, 100, 160, 0.15);
+    7px 7px 18px rgba(105, 90, 155, 0.4),
+    -7px -7px 18px rgba(255, 255, 255, 0.75),
+    inset 3px 3px 7px rgba(255, 255, 255, 0.5),
+    inset -3px -3px 7px rgba(105, 90, 155, 0.2);
 }
 .clay.dark .btn-primary {
   background-color: #7c5cbf;
@@ -267,10 +267,10 @@ body {
   color: var(--text-primary);
   border: none;
   box-shadow:
-    4px 4px 12px rgba(120, 100, 160, 0.2),
-    -4px -4px 12px rgba(255, 255, 255, 0.55),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.4),
-    inset -2px -2px 4px rgba(120, 100, 160, 0.12);
+    5px 5px 14px rgba(105, 90, 155, 0.3),
+    -5px -5px 14px rgba(255, 255, 255, 0.7),
+    inset 3px 3px 7px rgba(255, 255, 255, 0.5),
+    inset -3px -3px 7px rgba(105, 90, 155, 0.16);
 }
 .clay.dark .btn-outline {
   box-shadow:
@@ -285,10 +285,10 @@ body {
   background-color: #d7cdf0;
   color: #4c3f8f;
   box-shadow:
-    4px 4px 12px rgba(120, 100, 160, 0.2),
-    -4px -4px 12px rgba(255, 255, 255, 0.5),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.4),
-    inset -2px -2px 4px rgba(120, 100, 160, 0.12);
+    5px 5px 14px rgba(105, 90, 155, 0.3),
+    -5px -5px 14px rgba(255, 255, 255, 0.65),
+    inset 3px 3px 7px rgba(255, 255, 255, 0.5),
+    inset -3px -3px 7px rgba(105, 90, 155, 0.16);
 }
 .clay.dark .btn-secondary {
   background-color: #4c3f6e;
@@ -306,10 +306,10 @@ body {
   color: #8f3f4c;
   border: none;
   box-shadow:
-    4px 4px 12px rgba(150, 100, 110, 0.2),
-    -4px -4px 12px rgba(255, 255, 255, 0.55),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.4),
-    inset -2px -2px 4px rgba(150, 100, 110, 0.12);
+    5px 5px 14px rgba(150, 100, 110, 0.3),
+    -5px -5px 14px rgba(255, 255, 255, 0.7),
+    inset 3px 3px 7px rgba(255, 255, 255, 0.5),
+    inset -3px -3px 7px rgba(150, 100, 110, 0.16);
 }
 .clay.dark .btn-danger {
   background-color: #573036;
@@ -324,8 +324,8 @@ body {
 /* Clay inputs — pressed / inset clay */
 .clay :is(input, textarea, select) {
   box-shadow:
-    inset 4px 4px 8px rgba(120, 100, 160, 0.15),
-    inset -3px -3px 8px rgba(255, 255, 255, 0.5);
+    inset 5px 5px 10px rgba(105, 90, 155, 0.22),
+    inset -4px -4px 10px rgba(255, 255, 255, 0.6);
 }
 .clay.dark :is(input, textarea, select) {
   box-shadow:
