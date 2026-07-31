@@ -55,7 +55,7 @@ export default function BottomNav() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[100] pb-safe pointer-events-none">
       {!isModalOpen && (
-        <nav className="pointer-events-auto flex h-[64px] w-full items-center justify-between rounded-t-[24px] bg-card/80 dark:bg-slate-900/80 backdrop-blur-xl px-1 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] border-t border-card-border/50 dark:border-slate-800 transition-colors"
+        <nav className="bottom-nav pointer-events-auto flex h-[64px] w-full items-center justify-between rounded-t-[24px] bg-card/80 backdrop-blur-xl px-1 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] border-t border-card-border/50 transition-colors"
         >
             {navItems.map((item) => {
               const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));

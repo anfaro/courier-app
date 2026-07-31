@@ -44,13 +44,13 @@ export default function Header() {
 
   if (!session?.user) {
     return (
-      <header className="sticky top-0 z-50 w-full border-b border-card-border/50 dark:border-slate-800 bg-background/80 dark:bg-slate-950/80 px-4 py-3 sm:px-6 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 w-full border-b border-card-border/50 bg-background/80 px-4 py-3 sm:px-6 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex items-center gap-2">
             <Logo />
-            <span className="text-[18px] font-black tracking-tighter text-primary dark:text-slate-100 hidden xs:block">Courier</span>
+            <span className="text-[18px] font-black tracking-tighter text-primary hidden xs:block">Courier</span>
           </div>
-          <div className="h-11 w-11 rounded-full bg-gray-200 dark:bg-slate-800 animate-pulse" />
+          <div className="h-11 w-11 rounded-full bg-gray-200 dark:bg-surface-hover animate-pulse" />
         </div>
       </header>
     );
@@ -61,13 +61,13 @@ export default function Header() {
     : session.user.email?.charAt(0).toUpperCase() || "U";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-card-border/50 dark:border-slate-800 bg-background/80 dark:bg-slate-950/80 px-4 py-3 sm:px-6 backdrop-blur-xl transition-all">
+    <header className="sticky top-0 z-50 w-full border-b border-card-border/50 bg-background/80 px-4 py-3 sm:px-6 backdrop-blur-xl transition-all">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
 
         {/* App Logo & Title */}
         <Link href="/" className="flex items-center gap-2 shrink-0 active:scale-90 transition-transform">
           <Logo />
-          <span className="text-[20px] font-black tracking-tighter text-primary dark:text-slate-100 hidden sm:block">Courier</span>
+          <span className="text-[20px] font-black tracking-tighter text-primary hidden sm:block">Courier</span>
         </Link>
 
         {/* Search Bar or Branding on /search */}
@@ -85,7 +85,7 @@ export default function Header() {
               <span className="hidden sm:inline text-[11px] font-bold text-secondary/50 tracking-widest uppercase">Search</span>
             </motion.div>
           ) : (
-            <div className="flex items-center w-full max-w-[500px] transition-all duration-300 rounded-full bg-surface-hover/80 dark:bg-slate-900/80 px-3 sm:px-4 py-2 ring-1 ring-blue-500/10 dark:ring-blue-400/10 shadow-inner group focus-within:ring-blue-500/30 focus-within:bg-card">
+            <div className="flex items-center w-full max-w-[500px] transition-all duration-300 rounded-full bg-surface-hover/80 px-3 sm:px-4 py-2 ring-1 ring-blue-500/10 dark:ring-blue-400/10 shadow-inner group focus-within:ring-blue-500/30 focus-within:bg-card">
               <div className="flex items-center justify-center shrink-0 transition-colors text-secondary group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 mr-2">
                 <Icon name="search" size={18} strokeWidth={2.5} className="sm:hidden" />
                 <Icon name="search" size={20} strokeWidth={2.5} className="hidden sm:block" />
@@ -136,13 +136,13 @@ export default function Header() {
                     animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: -20, x: 20 }}
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                    className="w-72 rounded-[32px] bg-card/98 dark:bg-slate-900/98 p-2 shadow-2xl ring-1 ring-black/10 dark:ring-white/10 backdrop-blur-3xl overflow-hidden"
+                    className="w-72 rounded-[32px] bg-card/98 p-2 shadow-2xl ring-1 ring-black/10 dark:ring-white/10 backdrop-blur-3xl overflow-hidden"
                   >
-                    <div className="px-6 py-5 mb-1 bg-surface-hover/50 dark:bg-slate-800/50 rounded-[24px] border border-card-border/50">
-                      <p className="truncate text-[16px] font-black text-primary dark:text-slate-100 tracking-tight">
+                    <div className="px-6 py-5 mb-1 bg-surface-hover/50 rounded-[24px] border border-card-border/50">
+                      <p className="truncate text-[16px] font-black text-primary tracking-tight">
                         {session.user.name || "User"}
                       </p>
-                      <p className="truncate text-[13px] font-medium text-secondary dark:text-slate-400 opacity-80 mt-0.5">
+                      <p className="truncate text-[13px] font-medium text-secondary opacity-80 mt-0.5">
                         {session.user.email}
                       </p>
                     </div>
@@ -151,7 +151,7 @@ export default function Header() {
                       <Link
                         href="/earnings"
                         onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center gap-3 px-5 py-3.5 text-[14px] font-bold text-primary dark:text-slate-200 transition-all hover:bg-surface-hover/50 dark:hover:bg-slate-800/50 active:scale-90 rounded-2xl group"
+                        className="flex items-center gap-3 px-5 py-3.5 text-[14px] font-bold text-primary transition-all hover:bg-surface-hover/50 dark:hover:bg-surface-hover/50 active:scale-90 rounded-2xl group"
                       >
                         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">💰</span>
                         {t("earnings.title")}
@@ -161,7 +161,7 @@ export default function Header() {
                         <Link
                           href="/admin"
                           onClick={() => setIsMenuOpen(false)}
-                          className="flex items-center gap-3 px-5 py-3.5 text-[14px] font-bold text-primary dark:text-slate-200 transition-all hover:bg-surface-hover/50 dark:hover:bg-slate-800/50 active:scale-90 rounded-2xl group"
+                          className="flex items-center gap-3 px-5 py-3.5 text-[14px] font-bold text-primary transition-all hover:bg-surface-hover/50 dark:hover:bg-surface-hover/50 active:scale-90 rounded-2xl group"
                         >
                           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">🛡️</span>
                           {t("nav.admin")}
@@ -171,7 +171,7 @@ export default function Header() {
                       <Link
                         href="/settings"
                         onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center gap-3 px-5 py-3.5 text-[14px] font-bold text-primary dark:text-slate-200 transition-all hover:bg-surface-hover/50 dark:hover:bg-slate-800/50 active:scale-90 rounded-2xl group"
+                        className="flex items-center gap-3 px-5 py-3.5 text-[14px] font-bold text-primary transition-all hover:bg-surface-hover/50 dark:hover:bg-surface-hover/50 active:scale-90 rounded-2xl group"
                       >
                         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">⚙️</span>
                         {t("nav.settings")}

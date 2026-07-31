@@ -398,3 +398,32 @@ body {
   outline-offset: 2px;
 }
 
+/* --- Clay header & bottom nav ---
+   Clay surfaces carry no borders, so give the chrome a soft raised
+   edge + drop shadow so it floats above the tinted backdrop. */
+
+.clay header {
+  border-bottom: none;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.5),
+    0 10px 30px rgba(110, 85, 155, 0.1);
+}
+.clay.dark header {
+  box-shadow:
+    0 1px 0 rgba(150, 130, 190, 0.18),
+    0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.clay .bottom-nav {
+  background-color: var(--card-bg);
+  border-top: none;
+  box-shadow:
+    0 -10px 30px rgba(110, 85, 155, 0.12),
+    inset 0 2px 4px rgba(255, 255, 255, 0.4);
+}
+.clay.dark .bottom-nav {
+  box-shadow:
+    0 -10px 30px rgba(0, 0, 0, 0.45),
+    inset 0 2px 4px rgba(150, 130, 190, 0.12);
+}
+
