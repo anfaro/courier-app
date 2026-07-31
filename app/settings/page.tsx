@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import { useTheme } from "@/components/ThemeProvider";
+import ThemeStyleSelector from "@/components/ThemeStyleSelector";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useToast } from "@/components/ToastProvider";
 import { APP_VERSION } from "@/lib/version";
@@ -161,6 +162,13 @@ export default function SettingsPage() {
           <h2 className="text-[14px] font-black uppercase tracking-widest text-secondary mb-6 flex items-center gap-2">
             <span className="text-[16px]">🎨</span> {t("settings.appearance")}
           </h2>
+
+          {/* Theme Style Selector */}
+          <div className="mb-5">
+            <p className="text-[11px] font-bold text-secondary mb-3 uppercase tracking-wider ml-1">{t("settings.theme_style")}</p>
+            <ThemeStyleSelector variant="full" />
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <p className="text-[11px] font-bold text-secondary mb-3 uppercase tracking-wider ml-1">Theme</p>

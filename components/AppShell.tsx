@@ -6,6 +6,7 @@ import Header from "./header";
 import BottomNav from "./BottomNav";
 import AccessLogger from "./AccessLogger";
 import InstallPrompt from "./InstallPrompt";
+import BackgroundBlobs from "./BackgroundBlobs";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -18,6 +19,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      {!isSharePage && <BackgroundBlobs />}
       {!isSharePage && <Header />}
       {!isSharePage && <AccessLogger />}
       {children}

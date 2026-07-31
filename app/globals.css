@@ -19,26 +19,60 @@
 /* Define the dark variant to use the .dark class */
 @variant dark (&:where(.dark, .dark *));
 
+/* ============================================================
+   MD3 EXPRESSIVE — Light (default, glassmorphism)
+   ============================================================ */
 :root {
-  --background: #f8f9fa;
+  --background: rgba(244, 246, 251, 0.8);
   --foreground: #111827;
-  --card-bg: #ffffff;
-  --card-border: #f3f4f6;
-  --input-bg: #f3f4f6;
-  --surface-hover: #f1f5f9;
+  --card-bg: rgba(255, 255, 255, 0.6);
+  --card-border: rgba(255, 255, 255, 0.65);
+  --input-bg: rgba(241, 245, 249, 0.7);
+  --surface-hover: rgba(226, 232, 240, 0.6);
   --text-primary: #111827;
   --text-secondary: #4b5563;
 }
 
+/* ============================================================
+   MD3 EXPRESSIVE — Dark (glassmorphism)
+   ============================================================ */
 .dark {
-  --background: #000000;
+  --background: rgba(12, 14, 26, 0.8);
   --foreground: #f8fafc;
-  --card-bg: #111111;
-  --card-border: #1f1f1f;
-  --input-bg: #1a1a1a;
-  --surface-hover: #1a1a1a;
+  --card-bg: rgba(22, 28, 48, 0.55);
+  --card-border: rgba(148, 163, 184, 0.14);
+  --input-bg: rgba(30, 41, 59, 0.6);
+  --surface-hover: rgba(30, 41, 59, 0.6);
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
+}
+
+/* ============================================================
+   CLAYMORPHISM — Light (pastel purple, opaque clay)
+   ============================================================ */
+.clay {
+  --background: #efeaf6;
+  --foreground: #2e2a35;
+  --card-bg: #e4ddf0;
+  --card-border: rgba(255, 255, 255, 0.45);
+  --input-bg: #d9d1e8;
+  --surface-hover: #dcd4ea;
+  --text-primary: #2e2a35;
+  --text-secondary: #6f6791;
+}
+
+/* ============================================================
+   CLAYMORPHISM — Dark (deep plum clay)
+   ============================================================ */
+.clay.dark {
+  --background: #242029;
+  --foreground: #f0eafb;
+  --card-bg: #332e3d;
+  --card-border: rgba(0, 0, 0, 0.25);
+  --input-bg: #282432;
+  --surface-hover: #3a3446;
+  --text-primary: #f0eafb;
+  --text-secondary: #a89fc4;
 }
 
 body {
@@ -59,7 +93,9 @@ body {
 .btn-danger {
   transition: background-color 0.3s ease-out, 
               color 0.3s ease-out, 
-              border-color 0.3s ease-out;
+              border-color 0.3s ease-out, 
+              box-shadow 0.3s ease-out,
+              backdrop-filter 0.3s ease-out;
 }
 
 /* Disable transitions for specific elements that shouldn't have them (like logo paths) */
@@ -113,7 +149,13 @@ body {
 
 /* Base utility classes for theming */
 .bg-app { background-color: var(--background); }
-.bg-card { background-color: var(--card-bg); }
+
+/* MD3 glass surface — frosted translucent card */
+.bg-card {
+  background-color: var(--card-bg);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
 .border-card { border-color: var(--card-border); }
 .text-primary { color: var(--text-primary); }
 .text-secondary { color: var(--text-secondary); }
@@ -168,4 +210,125 @@ body {
   15% { opacity: 0.6; }
   80% { opacity: 0.35; }
   100% { bottom: calc(100% + 8px); opacity: 0; transform: scale(1.15); }
+}
+
+/* ============================================================
+   CLAYMORPHISM — Overrides
+   Raised clay surfaces: dual-direction shadows + inset highlights.
+   Unlayered rules beat Tailwind's layered utilities (shadow-*).
+   ============================================================ */
+
+/* Hide the MD3 glass background blobs in clay mode */
+.clay .bg-blobs { opacity: 0; }
+
+/* Clay cards — raised, opaque, no glass blur */
+.clay .bg-card {
+  background-color: var(--card-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow:
+    10px 10px 28px rgba(120, 100, 160, 0.22),
+    -10px -10px 28px rgba(255, 255, 255, 0.65),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.45),
+    inset -3px -3px 6px rgba(120, 100, 160, 0.12);
+}
+.clay.dark .bg-card {
+  box-shadow:
+    10px 10px 28px rgba(0, 0, 0, 0.5),
+    -10px -10px 28px rgba(140, 120, 180, 0.1),
+    inset 3px 3px 6px rgba(150, 130, 190, 0.14),
+    inset -3px -3px 6px rgba(0, 0, 0, 0.35);
+}
+
+/* Clay primary button */
+.clay .btn-primary {
+  background-color: #a78bfa;
+  color: #2e2a35;
+  border: none;
+  box-shadow:
+    6px 6px 14px rgba(120, 100, 160, 0.3),
+    -6px -6px 14px rgba(255, 255, 255, 0.6),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.4),
+    inset -2px -2px 4px rgba(120, 100, 160, 0.15);
+}
+.clay.dark .btn-primary {
+  background-color: #7c5cbf;
+  color: #f0eafb;
+  box-shadow:
+    6px 6px 14px rgba(0, 0, 0, 0.45),
+    -6px -6px 14px rgba(150, 130, 190, 0.1),
+    inset 2px 2px 4px rgba(160, 140, 200, 0.2),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Clay outline button */
+.clay .btn-outline {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border: none;
+  box-shadow:
+    4px 4px 12px rgba(120, 100, 160, 0.2),
+    -4px -4px 12px rgba(255, 255, 255, 0.55),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.4),
+    inset -2px -2px 4px rgba(120, 100, 160, 0.12);
+}
+.clay.dark .btn-outline {
+  box-shadow:
+    4px 4px 12px rgba(0, 0, 0, 0.45),
+    -4px -4px 12px rgba(150, 130, 190, 0.1),
+    inset 2px 2px 4px rgba(150, 130, 190, 0.12),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Clay secondary button */
+.clay .btn-secondary {
+  background-color: #d7cdf0;
+  color: #4c3f8f;
+  box-shadow:
+    4px 4px 12px rgba(120, 100, 160, 0.2),
+    -4px -4px 12px rgba(255, 255, 255, 0.5),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.4),
+    inset -2px -2px 4px rgba(120, 100, 160, 0.12);
+}
+.clay.dark .btn-secondary {
+  background-color: #4c3f6e;
+  color: #d8ccf2;
+  box-shadow:
+    4px 4px 12px rgba(0, 0, 0, 0.4),
+    -4px -4px 12px rgba(150, 130, 190, 0.1),
+    inset 2px 2px 4px rgba(160, 140, 200, 0.15),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Clay danger button */
+.clay .btn-danger {
+  background-color: #f0d5d8;
+  color: #8f3f4c;
+  border: none;
+  box-shadow:
+    4px 4px 12px rgba(150, 100, 110, 0.2),
+    -4px -4px 12px rgba(255, 255, 255, 0.55),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.4),
+    inset -2px -2px 4px rgba(150, 100, 110, 0.12);
+}
+.clay.dark .btn-danger {
+  background-color: #573036;
+  color: #f0c8cd;
+  box-shadow:
+    4px 4px 12px rgba(0, 0, 0, 0.4),
+    -4px -4px 12px rgba(150, 130, 190, 0.08),
+    inset 2px 2px 4px rgba(160, 140, 200, 0.12),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Clay inputs — pressed / inset clay */
+.clay :is(input, textarea, select) {
+  box-shadow:
+    inset 4px 4px 8px rgba(120, 100, 160, 0.15),
+    inset -3px -3px 8px rgba(255, 255, 255, 0.5);
+}
+.clay.dark :is(input, textarea, select) {
+  box-shadow:
+    inset 4px 4px 8px rgba(0, 0, 0, 0.4),
+    inset -3px -3px 8px rgba(150, 130, 190, 0.12);
 }

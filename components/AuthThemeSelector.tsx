@@ -2,12 +2,13 @@
 "use client";
 
 import { useTheme } from "@/components/ThemeProvider";
+import ThemeStyleSelector from "@/components/ThemeStyleSelector";
 
 export default function AuthThemeSelector() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="absolute top-6 right-6 z-50">
+    <div className="absolute top-6 right-6 z-50 flex flex-col items-end gap-2">
       <div className="flex rounded-2xl bg-white/50 dark:bg-slate-900/50 p-1 shadow-sm border border-card-border backdrop-blur-sm">
         <button 
           onClick={(e) => setTheme("light", { x: e.clientX, y: e.clientY })}
@@ -22,6 +23,7 @@ export default function AuthThemeSelector() {
           🌙
         </button>
       </div>
+      <ThemeStyleSelector variant="compact" />
     </div>
   );
 }

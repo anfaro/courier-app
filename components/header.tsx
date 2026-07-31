@@ -48,7 +48,7 @@ export default function Header() {
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex items-center gap-2">
             <Logo />
-            <span> className="text-[18px] font-black tracking-tighter text-primary dark:text-slate-100 hidden xs:block">Courier</span>
+            <span className="text-[18px] font-black tracking-tighter text-primary dark:text-slate-100 hidden xs:block">Courier</span>
           </div>
           <div className="h-11 w-11 rounded-full bg-gray-200 dark:bg-slate-800 animate-pulse" />
         </div>
