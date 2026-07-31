@@ -8,12 +8,21 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { motion } from "framer-motion";
 import Icon from "@/components/Icon";
 
+const cellVariants = {
+  initial: { opacity: 0, y: 14 },
+  animate: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 400, damping: 25, delay: i * 0.05 },
+  }),
+};
+
 export default function HomePage() {
   const { data: session } = useSession();
   const { t, locale } = useLanguage();
   const userName = session?.user?.name || "User";
 
-  const [stats, setStats] = useState({ totalCustomers: 0, totalClusters: 0 });
+  const [stats, setStats] = useState({ totalCustomers: 0, totalClusters: 0, totalVisits: 0 });
   const [statsLoaded, setStatsLoaded] = useState(false);
   const [recentVisits, setRecentVisits] = useState<any[]>([]);
   const [showAllVisits, setShowAllVisits] = useState(false);
@@ -31,7 +40,11 @@ export default function HomePage() {
         const res = await fetch("/api/dashboard");
         if (res.ok) {
           const data = await res.json();
-          setStats({ totalCustomers: data.totalCustomers, totalClusters: data.totalClusters });
+          setStats({
+            totalCustomers: data.totalCustomers,
+            totalClusters: data.totalClusters,
+            totalVisits: data.totalVisits || 0,
+          });
           setRecentVisits(data.recentVisits || []);
           if (data.earnings) {
             setEarningsData({
@@ -50,173 +63,214 @@ export default function HomePage() {
     fetchDashboard();
   }, []);
 
+  const statCards = [
+    {
+      href: "/customers",
+      label: t("home.total_customers"),
+      value: stats.totalCustomers,
+      icon: "👥",
+      iconBg: "bg-blue-50 dark:bg-blue-900/30",
+      iconText: "text-blue-600 dark:text-blue-400",
+    },
+    {
+      href: "/clusters",
+      label: t("home.total_clusters"),
+      value: stats.totalClusters,
+      icon: "📍",
+      iconBg: "bg-orange-50 dark:bg-orange-900/30",
+      iconText: "text-orange-600 dark:text-orange-400",
+    },
+    {
+      href: "/customers/stats",
+      label: "Visits",
+      value: stats.totalVisits,
+      icon: "✓",
+      iconBg: "bg-emerald-50 dark:bg-emerald-900/30",
+      iconText: "text-emerald-600 dark:text-emerald-400",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-background pb-24">
-      <main className="mx-auto max-w-xl p-4 sm:p-6 space-y-8 mt-2">
+      <main className="mx-auto max-w-xl p-4 sm:p-6 mt-2 grid grid-cols-2 gap-3">
 
-        {/* --- WELCOME BANNER --- */}
-        <div>
-          <p className="text-[13px] font-black uppercase tracking-widest text-secondary mb-1">
-            {today}
-          </p>
-          <h1 className="text-[30px] sm:text-[36px] font-extrabold tracking-tight text-primary">
-            {t("home.good_morning")}<br />
-            <span className="text-blue-600 dark:text-blue-400">{userName}</span>
-          </h1>
-        </div>
-
-        {/* --- SNAPSHOT STATS --- */}
-        <div>
-          <h2 className="text-[14px] font-bold tracking-tight text-primary mb-3">{t("home.snapshot")}</h2>
-          <div className="flex gap-3">
-
-            <Link href="/customers" className="flex-1 rounded-[24px] bg-card p-5 shadow-sm border border-card-border hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-md transition-all active:scale-90 flex flex-col justify-center relative overflow-hidden group">
-              <div className="absolute right-0 top-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity text-blue-500">
-                <Icon name="chevron-right" size={20} />
-              </div>
-              <p className="text-[11px] font-black uppercase tracking-widest text-secondary mb-1">{t("home.total_customers")}</p>
-              <p className="text-[28px] leading-none font-black text-primary">{stats.totalCustomers}</p>
-            </Link>
-
-            <Link href="/clusters" className="flex-1 rounded-[24px] bg-orange-50 dark:bg-orange-950/20 p-5 shadow-sm border border-orange-100 dark:border-orange-900/50 hover:border-orange-200 dark:hover:border-orange-800 hover:shadow-md transition-all active:scale-90 flex flex-col justify-center relative overflow-hidden group">
-              <div className="absolute right-0 top-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity text-orange-500">
-                <Icon name="chevron-right" size={20} />
-              </div>
-              <p className="text-[11px] font-black uppercase tracking-widest text-orange-400 dark:text-orange-500 mb-1">{t("home.total_clusters")}</p>
-              <p className="text-[28px] leading-none font-black text-primary">{stats.totalClusters}</p>
-            </Link>
-
+        {/* --- HERO WELCOME (full width) --- */}
+        <motion.div
+          custom={0}
+          variants={cellVariants}
+          initial="initial"
+          animate="animate"
+          className="col-span-2 relative overflow-hidden rounded-[28px] bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 p-6 shadow-xl shadow-blue-600/20"
+        >
+          <div className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-white/10 blur-2xl" />
+          <div className="absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-indigo-400/20 blur-2xl" />
+          <div className="relative z-10">
+            <p className="text-[12px] font-black uppercase tracking-widest text-blue-200 mb-1.5">
+              {today}
+            </p>
+            <h1 className="text-[26px] leading-tight font-extrabold tracking-tight text-white">
+              {t("home.good_morning")}<br />
+              <span className="bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+                {userName}
+              </span>
+            </h1>
           </div>
-        </div>
+        </motion.div>
 
-        {/* --- EARNINGS WIDGET --- */}
-        {!earningsLoading && earningsData && earningsData.totalDelivered > 0 && (
-          <Link href="/earnings" className="block group">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              className="rounded-[24px] bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 p-5 shadow-sm group-hover:shadow-md group-hover:border-emerald-300 dark:group-hover:border-emerald-700 transition-all active:scale-90"
+        {/* --- STAT CARDS (3 in a row) --- */}
+        {statCards.map((s, i) => (
+          <motion.div key={s.href} custom={i + 1} variants={cellVariants} initial="initial" animate="animate" className="col-span-1">
+            <Link
+              href={s.href}
+              className="flex flex-col items-center justify-center rounded-[24px] bg-card border border-card-border p-4 shadow-sm hover:shadow-md hover:border-gray-200 dark:hover:border-slate-700 transition-all active:scale-90 h-full text-center group"
             >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-1">
-                    {t("home.current_earnings")}
-                  </p>
-                  <p className="text-[26px] font-black text-emerald-800 dark:text-emerald-300 leading-none tracking-tight">
-                    {new Intl.NumberFormat("id-ID", {
-                      style: "currency", currency: "IDR",
-                      minimumFractionDigits: 0, maximumFractionDigits: 0,
-                    }).format(earningsData.totalEarnings)}
-                  </p>
-                  <p className="text-[12px] font-medium text-emerald-600/70 dark:text-emerald-400/70 mt-1">
-                    {earningsData.totalDelivered} {t("session.packages")} {t("session.delivered")}
-                  </p>
-                </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-200 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-300 text-[20px] group-hover:scale-110 transition-transform">
-                  💰
-                </div>
+              <div className={`flex h-9 w-9 items-center justify-center rounded-full ${s.iconBg} ${s.iconText} text-[16px] font-black mb-1.5 group-hover:scale-110 transition-transform`}>
+                {s.icon}
               </div>
-              <div className="mt-3 flex items-center gap-1 text-[12px] font-bold text-emerald-600 dark:text-emerald-400">
-                {t("home.view_earnings")}
-<Icon name="chevron-right" size={14} />
-              </div>
-            </motion.div>
-          </Link>
+              <p className="text-[22px] leading-none font-black text-primary">{s.value}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-secondary mt-1">{s.label}</p>
+            </Link>
+          </motion.div>
+        ))}
+
+        {/* --- EARNINGS WIDGET (full width) --- */}
+        {!earningsLoading && (
+          <motion.div custom={4} variants={cellVariants} initial="initial" animate="animate" className="col-span-2">
+            {earningsData && earningsData.totalDelivered > 0 ? (
+              <Link href="/earnings" className="block group">
+                <div className="relative overflow-hidden rounded-[28px] bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 p-5 shadow-sm group-hover:shadow-md group-hover:border-emerald-300 dark:group-hover:border-emerald-700 transition-all active:scale-90">
+                  <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-emerald-200/40 dark:bg-emerald-900/30 blur-2xl" />
+                  <div className="relative z-10 flex items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-1">
+                        {t("home.current_earnings")}
+                      </p>
+                      <p className="text-[26px] font-black text-emerald-800 dark:text-emerald-300 leading-none tracking-tight">
+                        {new Intl.NumberFormat("id-ID", {
+                          style: "currency", currency: "IDR",
+                          minimumFractionDigits: 0, maximumFractionDigits: 0,
+                        }).format(earningsData.totalEarnings)}
+                      </p>
+                      <p className="text-[12px] font-medium text-emerald-600/70 dark:text-emerald-400/70 mt-1.5">
+                        {earningsData.totalDelivered} {t("session.packages")} {t("session.delivered")}
+                      </p>
+                    </div>
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-emerald-200 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-300 text-[24px] group-hover:scale-110 transition-transform">
+                      💰
+                    </div>
+                  </div>
+                  <div className="relative z-10 mt-3 flex items-center gap-1 text-[12px] font-bold text-emerald-600 dark:text-emerald-400">
+                    {t("home.view_earnings")}
+                    <Icon name="chevron-right" size={14} strokeWidth={3} />
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <Link href="/earnings" className="block group">
+                <div className="relative overflow-hidden rounded-[28px] bg-emerald-600 p-5 shadow-lg shadow-emerald-600/20 transition-all active:scale-90">
+                  <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10 blur-2xl group-hover:bg-white/20 transition-colors duration-500" />
+                  <div className="relative z-10 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-widest text-emerald-100 mb-1">
+                        {t("earnings.title")}
+                      </p>
+                      <p className="text-[20px] leading-tight font-black text-white tracking-tight">
+                        {t("home.current_earnings")}
+                      </p>
+                      <p className="text-[12px] font-medium text-emerald-100/80 mt-1">
+                        Track your delivery performance &amp; salary
+                      </p>
+                    </div>
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white text-emerald-600 text-[24px] shadow-md group-hover:rotate-12 transition-transform">
+                      💰
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            )}
+          </motion.div>
         )}
 
         {/* --- GET STARTED (empty state) --- */}
         {statsLoaded && stats.totalCustomers === 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.1 }}
-            className="rounded-[2.5rem] bg-gradient-to-br from-blue-600 to-indigo-700 p-8 shadow-xl shadow-blue-600/20 text-white"
+            custom={5}
+            variants={cellVariants}
+            initial="initial"
+            animate="animate"
+            className="col-span-2 rounded-[28px] bg-gradient-to-br from-blue-600 to-indigo-700 p-6 shadow-xl shadow-blue-600/20 text-white"
           >
-            <h2 className="text-[22px] font-black tracking-tight mb-3">🚀 Get Started</h2>
-            <ol className="space-y-4">
-              <li className="flex items-start gap-4">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20 text-[15px] font-black">1</span>
+            <h2 className="text-[20px] font-black tracking-tight mb-3">🚀 Get Started</h2>
+            <ol className="space-y-3">
+              <li className="flex items-start gap-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-[13px] font-black">1</span>
                 <div>
-                  <p className="text-[16px] font-bold">Add your first customer</p>
-                  <p className="text-[13px] text-blue-200 mt-0.5">Tap the big blue button below to create a customer with name, address, and location.</p>
+                  <p className="text-[14px] font-bold">Add your first customer</p>
+                  <p className="text-[12px] text-blue-200 mt-0.5">Create a customer with name, address, and location.</p>
                 </div>
               </li>
-              <li className="flex items-start gap-4">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20 text-[15px] font-black">2</span>
+              <li className="flex items-start gap-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-[13px] font-black">2</span>
                 <div>
-                  <p className="text-[16px] font-bold">Organize with clusters</p>
-                  <p className="text-[13px] text-blue-200 mt-0.5">Group customers into clusters (areas, routes) for better organization.</p>
+                  <p className="text-[14px] font-bold">Organize with clusters</p>
+                  <p className="text-[12px] text-blue-200 mt-0.5">Group customers into clusters for better organization.</p>
                 </div>
               </li>
-              <li className="flex items-start gap-4">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20 text-[15px] font-black">3</span>
+              <li className="flex items-start gap-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-[13px] font-black">3</span>
                 <div>
-                    <p className="text-[16px] font-bold">Start a delivery session</p>
-                    <p className="text-[13px] text-blue-200 mt-0.5">Create a new session, log incoming packages, and track delivery progress on the map.</p>
+                  <p className="text-[14px] font-bold">Start a delivery session</p>
+                  <p className="text-[12px] text-blue-200 mt-0.5">Log incoming packages and track delivery progress on the map.</p>
                 </div>
               </li>
             </ol>
           </motion.div>
         )}
 
-        {/* --- QUICK ACTIONS --- */}
-        <div>
-          <h2 className="text-[14px] font-bold tracking-tight text-primary mb-3">{t("home.command_center")}</h2>
-          <div className="space-y-4">
-
-            {/* ACTION 1: CUSTOMERS DATABASE */}
-            <Link href="/customers/new" className="block group">
-              <div className="relative overflow-hidden rounded-[32px] bg-[#0A2FFF] p-8 shadow-xl shadow-blue-600/20 transition-all active:scale-90">
-                <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/10 blur-3xl group-hover:bg-white/20 transition-all duration-500"></div>
-                <div className="relative z-10 flex items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-[26px] leading-tight font-black text-white mb-2 tracking-tight">
-                      {t("customer.add")}
-                    </h2>
-                    <p className="text-blue-200 font-medium text-[14px] leading-snug pr-4">
-                      {t("home.manage_db_desc")}
-                    </p>
-                  </div>
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white text-[#0A2FFF] shadow-md transition-transform duration-500 group-hover:rotate-12 group-active:scale-90">
-                    <span className="text-[30px]">➕</span>
-                  </div>
+        {/* --- QUICK ACTIONS (2 cards) --- */}
+        <motion.div custom={6} variants={cellVariants} initial="initial" animate="animate" className="col-span-1">
+          <Link href="/progress" className="block h-full group">
+            <div className="relative overflow-hidden rounded-[28px] bg-blue-600 p-5 h-full shadow-xl shadow-blue-600/20 transition-all active:scale-90 flex flex-col justify-between">
+              <div className="absolute -right-10 -bottom-10 h-36 w-36 rounded-full bg-white/10 blur-2xl group-hover:bg-white/20 transition-colors duration-500" />
+              <div className="relative z-10">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-blue-600 shadow-md mb-3 group-hover:scale-110 transition-transform">
+                  <Icon name="package" size={22} strokeWidth={2.5} />
                 </div>
+                <h2 className="text-[20px] leading-tight font-black text-white tracking-tight">
+                  {t("session.title")}
+                </h2>
+                <p className="text-[12px] font-medium text-blue-200 mt-1 leading-snug">
+                  {t("home.live_route_desc")}
+                </p>
               </div>
-            </Link>
+            </div>
+          </Link>
+        </motion.div>
 
-            {/* ACTION 2: PROGRESS */}
-            <Link href="/progress" className="block group">
-              <div className="relative overflow-hidden rounded-[32px] bg-[#059669] p-8 shadow-xl shadow-emerald-600/20 transition-all active:scale-90">
-                <div className="absolute -left-10 -bottom-10 h-48 w-48 rounded-full bg-white/10 blur-3xl group-hover:bg-white/20 transition-all duration-500"></div>
-                <div className="relative z-10 flex items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-[26px] leading-tight font-black text-white mb-2 tracking-tight">
-                      {t("session.title")}
-                    </h2>
-                    <p className="text-emerald-200 font-medium text-[14px] leading-snug pr-4">
-                      {t("home.live_route_desc")}
-                    </p>
-                  </div>
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white text-[#059669] shadow-md transition-transform duration-500 group-hover:-rotate-12 group-active:scale-90">
-                    <span className="text-[30px]">📋</span>
-                  </div>
+        <motion.div custom={7} variants={cellVariants} initial="initial" animate="animate" className="col-span-1">
+          <Link href="/customers/new" className="block h-full group">
+            <div className="relative overflow-hidden rounded-[28px] bg-emerald-600 p-5 h-full shadow-xl shadow-emerald-600/20 transition-all active:scale-90 flex flex-col justify-between">
+              <div className="absolute -right-10 -bottom-10 h-36 w-36 rounded-full bg-white/10 blur-2xl group-hover:bg-white/20 transition-colors duration-500" />
+              <div className="relative z-10">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-emerald-600 shadow-md mb-3 group-hover:rotate-12 transition-transform">
+                  <span className="text-[22px]">➕</span>
                 </div>
+                <h2 className="text-[20px] leading-tight font-black text-white tracking-tight">
+                  {t("customer.add")}
+                </h2>
+                <p className="text-[12px] font-medium text-emerald-100 mt-1 leading-snug">
+                  {t("home.manage_db_desc")}
+                </p>
               </div>
-            </Link>
+            </div>
+          </Link>
+        </motion.div>
 
-          </div>
-        </div>
-
-        {/* --- RECENT VISITS --- */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.15 }}
-        >
+        {/* --- RECENT VISITS (full width) --- */}
+        <motion.div custom={8} variants={cellVariants} initial="initial" animate="animate" className="col-span-2">
           <h2 className="text-[14px] font-bold tracking-tight text-primary mb-3">{t("dashboard.recent_visits")}</h2>
           {recentVisits.length > 0 ? (
-            <div className="rounded-[20px] bg-card border border-card-border shadow-sm overflow-hidden">
+            <div className="rounded-[24px] bg-card border border-card-border shadow-sm overflow-hidden">
               {(showAllVisits ? recentVisits : recentVisits.slice(0, 3)).map((v: any, i: number) => (
                 <div key={v.id || i} className="flex items-center gap-3 px-4 py-3 border-b border-card-border last:border-0">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-[14px] font-bold">
@@ -245,47 +299,37 @@ export default function HomePage() {
               )}
             </div>
           ) : (
-            <div className="rounded-[20px] bg-card border border-card-border shadow-sm p-5 text-center">
+            <div className="rounded-[24px] bg-card border border-card-border shadow-sm p-5 text-center">
               <p className="text-[13px] font-medium text-secondary">{t("dashboard.no_visits_yet")}</p>
             </div>
           )}
         </motion.div>
 
-        {/* --- SECONDARY LINKS --- */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.2 }}
-          className="pt-2"
-        >
-          <h2 className="text-[14px] font-bold tracking-tight text-primary mb-3">{t("home.field_tools")}</h2>
-          <div className="space-y-3">
+        {/* --- SECONDARY LINKS (2 cards) --- */}
+        <motion.div custom={9} variants={cellVariants} initial="initial" animate="animate" className="col-span-1">
+          <Link href="/customers" className="flex items-center gap-3 rounded-[24px] bg-card p-4 shadow-sm border border-card-border hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:border-blue-100 dark:hover:border-blue-900/50 transition-colors active:scale-90 group h-full">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[18px] group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-colors">
+              👥
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="block text-[14px] font-bold text-primary leading-tight">{t("home.manage_db")}</span>
+              <span className="text-[11px] font-medium text-secondary truncate">{t("home.manage_db_desc")}</span>
+            </div>
+            <Icon name="chevron-right" size={18} strokeWidth={3} className="text-gray-300 dark:text-slate-600 group-hover:text-blue-500 shrink-0" />
+          </Link>
+        </motion.div>
 
-            {/* Customers Link */}
-            <Link href="/customers" className="flex items-center justify-between rounded-2xl bg-card p-4 shadow-sm border border-card-border hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:border-blue-100 dark:hover:border-blue-900/50 transition-colors active:scale-90 group">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[20px] group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-colors">👥</div>
-                <div>
-                  <span className="block text-[15px] font-bold text-primary leading-tight">{t("home.manage_db")}</span>
-                  <span className="text-[12px] font-medium text-secondary">{t("home.manage_db_desc")}</span>
-                </div>
-              </div>
-              <Icon name="chevron-right" size={20} className="text-gray-300 dark:text-slate-600 group-hover:text-blue-500" />
-            </Link>
-
-            {/* Clusters Link */}
-            <Link href="/clusters" className="flex items-center justify-between rounded-2xl bg-card p-4 shadow-sm border border-card-border hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:border-orange-100 dark:hover:border-orange-900/50 transition-colors active:scale-90 group">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-[20px] group-hover:bg-orange-100 dark:group-hover:bg-orange-900/50 transition-colors">📍</div>
-                <div>
-                  <span className="block text-[15px] font-bold text-primary leading-tight">{t("home.clusters")}</span>
-                  <span className="text-[12px] font-medium text-secondary">{t("home.clusters_desc")}</span>
-                </div>
-              </div>
-              <Icon name="chevron-right" size={20} className="text-gray-300 dark:text-slate-600 group-hover:text-orange-500" />
-            </Link>
-
-          </div>
+        <motion.div custom={10} variants={cellVariants} initial="initial" animate="animate" className="col-span-1">
+          <Link href="/clusters" className="flex items-center gap-3 rounded-[24px] bg-card p-4 shadow-sm border border-card-border hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:border-orange-100 dark:hover:border-orange-900/50 transition-colors active:scale-90 group h-full">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-[18px] group-hover:bg-orange-100 dark:group-hover:bg-orange-900/50 transition-colors">
+              📍
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="block text-[14px] font-bold text-primary leading-tight">{t("home.clusters")}</span>
+              <span className="text-[11px] font-medium text-secondary truncate">{t("home.clusters_desc")}</span>
+            </div>
+            <Icon name="chevron-right" size={18} strokeWidth={3} className="text-gray-300 dark:text-slate-600 group-hover:text-orange-500 shrink-0" />
+          </Link>
         </motion.div>
 
       </main>

@@ -13,9 +13,10 @@ export async function GET(req: NextRequest) {
     if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
     // Run all queries in parallel
-    const [customerCountResult, clusterCountResult, recentVisitsResult, earningsResult, userResult] = await Promise.all([
+    const [customerCountResult, clusterCountResult, visitCountResult, recentVisitsResult, earningsResult, userResult] = await Promise.all([
       db.execute(sql`SELECT COUNT(*) AS count FROM customers`),
       db.execute(sql`SELECT COUNT(*) AS count FROM clusters`),
+      db.execute(sql`SELECT COUNT(*) AS count FROM customer_visits`),
       db.execute(sql`
         SELECT DISTINCT ON (cv.customer_id)
           cv.id, cv.customer_id, cv.user_id, cv.user_name,
@@ -32,6 +33,7 @@ export async function GET(req: NextRequest) {
 
     const totalCustomers = Number((customerCountResult as any[])[0]?.count ?? 0);
     const totalClusters = Number((clusterCountResult as any[])[0]?.count ?? 0);
+    const totalVisits = Number((visitCountResult as any[])[0]?.count ?? 0);
     const rows = Array.isArray(recentVisitsResult) ? recentVisitsResult : (recentVisitsResult as any)?.rows || [];
     const recentVisits = rows.slice(0, 5).map((v: any) => ({
       id: v.id,
@@ -50,6 +52,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       totalCustomers,
       totalClusters,
+      totalVisits,
       recentVisits,
       earnings: earningsResult,
       ratePerPackage,
