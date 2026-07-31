@@ -48,31 +48,77 @@
 }
 
 /* ============================================================
-   CLAYMORPHISM — Light (pastel purple, opaque clay)
+   CLAYMORPHISM — Light
+   Distinct clay surfaces floating above a soft tinted backdrop.
+   Shape comes from each object's OWN color + a visible drop shadow
+   (never background-color + shadows alone = that's neumorphism).
    ============================================================ */
 .clay {
-  --background: #e8e1f2;
-  --foreground: #2e2a35;
-  --card-bg: #f3eefc;
-  --card-border: rgba(255, 255, 255, 0.55);
-  --input-bg: #ded5ee;
-  --surface-hover: #e6def5;
-  --text-primary: #2e2a35;
-  --text-secondary: #6f6791;
+  --background: #eee8f5;
+  --foreground: #332e3b;
+  --card-bg: #fff7ef;
+  --card-border: transparent;
+  --input-bg: #e7e0f2;
+  --surface-hover: #f0eaf7;
+  --text-primary: #332e3b;
+  --text-secondary: #61597a;
+
+  /* Clay shadow recipe: soft outer drop + light top / dark bottom inner */
+  --clay-shadow:
+    0 24px 40px rgba(110, 85, 155, 0.18),
+    inset 0 -8px 16px rgba(110, 85, 155, 0.15),
+    inset 0 8px 16px rgba(255, 255, 255, 0.55);
+  --clay-shadow-hover:
+    0 20px 34px rgba(110, 85, 155, 0.2),
+    inset 0 -10px 18px rgba(110, 85, 155, 0.18),
+    inset 0 10px 18px rgba(255, 255, 255, 0.6);
+  --clay-shadow-pressed:
+    0 14px 22px rgba(110, 85, 155, 0.2),
+    inset 0 -12px 20px rgba(110, 85, 155, 0.24),
+    inset 0 12px 20px rgba(255, 255, 255, 0.45);
+
+  /* Independently colored pastel surfaces (light) */
+  --clay-violet: #e6d8f8;   --clay-violet-text: #5b3fa0;
+  --clay-peach: #ffddd3;    --clay-peach-text: #a24f33;
+  --clay-mint: #d6f0e3;     --clay-mint-text: #2f7d5f;
+  --clay-sky: #d6e9fb;      --clay-sky-text: #2f6da0;
+  --clay-rose: #fbdbe4;     --clay-rose-text: #a13458;
+  --clay-lavender: #dcd2f5; --clay-lavender-text: #58469a;
 }
 
 /* ============================================================
    CLAYMORPHISM — Dark (deep plum clay)
    ============================================================ */
 .clay.dark {
-  --background: #242029;
-  --foreground: #f0eafb;
-  --card-bg: #332e3d;
-  --card-border: rgba(0, 0, 0, 0.25);
-  --input-bg: #282432;
-  --surface-hover: #3a3446;
-  --text-primary: #f0eafb;
-  --text-secondary: #a89fc4;
+  --background: #221e2b;
+  --foreground: #f2ecfd;
+  --card-bg: #35303f;
+  --card-border: transparent;
+  --input-bg: #2a2633;
+  --surface-hover: #3d3748;
+  --text-primary: #f2ecfd;
+  --text-secondary: #b6aed0;
+
+  --clay-shadow:
+    0 24px 40px rgba(0, 0, 0, 0.45),
+    inset 0 -8px 16px rgba(0, 0, 0, 0.4),
+    inset 0 8px 16px rgba(150, 130, 190, 0.12);
+  --clay-shadow-hover:
+    0 20px 34px rgba(0, 0, 0, 0.5),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.45),
+    inset 0 10px 18px rgba(150, 130, 190, 0.16);
+  --clay-shadow-pressed:
+    0 14px 22px rgba(0, 0, 0, 0.5),
+    inset 0 -12px 20px rgba(0, 0, 0, 0.5),
+    inset 0 12px 20px rgba(150, 130, 190, 0.08);
+
+  /* Independently colored pastel surfaces (dark) */
+  --clay-violet: #4a3a6b;   --clay-violet-text: #e0d4ff;
+  --clay-peach: #6b4436;    --clay-peach-text: #ffdcd0;
+  --clay-mint: #2f5c47;     --clay-mint-text: #c8f0dd;
+  --clay-sky: #2f5270;      --clay-sky-text: #d2e9ff;
+  --clay-rose: #6b3a4d;     --clay-rose-text: #ffd4e0;
+  --clay-lavender: #443a68; --clay-lavender-text: #e2d7ff;
 }
 
 body {
@@ -214,121 +260,141 @@ body {
 
 /* ============================================================
    CLAYMORPHISM — Overrides
-   Raised clay surfaces: dual-direction shadows + inset highlights.
-   Unlayered rules beat Tailwind's layered utilities (shadow-*).
+   Clay objects have their own color + a visible drop shadow.
+   Pressed/hover DEEPENS the inner shadows rather than removing them.
+   Unlayered rules beat Tailwind's layered utilities (shadow-*, rounded-*).
    ============================================================ */
 
 /* Hide the MD3 glass background blobs in clay mode */
 .clay .bg-blobs { opacity: 0; }
 
-/* Clay cards — raised, opaque, no glass blur */
+/* Neutral clay cards — warm cream, raised, no glass blur, no borders */
 .clay .bg-card {
   background-color: var(--card-bg);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  box-shadow:
-    12px 12px 30px rgba(105, 90, 155, 0.35),
-    -12px -12px 30px rgba(255, 255, 255, 0.7),
-    inset 4px 4px 10px rgba(255, 255, 255, 0.6),
-    inset -5px -5px 12px rgba(105, 90, 155, 0.18);
+  box-shadow: var(--clay-shadow);
 }
-.clay.dark .bg-card {
-  box-shadow:
-    10px 10px 28px rgba(0, 0, 0, 0.5),
-    -10px -10px 28px rgba(140, 120, 180, 0.1),
-    inset 3px 3px 6px rgba(150, 130, 190, 0.14),
-    inset -3px -3px 6px rgba(0, 0, 0, 0.35);
+.clay .bg-card:hover {
+  box-shadow: var(--clay-shadow-hover);
+}
+.clay .bg-card:active {
+  box-shadow: var(--clay-shadow-pressed);
 }
 
-/* Clay primary button */
-.clay .btn-primary {
-  background-color: #a78bfa;
-  color: #2e2a35;
+/* --- Independently colored pastel surfaces ---
+   Add `surface-violet` etc. to any card. In clay the surface bg + text
+   color swap; in MD3 these classes are inert (cards keep their look). */
+
+.clay .surface-violet   { background-color: var(--clay-violet);   background-image: none; color: var(--clay-violet-text); }
+.clay .surface-peach    { background-color: var(--clay-peach);    background-image: none; color: var(--clay-peach-text); }
+.clay .surface-mint     { background-color: var(--clay-mint);     background-image: none; color: var(--clay-mint-text); }
+.clay .surface-sky      { background-color: var(--clay-sky);      background-image: none; color: var(--clay-sky-text); }
+.clay .surface-rose     { background-color: var(--clay-rose);     background-image: none; color: var(--clay-rose-text); }
+.clay .surface-lavender { background-color: var(--clay-lavender); background-image: none; color: var(--clay-lavender-text); }
+
+.clay .surface-violet,
+.clay .surface-peach,
+.clay .surface-mint,
+.clay .surface-sky,
+.clay .surface-rose,
+.clay .surface-lavender {
+  box-shadow: var(--clay-shadow);
+}
+.clay .surface-violet:hover,
+.clay .surface-peach:hover,
+.clay .surface-mint:hover,
+.clay .surface-sky:hover,
+.clay .surface-rose:hover,
+.clay .surface-lavender:hover {
+  box-shadow: var(--clay-shadow-hover);
+}
+.clay .surface-violet:active,
+.clay .surface-peach:active,
+.clay .surface-mint:active,
+.clay .surface-sky:active,
+.clay .surface-rose:active,
+.clay .surface-lavender:active {
+  box-shadow: var(--clay-shadow-pressed);
+}
+
+/* Recolor white / light-tinted text placed on pastel surfaces */
+.clay [class*="surface-"] .text-white,
+.clay [class*="surface-"] .text-blue-100,
+.clay [class*="surface-"] .text-blue-200,
+.clay [class*="surface-"] .text-indigo-100,
+.clay [class*="surface-"] .text-emerald-100,
+.clay [class*="surface-"] .text-emerald-200,
+.clay [class*="surface-"] .text-slate-100 {
+  color: inherit;
+}
+/* Convert gradient-clipped transparent text to the surface color */
+.clay [class*="surface-"] .text-transparent {
+  background-image: none;
+  -webkit-text-fill-color: currentColor;
+}
+
+/* --- Clay buttons — chunky friendly type, 26px radius --- */
+
+.clay .btn-primary,
+.clay .btn-outline,
+.clay .btn-secondary,
+.clay .btn-danger {
+  border-radius: 26px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
   border: none;
-  box-shadow:
-    7px 7px 18px rgba(105, 90, 155, 0.4),
-    -7px -7px 18px rgba(255, 255, 255, 0.75),
-    inset 3px 3px 7px rgba(255, 255, 255, 0.5),
-    inset -3px -3px 7px rgba(105, 90, 155, 0.2);
-}
-.clay.dark .btn-primary {
-  background-color: #7c5cbf;
-  color: #f0eafb;
-  box-shadow:
-    6px 6px 14px rgba(0, 0, 0, 0.45),
-    -6px -6px 14px rgba(150, 130, 190, 0.1),
-    inset 2px 2px 4px rgba(160, 140, 200, 0.2),
-    inset -2px -2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Clay outline button */
+.clay .btn-primary {
+  background-color: var(--clay-violet);
+  color: var(--clay-violet-text);
+  box-shadow: var(--clay-shadow);
+}
+.clay .btn-primary:hover { box-shadow: var(--clay-shadow-hover); }
+.clay .btn-primary:active { box-shadow: var(--clay-shadow-pressed); }
+
 .clay .btn-outline {
   background-color: var(--card-bg);
   color: var(--text-primary);
-  border: none;
-  box-shadow:
-    5px 5px 14px rgba(105, 90, 155, 0.3),
-    -5px -5px 14px rgba(255, 255, 255, 0.7),
-    inset 3px 3px 7px rgba(255, 255, 255, 0.5),
-    inset -3px -3px 7px rgba(105, 90, 155, 0.16);
+  box-shadow: var(--clay-shadow);
 }
-.clay.dark .btn-outline {
-  box-shadow:
-    4px 4px 12px rgba(0, 0, 0, 0.45),
-    -4px -4px 12px rgba(150, 130, 190, 0.1),
-    inset 2px 2px 4px rgba(150, 130, 190, 0.12),
-    inset -2px -2px 4px rgba(0, 0, 0, 0.3);
-}
+.clay .btn-outline:hover { box-shadow: var(--clay-shadow-hover); }
+.clay .btn-outline:active { box-shadow: var(--clay-shadow-pressed); }
 
-/* Clay secondary button */
 .clay .btn-secondary {
-  background-color: #d7cdf0;
-  color: #4c3f8f;
-  box-shadow:
-    5px 5px 14px rgba(105, 90, 155, 0.3),
-    -5px -5px 14px rgba(255, 255, 255, 0.65),
-    inset 3px 3px 7px rgba(255, 255, 255, 0.5),
-    inset -3px -3px 7px rgba(105, 90, 155, 0.16);
+  background-color: var(--clay-lavender);
+  color: var(--clay-lavender-text);
+  box-shadow: var(--clay-shadow);
 }
-.clay.dark .btn-secondary {
-  background-color: #4c3f6e;
-  color: #d8ccf2;
-  box-shadow:
-    4px 4px 12px rgba(0, 0, 0, 0.4),
-    -4px -4px 12px rgba(150, 130, 190, 0.1),
-    inset 2px 2px 4px rgba(160, 140, 200, 0.15),
-    inset -2px -2px 4px rgba(0, 0, 0, 0.3);
-}
+.clay .btn-secondary:hover { box-shadow: var(--clay-shadow-hover); }
+.clay .btn-secondary:active { box-shadow: var(--clay-shadow-pressed); }
 
-/* Clay danger button */
 .clay .btn-danger {
-  background-color: #f0d5d8;
-  color: #8f3f4c;
-  border: none;
-  box-shadow:
-    5px 5px 14px rgba(150, 100, 110, 0.3),
-    -5px -5px 14px rgba(255, 255, 255, 0.7),
-    inset 3px 3px 7px rgba(255, 255, 255, 0.5),
-    inset -3px -3px 7px rgba(150, 100, 110, 0.16);
+  background-color: var(--clay-rose);
+  color: var(--clay-rose-text);
+  box-shadow: var(--clay-shadow);
 }
-.clay.dark .btn-danger {
-  background-color: #573036;
-  color: #f0c8cd;
-  box-shadow:
-    4px 4px 12px rgba(0, 0, 0, 0.4),
-    -4px -4px 12px rgba(150, 130, 190, 0.08),
-    inset 2px 2px 4px rgba(160, 140, 200, 0.12),
-    inset -2px -2px 4px rgba(0, 0, 0, 0.3);
-}
+.clay .btn-danger:hover { box-shadow: var(--clay-shadow-hover); }
+.clay .btn-danger:active { box-shadow: var(--clay-shadow-pressed); }
 
-/* Clay inputs — pressed / inset clay */
+/* --- Clay inputs — pressed / inset clay wells --- */
 .clay :is(input, textarea, select) {
+  background-color: var(--input-bg);
+  border-radius: 20px;
   box-shadow:
-    inset 5px 5px 10px rgba(105, 90, 155, 0.22),
-    inset -4px -4px 10px rgba(255, 255, 255, 0.6);
+    inset 4px 4px 10px rgba(110, 85, 155, 0.18),
+    inset -3px -3px 10px rgba(255, 255, 255, 0.55);
 }
 .clay.dark :is(input, textarea, select) {
   box-shadow:
-    inset 4px 4px 8px rgba(0, 0, 0, 0.4),
-    inset -3px -3px 8px rgba(150, 130, 190, 0.12);
+    inset 4px 4px 10px rgba(0, 0, 0, 0.4),
+    inset -3px -3px 10px rgba(150, 130, 190, 0.12);
 }
+
+/* --- Clay visible focus ring --- */
+.clay :focus-visible {
+  outline: 3px solid rgba(124, 93, 250, 0.55);
+  outline-offset: 2px;
+}
+

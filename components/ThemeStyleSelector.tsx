@@ -49,9 +49,11 @@ export default function ThemeStyleSelector({ variant = "full" }: { variant?: Var
       desc: t("settings.style_clay_desc"),
       active: style === "clay",
       preview: (
-        <div className="h-16 rounded-2xl bg-[#f3eefc] shadow-[8px_8px_18px_rgba(105,90,155,0.32),-8px_-8px_18px_rgba(255,255,255,0.75),inset_3px_3px_6px_rgba(255,255,255,0.6),inset_-3px_-3px_6px_rgba(105,90,155,0.18)]">
-          <div className="flex h-full items-end justify-center pb-2">
-            <div className="h-4 w-20 rounded-full bg-[#c9bfe3] shadow-[3px_3px_6px_rgba(105,90,155,0.3),-3px_-3px_6px_rgba(255,255,255,0.7)]" />
+        <div className="h-16 rounded-2xl bg-[#fff7ef] p-2 shadow-[0_12px_22px_rgba(110,85,155,0.22),inset_0_-4px_8px_rgba(110,85,155,0.14),inset_0_4px_8px_rgba(255,255,255,0.6)]">
+          <div className="flex h-full items-center justify-center gap-1.5">
+            <div className="h-8 w-10 rounded-xl bg-[#e6d8f8] shadow-[0_6px_10px_rgba(110,85,155,0.22),inset_0_-3px_5px_rgba(110,85,155,0.12),inset_0_3px_5px_rgba(255,255,255,0.55)]" />
+            <div className="h-8 w-10 rounded-xl bg-[#d6f0e3] shadow-[0_6px_10px_rgba(110,85,155,0.22),inset_0_-3px_5px_rgba(110,85,155,0.12),inset_0_3px_5px_rgba(255,255,255,0.55)]" />
+            <div className="h-8 w-10 rounded-xl bg-[#ffddd3] shadow-[0_6px_10px_rgba(110,85,155,0.22),inset_0_-3px_5px_rgba(110,85,155,0.12),inset_0_3px_5px_rgba(255,255,255,0.55)]" />
           </div>
         </div>
       ),

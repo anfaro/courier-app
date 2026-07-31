@@ -71,6 +71,7 @@ export default function HomePage() {
       icon: "👥",
       iconBg: "bg-blue-50 dark:bg-blue-900/30",
       iconText: "text-blue-600 dark:text-blue-400",
+      surface: "surface-violet",
     },
     {
       href: "/clusters",
@@ -79,6 +80,7 @@ export default function HomePage() {
       icon: "📍",
       iconBg: "bg-orange-50 dark:bg-orange-900/30",
       iconText: "text-orange-600 dark:text-orange-400",
+      surface: "surface-peach",
     },
     {
       href: "/customers/stats",
@@ -87,6 +89,7 @@ export default function HomePage() {
       icon: "✓",
       iconBg: "bg-emerald-50 dark:bg-emerald-900/30",
       iconText: "text-emerald-600 dark:text-emerald-400",
+      surface: "surface-mint",
     },
   ];
 
@@ -100,7 +103,7 @@ export default function HomePage() {
           variants={cellVariants}
           initial="initial"
           animate="animate"
-          className="col-span-2 relative overflow-hidden rounded-[28px] bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 p-6 shadow-xl shadow-blue-600/20"
+          className="col-span-2 relative overflow-hidden rounded-[28px] bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 surface-lavender p-6 shadow-xl shadow-blue-600/20"
         >
           <div className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-white/10 blur-2xl" />
           <div className="absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-indigo-400/20 blur-2xl" />
@@ -122,7 +125,7 @@ export default function HomePage() {
           <motion.div key={s.href} custom={i + 1} variants={cellVariants} initial="initial" animate="animate" className="col-span-1">
             <Link
               href={s.href}
-              className="flex flex-col items-center justify-center rounded-[24px] bg-card border border-card-border p-4 shadow-sm hover:shadow-md hover:border-gray-200 dark:hover:border-slate-700 transition-all active:scale-90 h-full text-center group"
+              className={`flex flex-col items-center justify-center rounded-[24px] bg-card border border-card-border p-4 shadow-sm hover:shadow-md hover:border-gray-200 dark:hover:border-slate-700 transition-all active:scale-90 h-full text-center group ${s.surface}`}
             >
               <div className={`flex h-9 w-9 items-center justify-center rounded-full ${s.iconBg} ${s.iconText} text-[16px] font-black mb-1.5 group-hover:scale-110 transition-transform`}>
                 {s.icon}
@@ -138,7 +141,7 @@ export default function HomePage() {
           <motion.div custom={4} variants={cellVariants} initial="initial" animate="animate" className="col-span-2">
             {earningsData && earningsData.totalDelivered > 0 ? (
               <Link href="/earnings" className="block group">
-                <div className="relative overflow-hidden rounded-[28px] bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 p-5 shadow-sm group-hover:shadow-md group-hover:border-emerald-300 dark:group-hover:border-emerald-700 transition-all active:scale-90">
+                <div className="relative overflow-hidden rounded-[28px] bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 p-5 shadow-sm group-hover:shadow-md group-hover:border-emerald-300 dark:group-hover:border-emerald-700 transition-all active:scale-90 surface-mint">
                   <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-emerald-200/40 dark:bg-emerald-900/30 blur-2xl" />
                   <div className="relative z-10 flex items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
@@ -167,7 +170,7 @@ export default function HomePage() {
               </Link>
             ) : (
               <Link href="/earnings" className="block group">
-                <div className="relative overflow-hidden rounded-[28px] bg-emerald-600 p-5 shadow-lg shadow-emerald-600/20 transition-all active:scale-90">
+                <div className="relative overflow-hidden rounded-[28px] bg-emerald-600 surface-mint p-5 shadow-lg shadow-emerald-600/20 transition-all active:scale-90">
                   <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10 blur-2xl group-hover:bg-white/20 transition-colors duration-500" />
                   <div className="relative z-10 flex items-center justify-between gap-4">
                     <div>
@@ -177,7 +180,7 @@ export default function HomePage() {
                       <p className="text-[20px] leading-tight font-black text-white tracking-tight">
                         {t("home.current_earnings")}
                       </p>
-                      <p className="text-[12px] font-medium text-emerald-100/80 mt-1">
+                      <p className="text-[12px] font-medium text-white opacity-80 mt-1">
                         Track your delivery performance &amp; salary
                       </p>
                     </div>
@@ -198,7 +201,7 @@ export default function HomePage() {
             variants={cellVariants}
             initial="initial"
             animate="animate"
-            className="col-span-2 rounded-[28px] bg-gradient-to-br from-blue-600 to-indigo-700 p-6 shadow-xl shadow-blue-600/20 text-white"
+            className="col-span-2 rounded-[28px] bg-gradient-to-br from-blue-600 to-indigo-700 surface-lavender p-6 shadow-xl shadow-blue-600/20 text-white"
           >
             <h2 className="text-[20px] font-black tracking-tight mb-3">🚀 Get Started</h2>
             <ol className="space-y-3">
@@ -230,7 +233,7 @@ export default function HomePage() {
         {/* --- QUICK ACTIONS (2 cards) --- */}
         <motion.div custom={6} variants={cellVariants} initial="initial" animate="animate" className="col-span-1">
           <Link href="/progress" className="block h-full group">
-            <div className="relative overflow-hidden rounded-[28px] bg-blue-600 p-5 h-full shadow-xl shadow-blue-600/20 transition-all active:scale-90 flex flex-col justify-between">
+            <div className="relative overflow-hidden rounded-[28px] bg-blue-600 surface-sky p-5 h-full shadow-xl shadow-blue-600/20 transition-all active:scale-90 flex flex-col justify-between">
               <div className="absolute -right-10 -bottom-10 h-36 w-36 rounded-full bg-white/10 blur-2xl group-hover:bg-white/20 transition-colors duration-500" />
               <div className="relative z-10">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-blue-600 shadow-md mb-3 group-hover:scale-110 transition-transform">
@@ -249,7 +252,7 @@ export default function HomePage() {
 
         <motion.div custom={7} variants={cellVariants} initial="initial" animate="animate" className="col-span-1">
           <Link href="/customers/new" className="block h-full group">
-            <div className="relative overflow-hidden rounded-[28px] bg-emerald-600 p-5 h-full shadow-xl shadow-emerald-600/20 transition-all active:scale-90 flex flex-col justify-between">
+            <div className="relative overflow-hidden rounded-[28px] bg-emerald-600 surface-mint p-5 h-full shadow-xl shadow-emerald-600/20 transition-all active:scale-90 flex flex-col justify-between">
               <div className="absolute -right-10 -bottom-10 h-36 w-36 rounded-full bg-white/10 blur-2xl group-hover:bg-white/20 transition-colors duration-500" />
               <div className="relative z-10">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-emerald-600 shadow-md mb-3 group-hover:rotate-12 transition-transform">
@@ -307,7 +310,7 @@ export default function HomePage() {
 
         {/* --- SECONDARY LINKS (2 cards) --- */}
         <motion.div custom={9} variants={cellVariants} initial="initial" animate="animate" className="col-span-1">
-          <Link href="/customers" className="flex items-center gap-3 rounded-[24px] bg-card p-4 shadow-sm border border-card-border hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:border-blue-100 dark:hover:border-blue-900/50 transition-colors active:scale-90 group h-full">
+          <Link href="/customers" className="flex items-center gap-3 rounded-[24px] bg-card surface-sky p-4 shadow-sm border border-card-border hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:border-blue-100 dark:hover:border-blue-900/50 transition-colors active:scale-90 group h-full">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[18px] group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-colors">
               👥
             </div>
@@ -320,7 +323,7 @@ export default function HomePage() {
         </motion.div>
 
         <motion.div custom={10} variants={cellVariants} initial="initial" animate="animate" className="col-span-1">
-          <Link href="/clusters" className="flex items-center gap-3 rounded-[24px] bg-card p-4 shadow-sm border border-card-border hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:border-orange-100 dark:hover:border-orange-900/50 transition-colors active:scale-90 group h-full">
+          <Link href="/clusters" className="flex items-center gap-3 rounded-[24px] bg-card surface-rose p-4 shadow-sm border border-card-border hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:border-orange-100 dark:hover:border-orange-900/50 transition-colors active:scale-90 group h-full">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-[18px] group-hover:bg-orange-100 dark:group-hover:bg-orange-900/50 transition-colors">
               📍
             </div>
