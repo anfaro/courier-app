@@ -85,7 +85,7 @@ export default function Header() {
               <span className="hidden sm:inline text-[11px] font-bold text-secondary/50 tracking-widest uppercase">Search</span>
             </motion.div>
           ) : (
-            <div className="flex items-center w-full max-w-[500px] transition-all duration-300 rounded-full bg-surface-hover/80 px-3 sm:px-4 py-2 ring-1 ring-blue-500/10 dark:ring-blue-400/10 shadow-inner group focus-within:ring-blue-500/30 focus-within:bg-card">
+            <div className="header-search flex items-center w-full max-w-[500px] transition-all duration-300 rounded-full bg-surface-hover/80 px-3 sm:px-4 py-2 ring-1 ring-blue-500/10 dark:ring-blue-400/10 shadow-inner group focus-within:ring-blue-500/30 focus-within:bg-card">
               <div className="flex items-center justify-center shrink-0 transition-colors text-secondary group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 mr-2">
                 <Icon name="search" size={18} strokeWidth={2.5} className="sm:hidden" />
                 <Icon name="search" size={20} strokeWidth={2.5} className="hidden sm:block" />

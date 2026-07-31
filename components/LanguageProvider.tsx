@@ -53,6 +53,8 @@ export const translations: Translations = {
   "settings.style_md3_desc": { en: "Frosted glass, vibrant", id: "Kaca buram, cerah" },
   "settings.style_clay": { en: "Claymorphism", id: "Klaymorfisme" },
   "settings.style_clay_desc": { en: "Soft clay, pastel", id: "Tanah liat pastel" },
+  "settings.style_neu": { en: "Neumorphism", id: "Neumorfisme" },
+  "settings.style_neu_desc": { en: "Soft UI, matte", id: "Soft UI, matte" },
   "settings.save": { en: "Save Changes", id: "Simpan Perubahan" },
   "settings.saving": { en: "Saving Changes...", id: "Menyimpan..." },
   "settings.success": { en: "Profile updated successfully!", id: "Profil berhasil diperbarui!" },

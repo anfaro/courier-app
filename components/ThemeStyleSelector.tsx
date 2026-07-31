@@ -25,6 +25,12 @@ export default function ThemeStyleSelector({ variant = "full" }: { variant?: Var
         >
           Clay
         </button>
+        <button
+          onClick={() => setStyle("neu")}
+          className={`px-2.5 py-2 rounded-xl text-[11px] font-black transition-all active:scale-90 ${style === "neu" ? "bg-blue-500 text-white shadow-md" : "text-secondary hover:text-primary"}`}
+        >
+          Neu
+        </button>
       </div>
     );
   }
@@ -54,6 +60,21 @@ export default function ThemeStyleSelector({ variant = "full" }: { variant?: Var
             <div className="h-8 w-10 rounded-xl bg-[#e6d8f8] shadow-[0_6px_10px_rgba(110,85,155,0.22),inset_0_-3px_5px_rgba(110,85,155,0.12),inset_0_3px_5px_rgba(255,255,255,0.55)]" />
             <div className="h-8 w-10 rounded-xl bg-[#d6f0e3] shadow-[0_6px_10px_rgba(110,85,155,0.22),inset_0_-3px_5px_rgba(110,85,155,0.12),inset_0_3px_5px_rgba(255,255,255,0.55)]" />
             <div className="h-8 w-10 rounded-xl bg-[#ffddd3] shadow-[0_6px_10px_rgba(110,85,155,0.22),inset_0_-3px_5px_rgba(110,85,155,0.12),inset_0_3px_5px_rgba(255,255,255,0.55)]" />
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "neu" as const,
+      label: t("settings.style_neu"),
+      desc: t("settings.style_neu_desc"),
+      active: style === "neu",
+      preview: (
+        <div className="h-16 rounded-2xl bg-[#e0e5ec] p-2 shadow-[-6px_-6px_12px_rgba(255,255,255,0.85),6px_6px_12px_rgba(163,177,198,0.6)]">
+          <div className="flex h-full items-center justify-center gap-1.5">
+            <div className="h-8 w-10 rounded-xl bg-[#e0e5ec] shadow-[-4px_-4px_8px_rgba(255,255,255,0.8),4px_4px_8px_rgba(163,177,198,0.55)]" />
+            <div className="h-8 w-10 rounded-xl bg-[#4a7dff] shadow-[-4px_-4px_8px_rgba(255,255,255,0.6),4px_4px_8px_rgba(163,177,198,0.4)]" />
+            <div className="h-8 w-10 rounded-xl bg-[#e0e5ec] shadow-[inset_-4px_-4px_8px_rgba(255,255,255,0.7),inset_4px_4px_8px_rgba(163,177,198,0.55)]" />
           </div>
         </div>
       ),

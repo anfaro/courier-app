@@ -4,7 +4,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 type ThemeMode = "light" | "dark";
-type ThemeStyle = "md3" | "clay";
+type ThemeStyle = "md3" | "clay" | "neu";
 
 interface ThemeContextType {
   theme: ThemeMode;
@@ -20,6 +20,7 @@ function applyDomClasses(mode: ThemeMode, style: ThemeStyle) {
   if (typeof document === "undefined") return;
   document.documentElement.classList.toggle("dark", mode === "dark");
   document.documentElement.classList.toggle("clay", style === "clay");
+  document.documentElement.classList.toggle("neu", style === "neu");
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -33,7 +34,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
 
     const savedStyle = localStorage.getItem("theme-style");
-    const initialStyle: ThemeStyle = savedStyle === "clay" ? "clay" : "md3";
+    const initialStyle: ThemeStyle = savedStyle === "clay" || savedStyle === "neu" ? savedStyle : "md3";
 
     setThemeState(initialTheme);
     setStyleState(initialStyle);

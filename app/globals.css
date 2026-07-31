@@ -121,6 +121,62 @@
   --clay-lavender: #443a68; --clay-lavender-text: #e2d7ff;
 }
 
+/* ============================================================
+   NEUMORPHISM (Soft UI) — Light
+   One uniform material-less matte. Controls share the background's
+   exact color; depth comes ONLY from dual soft shadows.
+   NOT skeuomorphism: no textures, gloss, or imitated materials.
+   ============================================================ */
+.neu {
+  --background: #e0e5ec;
+  --foreground: #4a5361;
+  --card-bg: #e0e5ec;
+  --card-border: transparent;
+  --input-bg: #e0e5ec;
+  --surface-hover: #dbe0e8;
+  --text-primary: #4a5361;
+  --text-secondary: #68717f;
+
+  --accent: #4a7dff;
+
+  /* Dual soft shadows: light top-left, dark bottom-right */
+  --neu-raised:
+    -6px -6px 12px rgba(255, 255, 255, 0.85),
+    6px 6px 12px rgba(163, 177, 198, 0.6);
+  --neu-raised-hover:
+    -4px -4px 9px rgba(255, 255, 255, 0.8),
+    4px 4px 9px rgba(163, 177, 198, 0.55);
+  --neu-pressed:
+    inset -6px -6px 12px rgba(255, 255, 255, 0.7),
+    inset 6px 6px 12px rgba(163, 177, 198, 0.55);
+}
+
+/* ============================================================
+   NEUMORPHISM — Dark (dark matte)
+   ============================================================ */
+.neu.dark {
+  --background: #2a2e35;
+  --foreground: #e6e9ef;
+  --card-bg: #2a2e35;
+  --card-border: transparent;
+  --input-bg: #2a2e35;
+  --surface-hover: #2f333c;
+  --text-primary: #e6e9ef;
+  --text-secondary: #9aa3b2;
+
+  --accent: #5b8cff;
+
+  --neu-raised:
+    -6px -6px 12px rgba(255, 255, 255, 0.05),
+    6px 6px 12px rgba(0, 0, 0, 0.5);
+  --neu-raised-hover:
+    -4px -4px 9px rgba(255, 255, 255, 0.04),
+    4px 4px 9px rgba(0, 0, 0, 0.45);
+  --neu-pressed:
+    inset -6px -6px 12px rgba(255, 255, 255, 0.04),
+    inset 6px 6px 12px rgba(0, 0, 0, 0.5);
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);
@@ -425,5 +481,185 @@ body {
   box-shadow:
     0 -10px 30px rgba(0, 0, 0, 0.45),
     inset 0 2px 4px rgba(150, 130, 190, 0.12);
+}
+
+/* ============================================================
+   NEUMORPHISM — Overrides
+   Uniform matte surfaces; depth from dual soft shadows only.
+   Pressed/input states invert shadows inward (inset).
+   Focus uses a real outline (never shadow-only) + reduced motion.
+   ============================================================ */
+
+/* Hide the MD3 glass background blobs in neu mode */
+.neu .bg-blobs { opacity: 0; }
+
+/* Neutral matte cards — raised dual shadow, no borders, no blur */
+.neu .bg-card {
+  background-color: var(--card-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: var(--neu-raised);
+}
+.neu .bg-card:hover { box-shadow: var(--neu-raised-hover); }
+.neu .bg-card:active { box-shadow: var(--neu-pressed); }
+
+/* Neutralize the clay pastel surfaces to the uniform neu matte */
+.neu .surface-violet,
+.neu .surface-peach,
+.neu .surface-mint,
+.neu .surface-sky,
+.neu .surface-rose,
+.neu .surface-lavender {
+  background-color: var(--card-bg);
+  background-image: none;
+  box-shadow: var(--neu-raised);
+}
+.neu .surface-violet:hover,
+.neu .surface-peach:hover,
+.neu .surface-mint:hover,
+.neu .surface-sky:hover,
+.neu .surface-rose:hover,
+.neu .surface-lavender:hover {
+  box-shadow: var(--neu-raised-hover);
+}
+.neu .surface-violet:active,
+.neu .surface-peach:active,
+.neu .surface-mint:active,
+.neu .surface-sky:active,
+.neu .surface-rose:active,
+.neu .surface-lavender:active {
+  box-shadow: var(--neu-pressed);
+}
+
+/* Recolor white / light-tinted text placed on the matte surfaces */
+.neu .surface-violet .text-white,
+.neu .surface-peach .text-white,
+.neu .surface-mint .text-white,
+.neu .surface-sky .text-white,
+.neu .surface-rose .text-white,
+.neu .surface-lavender .text-white,
+.neu .surface-violet .text-blue-100,
+.neu .surface-peach .text-blue-100,
+.neu .surface-mint .text-blue-100,
+.neu .surface-sky .text-blue-100,
+.neu .surface-rose .text-blue-100,
+.neu .surface-lavender .text-blue-100,
+.neu .surface-violet .text-blue-200,
+.neu .surface-peach .text-blue-200,
+.neu .surface-mint .text-blue-200,
+.neu .surface-sky .text-blue-200,
+.neu .surface-rose .text-blue-200,
+.neu .surface-lavender .text-blue-200,
+.neu .surface-violet .text-emerald-100,
+.neu .surface-peach .text-emerald-100,
+.neu .surface-mint .text-emerald-100,
+.neu .surface-sky .text-emerald-100,
+.neu .surface-rose .text-emerald-100,
+.neu .surface-lavender .text-emerald-100,
+.neu .surface-violet .text-slate-100,
+.neu .surface-peach .text-slate-100,
+.neu .surface-mint .text-slate-100,
+.neu .surface-sky .text-slate-100,
+.neu .surface-rose .text-slate-100,
+.neu .surface-lavender .text-slate-100 {
+  color: var(--text-primary);
+}
+/* Convert gradient-clipped transparent text to the matte text color */
+.neu :is(.surface-violet, .surface-peach, .surface-mint, .surface-sky, .surface-rose, .surface-lavender) .text-transparent {
+  background-image: none;
+  -webkit-text-fill-color: var(--text-primary);
+}
+
+/* --- Neu buttons — generous radius, matte + one saturated accent --- */
+
+.neu .btn-primary,
+.neu .btn-outline,
+.neu .btn-secondary,
+.neu .btn-danger {
+  border-radius: 18px;
+  border: none;
+  font-weight: 800;
+}
+
+.neu .btn-primary {
+  background-color: var(--accent);
+  color: #fff;
+  box-shadow: var(--neu-raised);
+}
+.neu .btn-primary:hover { box-shadow: var(--neu-raised-hover); }
+.neu .btn-primary:active { box-shadow: var(--neu-pressed); }
+
+.neu .btn-outline,
+.neu .btn-secondary {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  box-shadow: var(--neu-raised);
+}
+.neu .btn-outline:hover,
+.neu .btn-secondary:hover { box-shadow: var(--neu-raised-hover); }
+.neu .btn-outline:active,
+.neu .btn-secondary:active { box-shadow: var(--neu-pressed); }
+
+.neu .btn-danger {
+  background-color: var(--card-bg);
+  color: #d64550;
+  box-shadow: var(--neu-raised);
+}
+.neu .btn-danger:hover { box-shadow: var(--neu-raised-hover); }
+.neu .btn-danger:active { box-shadow: var(--neu-pressed); }
+
+/* --- Neu inputs — inset wells (shadows inverted inward) --- */
+.neu :is(input, textarea, select) {
+  background-color: var(--input-bg);
+  border-radius: 18px;
+  box-shadow: var(--neu-pressed);
+}
+
+/* --- Neu header search pill — inset well --- */
+.neu .header-search {
+  background-color: var(--input-bg);
+  box-shadow: var(--neu-pressed);
+  border: none;
+}
+.neu .header-search:focus-within {
+  box-shadow: var(--neu-pressed);
+}
+.neu .header-search input {
+  background-color: transparent;
+  box-shadow: none;
+}
+
+/* --- Neu visible focus ring (non-shadow cue for WCAG) --- */
+.neu :focus-visible {
+  outline: 3px solid rgba(74, 125, 255, 0.6);
+  outline-offset: 2px;
+}
+
+/* --- Neu chrome: header + bottom nav --- */
+.neu header {
+  border-bottom: none;
+  box-shadow: 0 4px 12px rgba(163, 177, 198, 0.4);
+}
+.neu.dark header {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.neu .bottom-nav {
+  background-color: var(--card-bg);
+  border-top: none;
+  box-shadow: 0 -4px 12px rgba(163, 177, 198, 0.4);
+}
+.neu.dark .bottom-nav {
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* --- Reduced motion support --- */
+@media (prefers-reduced-motion: reduce) {
+  .neu *,
+  .neu *::before,
+  .neu *::after {
+    transition: none !important;
+    animation: none !important;
+  }
 }
 
