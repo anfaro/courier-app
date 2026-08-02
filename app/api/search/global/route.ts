@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
 import { customers, users, clusters, customerClusters, customerVisits } from "@/lib/schema";
-import { or, eq, sql, desc, and } from "drizzle-orm";
+import { or, eq, sql, desc, inArray } from "drizzle-orm";
 import { logActivity, logError } from "@/lib/logger";
 
 export async function GET(req: NextRequest) {
@@ -21,12 +21,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ customers: [], clusters: [], users: [] });
     }
 
-    await logActivity({
+    // Fire-and-forget: don't add a blocking DB write to the hot path.
+    logActivity({
       userId: token.id as string,
       userName: token.name as string,
       action: "SEARCH_QUERIED",
       details: `Global search query: "${q}"${type ? ` (filter: ${type})` : ""}`,
-    });
+    }).catch(() => {});
 
     const sanitized = q.replace(/[%_\\]/g, '\\$&');
     const pattern = `%${sanitized}%`;
@@ -51,10 +52,16 @@ export async function GET(req: NextRequest) {
         },
       });
 
-      const visitCounts = await db
-        .select({ customerId: customerVisits.customerId, count: sql<number>`count(*)` })
-        .from(customerVisits)
-        .groupBy(customerVisits.customerId);
+      // Restrict the visit-count aggregate to the found customers instead of
+      // scanning the whole visits table.
+      const foundIds = rawCustomers.map((c: any) => c.id);
+      const visitCounts = foundIds.length > 0
+        ? await db
+            .select({ customerId: customerVisits.customerId, count: sql<number>`count(*)` })
+            .from(customerVisits)
+            .where(inArray(customerVisits.customerId, foundIds))
+            .groupBy(customerVisits.customerId)
+        : [];
 
       const visitCountMap = new Map(visitCounts.map((v) => [v.customerId, Number(v.count)]));
 

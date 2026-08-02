@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { customers } from "@/lib/schema";
 import { inArray } from "drizzle-orm";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
+import { clearCache } from "@/lib/cache";
 
 export async function DELETE(req: NextRequest) {
   try {
@@ -44,6 +45,10 @@ export async function DELETE(req: NextRequest) {
       action: "CUSTOMER_DELETED",
       details: `Bulk deleted ${ids.length} customers and their linked data.`,
     });
+
+    clearCache("/api/customers");
+    clearCache("/api/clusters");
+    clearCache("/api/dashboard");
 
     // 6. Success!
     return NextResponse.json(

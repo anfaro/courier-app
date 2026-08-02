@@ -73,7 +73,7 @@ export default function InstallPrompt() {
         >
           <motion.div
             layout
-            className="rounded-[32px] bg-card/90 dark:bg-slate-900/90 p-4 shadow-2xl ring-1 ring-black/5 dark:ring-white/10 backdrop-blur-2xl border border-card-border/50"
+            className="rounded-[32px] glass p-4 shadow-2xl ring-1 ring-black/5 dark:ring-white/10 border border-card-border/50"
           >
             <div className="flex items-start gap-3">
               <div className="shrink-0 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">

@@ -52,7 +52,7 @@ export default function MapModal({ latitude, longitude, address }: MapModalProps
         className="group relative mt-2 mb-4 h-28 w-full sm:w-64 overflow-hidden rounded-[1.5rem] border border-card-border shadow-sm transition-all active:scale-90 focus:outline-none focus:ring-4 focus:ring-blue-500/20"
       >
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/5 transition-colors group-hover:bg-black/10">
-          <div className="pointer-events-none rounded-full bg-card/90 px-3 py-1.5 text-[12px] font-bold text-blue-700 shadow-sm backdrop-blur-md transition-transform group-hover:scale-105">
+          <div className="pointer-events-none rounded-full glass px-3 py-1.5 text-[12px] font-bold text-blue-700 shadow-sm transition-transform group-hover:scale-105">
             📍 Tap to expand map
           </div>
         </div>

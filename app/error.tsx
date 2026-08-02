@@ -11,6 +11,29 @@ export default function Error({
   reset: () => void;
 }) {
   const [showDetails, setShowDetails] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    const text = [
+      `${error.name}: ${error.message}`,
+      error.digest && `\n\nDigest: ${error.digest}`,
+      error.stack && `\n\n${error.stack}`,
+    ].filter(Boolean).join("");
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     fetch("/api/admin/system/logs/record-error", {
@@ -45,13 +68,20 @@ export default function Error({
 
         {showDetails && (
           <div className="mb-5 rounded-2xl bg-red-50/50 dark:bg-red-950/10 p-4 text-left border border-red-100 dark:border-red-900/50">
-            <p className="text-[11px] font-mono text-red-700 dark:text-red-400 whitespace-pre-wrap break-all leading-relaxed">
+            <pre className="text-[11px] font-mono text-red-700 dark:text-red-400 whitespace-pre-wrap break-all leading-relaxed">
               {error.name && `${error.name}: `}{error.message}
               {error.digest && `\n\nDigest: ${error.digest}`}
               {error.stack && `\n\n${error.stack}`}
-            </p>
+            </pre>
           </div>
         )}
+
+        <button
+          onClick={handleCopy}
+          className="mb-4 text-[12px] font-bold text-secondary/60 hover:text-secondary active:scale-90 transition-all"
+        >
+          {copied ? "✓ Copied!" : "Copy error details"}
+        </button>
 
         <button
           onClick={reset}

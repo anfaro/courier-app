@@ -25,7 +25,7 @@ export default function Breadcrumbs({ segmentLabels, title }: BreadcrumbsProps =
         <li>
           <Link
             href="/"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-card/80 dark:bg-slate-900/80 text-secondary dark:text-slate-400 shadow-sm ring-1 ring-gray-200/50 dark:ring-slate-800 transition-all hover:text-blue-600 dark:hover:text-blue-400 active:scale-90 backdrop-blur-md"
+            className="flex h-9 w-9 items-center justify-center rounded-full glass text-secondary shadow-sm ring-1 ring-gray-200/50 dark:ring-slate-800 transition-all hover:text-blue-600 dark:hover:text-blue-400 active:scale-90"
             title="Home" aria-label="Home"
           >
             <Icon name="home" size={16} />
@@ -55,7 +55,7 @@ export default function Breadcrumbs({ segmentLabels, title }: BreadcrumbsProps =
               ) : (
                 <Link
                   href={href}
-                  className="rounded-full bg-card/80 dark:bg-slate-900/80 px-4 py-1.5 text-[13px] font-bold text-secondary dark:text-slate-300 shadow-sm ring-1 ring-gray-200/50 dark:ring-slate-800 transition-all hover:text-blue-600 dark:hover:text-blue-400 active:scale-90 backdrop-blur-md"
+                  className="rounded-full glass px-4 py-1.5 text-[13px] font-bold text-secondary shadow-sm ring-1 ring-gray-200/50 dark:ring-slate-800 transition-all hover:text-blue-600 dark:hover:text-blue-400 active:scale-90"
                 >
                   {displayLabel}
                 </Link>

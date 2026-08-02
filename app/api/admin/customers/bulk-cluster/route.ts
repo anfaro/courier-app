@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { customerClusters } from "@/lib/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { logServerAccess, logActivity, logError } from "@/lib/logger";
+import { clearCache } from "@/lib/cache";
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -50,6 +51,9 @@ export async function PATCH(req: NextRequest) {
       action: `BULK_CLUSTER_${action.toUpperCase()}`,
       details: `${action === "add" ? "Assigned" : "Removed"} ${customerIds.length} customers ${action === "add" ? "to" : "from"} cluster ${clusterId}`,
     });
+
+    clearCache("/api/customers");
+    clearCache("/api/clusters");
 
     return NextResponse.json({ message: `Customers ${action === "add" ? "added to" : "removed from"} cluster` });
   } catch (error) {

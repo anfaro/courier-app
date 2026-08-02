@@ -170,8 +170,9 @@ export default function IncomingDetailPage() {
         const res = await fetch(`/api/customers/search?q=${encodeURIComponent(customerSearch)}`);
         if (res.ok) {
           const data = await res.json();
-          if (data.length > 0) {
-            setAvailableCustomers(data);
+          const results = data.customers || [];
+          if (results.length > 0) {
+            setAvailableCustomers(results);
             return;
           }
         }
@@ -716,7 +717,7 @@ export default function IncomingDetailPage() {
               {activeDeliveryTab === "pending" && (
                 <div className="max-h-[450px] overflow-y-auto">
                   {pendingDeliveries.length > 0 ? (
-                    <div className="p-1 space-y-1">
+                    <div className="rounded-[24px] bg-card border border-card-border overflow-hidden divide-y divide-card-border">
                       {combinedCustomerList.map((group) => {
                           const isCombined = group.deliveries.length > 1;
                           return (
@@ -737,15 +738,11 @@ export default function IncomingDetailPage() {
               {activeDeliveryTab === "returned" && (
                 <div className="max-h-[450px] overflow-y-auto">
                   {returnedDeliveries.length > 0 ? (
-                    <div className="p-1 space-y-1">
+                    <div className="rounded-[24px] bg-card border border-card-border overflow-hidden divide-y divide-card-border">
                       {combinedReturnedList.map((group) => {
                           const isCombined = group.deliveries.length > 1;
                           return (
-                            <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} sessionData={sessionDataProp} status="returned">
-                              <span className="text-[10px] font-black uppercase tracking-wider shrink-0 text-orange-600 dark:text-orange-400">
-                                {t("session.returned")}
-                              </span>
-                            </CustomerGroupCard>
+                            <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} sessionData={sessionDataProp} status="returned" />
                           );
                         })}
                     </div>
@@ -760,7 +757,7 @@ export default function IncomingDetailPage() {
               {activeDeliveryTab === "rescheduled" && (
                 <div className="max-h-[450px] overflow-y-auto">
                   {rescheduledDeliveries.length > 0 ? (
-                    <div className="p-1 space-y-1">
+                    <div className="rounded-[24px] bg-card border border-card-border overflow-hidden divide-y divide-card-border">
                       {combinedRescheduledList.map((group) => {
                         const isCombined = group.deliveries.length > 1;
                         const first = group.deliveries[0];
@@ -795,15 +792,11 @@ export default function IncomingDetailPage() {
               {activeDeliveryTab === "delivered" && (
                 <div className="max-h-[450px] overflow-y-auto">
                   {deliveredDeliveries.length > 0 ? (
-                    <div className="p-1 space-y-1">
+                    <div className="rounded-[24px] bg-card border border-card-border overflow-hidden divide-y divide-card-border">
                       {combinedDeliveredList.map((group) => {
                           const isCombined = group.deliveries.length > 1;
                           return (
-                            <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} sessionData={sessionDataProp} status="delivered">
-                              <span className="text-[10px] font-black uppercase tracking-wider shrink-0 text-emerald-600 dark:text-emerald-400">
-                                {t("session.delivered")}
-                              </span>
-                            </CustomerGroupCard>
+                            <CustomerGroupCard key={group.customer.id} group={group} isCombined={isCombined} sessionData={sessionDataProp} status="delivered" />
                           );
                         })}
                     </div>

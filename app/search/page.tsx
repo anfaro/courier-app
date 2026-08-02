@@ -101,7 +101,7 @@ function SearchContent() {
             <Icon name="search" size={18} strokeWidth={2.5} className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary" />
             <input
               type="text"
-              placeholder="Search customers, clusters, staff…"
+              placeholder="Search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               autoFocus

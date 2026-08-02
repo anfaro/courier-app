@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { customers, customerClusters } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
+import { clearCache } from "@/lib/cache";
 import { customerSchema } from "@/lib/validation";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -76,6 +77,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       targetId: id
     });
 
+    clearCache("/api/customers");
+    clearCache("/api/clusters");
+    clearCache("/api/dashboard");
+
     return NextResponse.json({ message: "Customer updated successfully" }, { status: 200 });
   } catch (error) {
     await logError({
@@ -103,6 +108,10 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       details: `Deleted customer ID: ${id}`,
       targetId: id
     });
+
+    clearCache("/api/customers");
+    clearCache("/api/clusters");
+    clearCache("/api/dashboard");
 
     return NextResponse.json({ message: "Customer deleted successfully" }, { status: 200 });
   } catch (error) {

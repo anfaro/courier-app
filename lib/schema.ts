@@ -64,6 +64,9 @@ export const customers = pgTable("customers", {
   nameIdx: index("customers_name_idx").on(table.name),
   phoneIdx: index("customers_phone_idx").on(table.phoneNumber),
   shareTokenIdx: index("customers_share_token_idx").on(table.shareToken),
+  nameTrgmIdx: index("customers_name_trgm_idx").using("gin", table.name.op("gin_trgm_ops")),
+  addressTrgmIdx: index("customers_address_trgm_idx").using("gin", table.address.op("gin_trgm_ops")),
+  phoneTrgmIdx: index("customers_phone_trgm_idx").using("gin", table.phoneNumber.op("gin_trgm_ops")),
 }));
 
 export const customerClusters = pgTable("customer_clusters", {
@@ -75,6 +78,7 @@ export const customerClusters = pgTable("customer_clusters", {
     .references(() => clusters.id, { onDelete: "cascade" }),
 }, (t) => ({
   pk: primaryKey({ columns: [t.customerId, t.clusterId] }),
+  clusterIdIdx: index("customer_clusters_cluster_id_idx").on(t.clusterId),
 }));
 
 export const customerVisits = pgTable("customer_visits", {
@@ -90,6 +94,7 @@ export const customerVisits = pgTable("customer_visits", {
 }, (table) => ({
   customerIdIdx: index("visits_customer_id_idx").on(table.customerId),
   visitedAtIdx: index("visits_visited_at_idx").on(table.visitedAt),
+  customerVisitedIdx: index("visits_customer_visited_idx").on(table.customerId, table.visitedAt.desc()),
 }));
 
 export const customersRelations = relations(customers, ({ many }) => ({

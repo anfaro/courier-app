@@ -55,7 +55,7 @@ export default function ClusterCustomerList({
   return (
     <div className="relative overflow-hidden rounded-[2rem] border border-card-border bg-card shadow-sm">
       {loading && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-card/60 backdrop-blur-sm rounded-[2rem]">
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-surface-hover/50 rounded-[2rem]">
           <div className="flex h-12 w-12 animate-spin items-center justify-center rounded-full bg-surface-hover text-[24px] border border-card-border">
             ⏳
           </div>

@@ -5,6 +5,7 @@ import { sessions } from "@/lib/schema";
 import { eq, desc, and, gte, lte, like, sql } from "drizzle-orm";
 import { generateId } from "@/lib/utils";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
+import { clearCache } from "@/lib/cache";
 import { sessionCreateSchema } from "@/lib/validation";
 
 export async function GET(req: NextRequest) {
@@ -100,6 +101,8 @@ export async function POST(req: NextRequest) {
       details: `Created session for ${sessionDate}`,
       targetId: session.id,
     });
+
+    clearCache("/api/dashboard");
 
     return NextResponse.json(session, { status: 201 });
   } catch (error) {

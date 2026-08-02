@@ -5,6 +5,7 @@ import { sql, eq } from "drizzle-orm";
 import { sessions, incomings, sessionDeliveries, customerVisits } from "@/lib/schema";
 import { generateId } from "@/lib/utils";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
+import { clearCache } from "@/lib/cache";
 import { deliveryStatusSchema } from "@/lib/validation";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string; deliveryId: string }> }) {
@@ -116,6 +117,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       targetId: sessionId,
     });
 
+    clearCache("/api/dashboard");
+    clearCache("/api/customers");
+
     return NextResponse.json({ message: "Status updated" }, { status: 200 });
   } catch (error) {
     await logError({
@@ -193,6 +197,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       details: `Removed delivery ${deliveryId} (${pkgCount} packages) from session ${sessionId}`,
       targetId: sessionId,
     });
+
+    clearCache("/api/dashboard");
 
     return NextResponse.json({ message: "Delivery removed" }, { status: 200 });
   } catch (error) {

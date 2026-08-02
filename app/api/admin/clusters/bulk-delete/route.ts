@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { clusters } from "@/lib/schema";
 import { inArray } from "drizzle-orm";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
+import { clearCache } from "@/lib/cache";
 
 export async function DELETE(req: NextRequest) {
   try {
@@ -24,6 +25,10 @@ export async function DELETE(req: NextRequest) {
       action: "CLUSTER_DELETED",
       details: `Bulk deleted ${ids.length} clusters.`,
     });
+
+    clearCache("/api/clusters");
+    clearCache("/api/customers");
+    clearCache("/api/dashboard");
 
     return NextResponse.json({ message: "Success" }, { status: 200 });
   } catch (error) {

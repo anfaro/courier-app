@@ -5,7 +5,7 @@ import { customerClusters, customers } from "@/lib/schema";
 import { getCLIToken } from "@/lib/getCLIToken";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
 import { generateId } from "@/lib/utils";
-import { getCached, setCache } from "@/lib/cache";
+import { getCached, setCache, clearCache } from "@/lib/cache";
 import { customerSchema } from "@/lib/validation";
 import { sql, eq, inArray } from "drizzle-orm";
 
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const cacheKey = req.url;
     const cached = getCached<{ customers: any[]; hasMore: boolean; limit: number; offset: number; total: number }>(cacheKey);
     if (cached) {
-      return NextResponse.json(cached, { status: 200 });
+      return NextResponse.json(cached, { status: 200, headers: { "Cache-Control": "private, max-age=15" } });
     }
 
     const { searchParams } = new URL(req.url);
@@ -40,37 +40,36 @@ export async function GET(req: NextRequest) {
     const where = customerIds ? inArray(customers.id, customerIds) : undefined;
 
     const orderBy = sort === "oldest" ? sql`${customers.createdAt} ASC` :
-      sort === "recent_visit" ? sql`visit_stats.last_visited_at DESC NULLS LAST` :
-      sort === "oldest_visit" ? sql`visit_stats.last_visited_at ASC NULLS FIRST` :
-      sort === "most_visited" ? sql`visit_stats.visit_count DESC NULLS LAST` :
-      sort === "least_visited" ? sql`visit_stats.visit_count ASC NULLS FIRST` :
+      sort === "recent_visit" ? sql`last_visited_at DESC NULLS LAST` :
+      sort === "oldest_visit" ? sql`last_visited_at ASC NULLS FIRST` :
+      sort === "most_visited" ? sql`visit_count DESC NULLS LAST` :
+      sort === "least_visited" ? sql`visit_count ASC NULLS FIRST` :
       sql`${customers.createdAt} DESC`;
 
+    // Single round-trip: page-scoped correlated subqueries for visit stats (uses the
+    // visits_customer_visited_idx index) + window COUNT for the total. Avoids the
+    // full-table visit_stats aggregate and the separate COUNT(*) query.
+    // Note: ${customers}.id qualifies the outer column; explicit AS aliases are
+    // required so the visit-based ORDER BY expressions resolve.
     const allCustomers = await db.select({
       id: customers.id,
       name: customers.name,
       phoneNumber: customers.phoneNumber,
       address: customers.address,
       housePictureUrl: customers.housePictureUrl,
-      housePictures: customers.housePictures,
       landmark: customers.landmark,
-      accessInfo: customers.accessInfo,
       createdAt: customers.createdAt,
       latitude: customers.latitude,
       longitude: customers.longitude,
-      notes: customers.notes,
-      lastVisitedAt: sql<string | null>`visit_stats.last_visited_at`,
-      visitCount: sql<number>`COALESCE(visit_stats.visit_count, 0)`,
+      total: sql<number>`count(*) OVER() AS total`,
+      lastVisitedAt: sql<string | null>`(
+        SELECT MAX(v.visited_at) FROM customer_visits v WHERE v.customer_id = ${customers}.id
+      ) AS last_visited_at`,
+      visitCount: sql<number>`(
+        SELECT COUNT(*)::int FROM customer_visits v WHERE v.customer_id = ${customers}.id
+      ) AS visit_count`,
     })
       .from(customers)
-      .leftJoin(
-        sql`(
-          SELECT customer_id, MAX(visited_at) AS last_visited_at, COUNT(*)::int AS visit_count
-          FROM customer_visits
-          GROUP BY customer_id
-        ) visit_stats`,
-        sql`visit_stats.customer_id = ${customers.id}`
-      )
       .where(where)
       .orderBy(orderBy)
       .limit(limit + 1)
@@ -78,6 +77,8 @@ export async function GET(req: NextRequest) {
 
     const hasMore = allCustomers.length > limit;
     if (hasMore) allCustomers.pop();
+
+    const total = customerIds ? customerIds.length : Number(allCustomers[0]?.total ?? 0);
 
     // Batch-load cluster relations to avoid N+1
     const customerIdList = allCustomers.map(c => c.id);
@@ -96,23 +97,15 @@ export async function GET(req: NextRequest) {
       clustersByCustomer[row.customerId].push({ cluster: { id: row.clusterId, name: row.clusterName } });
     }
 
-    const customersWithClusters = allCustomers.map(c => ({
+    const customersWithClusters = allCustomers.map(({ total: _total, ...c }) => ({
       ...c,
       clusters: clustersByCustomer[c.id] || [],
     }));
 
-    let total: number;
-    if (customerIds) {
-      total = customerIds.length;
-    } else {
-      const totalResult = await db.execute(sql`SELECT COUNT(*) AS count FROM customers`);
-      total = Number(totalResult[0]?.count ?? 0);
-    }
-
     const body = { customers: customersWithClusters, hasMore, limit, offset, total };
     setCache(cacheKey, body, 15000);
 
-    return NextResponse.json(body, { status: 200 });
+    return NextResponse.json(body, { status: 200, headers: { "Cache-Control": "private, max-age=15" } });
   } catch (error) {
     await logError({
       errorName: "FetchCustomersError",
@@ -168,6 +161,9 @@ export async function POST(req: NextRequest) {
         targetId: newCustomer.id
       });
     }
+
+    clearCache("/api/customers");
+    clearCache("/api/dashboard");
 
     return NextResponse.json({
       message: "Customer added successfully",

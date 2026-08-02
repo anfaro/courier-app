@@ -133,7 +133,7 @@ export default function NewClusterPage() {
 
               <div className="relative min-h-[120px] rounded-[2rem] overflow-hidden p-2">
                 {fetchingCustomers && (
-                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-card/60 backdrop-blur-sm rounded-[2rem]">
+                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-surface-hover/50 rounded-[2rem]">
                     <div className="flex h-12 w-12 animate-spin items-center justify-center rounded-full bg-surface-hover text-[24px] border border-card-border">
                       ⏳
                     </div>

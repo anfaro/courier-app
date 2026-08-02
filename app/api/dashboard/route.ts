@@ -6,11 +6,18 @@ import { sessions, users } from "@/lib/schema";
 import { eq, desc, between, and, sql } from "drizzle-orm";
 import { logError } from "@/lib/logger";
 import { getCutoffPeriod } from "@/lib/earnings";
+import { getCached, setCache } from "@/lib/cache";
 
 export async function GET(req: NextRequest) {
   try {
     const token = await getCLIToken(req);
     if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+    const cacheKey = `/api/dashboard:${token.id as string}`;
+    const cached = getCached(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached, { status: 200, headers: { "Cache-Control": "private, max-age=15" } });
+    }
 
     // Run all queries in parallel
     const [customerCountResult, clusterCountResult, visitCountResult, recentVisitsResult, earningsResult, userResult] = await Promise.all([
@@ -49,14 +56,17 @@ export async function GET(req: NextRequest) {
 
     const ratePerPackage = userResult.length ? (userResult[0].rate ?? 1500) : 1500;
 
-    return NextResponse.json({
+    const body = {
       totalCustomers,
       totalClusters,
       totalVisits,
       recentVisits,
       earnings: earningsResult,
       ratePerPackage,
-    });
+    };
+    setCache(cacheKey, body, 15000);
+
+    return NextResponse.json(body, { status: 200, headers: { "Cache-Control": "private, max-age=15" } });
   } catch (error) {
     await logError({
       errorName: "FetchDashboardError",

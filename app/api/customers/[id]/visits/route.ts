@@ -5,6 +5,7 @@ import { customerVisits } from "@/lib/schema";
 import { eq, desc, and, isNull } from "drizzle-orm";
 import { generateId } from "@/lib/utils";
 import { logServerAccess, logActivity, logError } from "@/lib/logger";
+import { clearCache } from "@/lib/cache";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -68,6 +69,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       targetId: customerId,
     });
 
+    clearCache("/api/customers");
+    clearCache("/api/dashboard");
+
     return NextResponse.json(visit, { status: 201 });
   } catch (error) {
     await logError({
@@ -113,6 +117,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       details: `Checked out at customer ${customerId} (${duration} min visit)`,
       targetId: customerId,
     });
+
+    clearCache("/api/customers");
+    clearCache("/api/dashboard");
 
     return NextResponse.json({ ...activeVisit, checkedOutAt: now });
   } catch (error) {

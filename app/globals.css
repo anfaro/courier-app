@@ -190,6 +190,9 @@ body {
 .border-card, 
 .text-primary, 
 .text-secondary,
+.glass,
+.segment-control,
+.app-bar,
 .btn-outline,
 .btn-secondary,
 .btn-danger {
@@ -262,6 +265,32 @@ body {
 .text-primary { color: var(--text-primary); }
 .text-secondary { color: var(--text-secondary); }
 
+/* Glass surface — MD3 frosted translucent card; clay/neu override it to an
+   opaque raised object. Use this for chrome/controls that must not stay
+   glassy when the user switches to claymorphism or neumorphism. */
+.glass {
+  background-color: var(--card-bg);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+/* Segmented control container — frosted pill in MD3, inset well in clay/neu */
+.segment-control {
+  background-color: color-mix(in srgb, var(--card-bg) 55%, transparent);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* App chrome bar — page-colored frosted bar in MD3 (matches the page
+   background, near-black in dark mode); opaque raised bar in clay/neu.
+   Raised depth comes from the existing `.clay header` / `.neu header`
+   box-shadow rules. */
+.app-bar {
+  background-color: var(--background);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
 /* Hide scrollbar everywhere */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
@@ -324,18 +353,15 @@ body {
 /* Hide the MD3 glass background blobs in clay mode */
 .clay .bg-blobs { opacity: 0; }
 
-/* Neutral clay cards — warm cream, raised, no glass blur, no borders */
+/* Neutral clay cards — warm cream, raised, no glass blur, no borders.
+   Static shadow: interactive state changes on the card itself are dropped
+   so pressing a button inside a popup/modal doesn't flip the card's shadow
+   (`:active` also matches ancestors, which caused a visible flicker). */
 .clay .bg-card {
   background-color: var(--card-bg);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-shadow: var(--clay-shadow);
-}
-.clay .bg-card:hover {
-  box-shadow: var(--clay-shadow-hover);
-}
-.clay .bg-card:active {
-  box-shadow: var(--clay-shadow-pressed);
 }
 
 /* --- Independently colored pastel surfaces ---
@@ -434,6 +460,39 @@ body {
 .clay .btn-danger:hover { box-shadow: var(--clay-shadow-hover); }
 .clay .btn-danger:active { box-shadow: var(--clay-shadow-pressed); }
 
+/* --- Clay glass surfaces ---
+   Any element carrying `.glass` loses its frosted blur and becomes an
+   opaque raised clay object (used by chrome, pills, pagination buttons).
+   Static shadow (see note on `.bg-card` about ancestor `:active` flicker). */
+.clay .glass {
+  background-color: var(--card-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: var(--clay-shadow);
+}
+
+/* --- Clay app bar — opaque cream raised header --- */
+.clay .app-bar {
+  background-color: var(--card-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* --- Clay segmented control — pressed / inset well --- */
+.clay .segment-control {
+  background-color: var(--card-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow:
+    inset 3px 3px 8px rgba(110, 85, 155, 0.18),
+    inset -2px -2px 8px rgba(255, 255, 255, 0.5);
+}
+.clay.dark .segment-control {
+  box-shadow:
+    inset 3px 3px 8px rgba(0, 0, 0, 0.4),
+    inset -2px -2px 8px rgba(150, 130, 190, 0.12);
+}
+
 /* --- Clay inputs — pressed / inset clay wells --- */
 .clay :is(input, textarea, select) {
   background-color: var(--input-bg);
@@ -493,15 +552,20 @@ body {
 /* Hide the MD3 glass background blobs in neu mode */
 .neu .bg-blobs { opacity: 0; }
 
-/* Neutral matte cards — raised dual shadow, no borders, no blur */
+/* Neutral matte cards — raised dual shadow, no borders, no blur.
+   Floating popups/modals carry their own shadow-2xl/xl/lg and are excluded
+   so they keep a normal drop shadow (the offset neumorphic shadow looks
+   misaligned over a dimmed backdrop). No :hover/:active state shadows —
+   `:active` also matches ancestors, which made popup shadows flicker when
+   a button inside them was pressed. */
 .neu .bg-card {
   background-color: var(--card-bg);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+}
+.neu .bg-card:not(.shadow-2xl):not(.shadow-xl):not(.shadow-lg) {
   box-shadow: var(--neu-raised);
 }
-.neu .bg-card:hover { box-shadow: var(--neu-raised-hover); }
-.neu .bg-card:active { box-shadow: var(--neu-pressed); }
 
 /* Neutralize the clay pastel surfaces to the uniform neu matte */
 .neu .surface-violet,
@@ -607,6 +671,34 @@ body {
 }
 .neu .btn-danger:hover { box-shadow: var(--neu-raised-hover); }
 .neu .btn-danger:active { box-shadow: var(--neu-pressed); }
+
+/* --- Neu glass surfaces — uniform matte, dual soft shadow ---
+   Popups/modals with their own shadow-2xl/xl/lg keep a normal drop shadow;
+   controls keep the neumorphic raised shadow. No :hover/:active states
+   (ancestor `:active` made popup shadows flicker on button press). */
+.neu .glass {
+  background-color: var(--card-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.neu .glass:not(.shadow-2xl):not(.shadow-xl):not(.shadow-lg) {
+  box-shadow: var(--neu-raised);
+}
+
+/* --- Neu app bar — opaque matte raised header --- */
+.neu .app-bar {
+  background-color: var(--card-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* --- Neu segmented control — inset well --- */
+.neu .segment-control {
+  background-color: var(--card-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: var(--neu-pressed);
+}
 
 /* --- Neu inputs — inset wells (shadows inverted inward) --- */
 .neu :is(input, textarea, select) {

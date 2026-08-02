@@ -75,7 +75,7 @@ function CustomersListContent() {
         const res = await fetchWithTimeout(url, {}, 60000);
         if (!res.ok) throw new Error(`Server error (${res.status})`);
         const data = await res.json();
-        const list = data || [];
+        const list = data.customers || [];
         pageCache.set(`${q}:0`, { customers: list, hasMore: false, ts: Date.now() });
         setAllCustomers(list);
         setHasMore(false);
@@ -321,7 +321,7 @@ function CustomersListContent() {
           <select
             value={sortBy}
             onChange={(e) => { setSortBy(e.target.value); setPage(0); }}
-            className="w-full rounded-2xl border border-card-border bg-card/80 backdrop-blur-xl px-4 py-3 text-[13px] font-medium text-primary focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer pr-10 shadow-sm"
+                className="w-full rounded-2xl border border-card-border bg-input px-4 py-3 text-[13px] font-medium text-primary focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer pr-10 shadow-sm"
           >
             <option value="newest">{t("customer.sort_newest")}</option>
             <option value="oldest">{t("customer.sort_oldest")}</option>
@@ -339,7 +339,7 @@ function CustomersListContent() {
               <select
                 value={clusterFilter}
                 onChange={(e) => setClusterFilter(e.target.value)}
-                className="w-full rounded-2xl border border-card-border bg-card/80 backdrop-blur-xl px-4 py-3 text-[13px] font-medium text-primary focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer pr-10 shadow-sm"
+            className="w-full rounded-2xl border border-card-border bg-input px-4 py-3 text-[13px] font-medium text-primary focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer pr-10 shadow-sm"
               >
                 <option value="all">All Clusters</option>
                 {allClusters.map((c: any) => (
@@ -362,7 +362,7 @@ function CustomersListContent() {
               className={`shrink-0 rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-wider transition-all active:scale-90 ${
                 quickFilter === f
                   ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
-                  : "bg-card/80 backdrop-blur-xl text-secondary border border-card-border hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-200 dark:hover:border-blue-800 shadow-sm"
+                  : "glass text-secondary border border-card-border hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-200 dark:hover:border-blue-800 shadow-sm"
               }`}
             >
               {f === "all" ? t("customer.filter_all") : f === "hasPin" ? t("customer.filter_has_pin") : f === "noPin" ? t("customer.filter_no_pin") : t("customer.filter_visited")}
@@ -420,7 +420,7 @@ function CustomersListContent() {
         ) : (
           <div className="relative overflow-hidden rounded-[2rem] bg-card shadow-sm border border-card-border min-h-[500px]">
             {isLoading && !fetchError && (
-              <div className="absolute inset-0 z-20 flex items-center justify-center bg-card/60 backdrop-blur-sm rounded-[2rem]">
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-surface-hover/50 rounded-[2rem]">
                 <div className="flex flex-col items-center gap-4">
                   <div className="flex gap-2">
                     {[1,2,3].map(i => (
@@ -588,7 +588,7 @@ function CustomersListContent() {
                   <button
                     onClick={() => setPage(p => Math.max(0, p - 1))}
                     disabled={page === 0 || isLoading}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-card/80 backdrop-blur-xl text-primary shadow-sm ring-1 ring-gray-200/50 dark:ring-slate-800 transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-hover"
+                    className="flex h-9 w-9 items-center justify-center rounded-full glass text-primary shadow-sm ring-1 ring-gray-200/50 dark:ring-slate-800 transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-hover"
                   >
                     <Icon name="chevron-left" size={16} />
                   </button>
@@ -615,7 +615,7 @@ function CustomersListContent() {
                   <button
                     onClick={() => setPage(p => p + 1)}
                     disabled={!hasMore || isLoading}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-card/80 backdrop-blur-xl text-primary shadow-sm ring-1 ring-gray-200/50 dark:ring-slate-800 transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-hover"
+                    className="flex h-9 w-9 items-center justify-center rounded-full glass text-primary shadow-sm ring-1 ring-gray-200/50 dark:ring-slate-800 transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-hover"
                   >
                     <Icon name="chevron-right" size={16} />
                   </button>
@@ -625,7 +625,7 @@ function CustomersListContent() {
                   <select
                     value={pageSize}
                     onChange={e => { setPageSize(Number(e.target.value)); setPage(0); setJumpInput(""); }}
-                    className="rounded-xl bg-card/80 backdrop-blur-xl px-2.5 py-1.5 text-[12px] font-bold text-primary border border-card-border outline-none cursor-pointer active:scale-90 transition-all shadow-sm"
+                    className="rounded-xl bg-input px-2.5 py-1.5 text-[12px] font-bold text-primary border border-card-border outline-none cursor-pointer active:scale-90 transition-all shadow-sm"
                   >
                     <option value={5}>5</option>
                     <option value={10}>10</option>

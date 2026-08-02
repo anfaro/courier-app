@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { sessions, incomings, sessionDeliveries } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
+import { clearCache } from "@/lib/cache";
 import { sessionUpdateSchema } from "@/lib/validation";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -82,6 +83,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           targetId: id,
         });
 
+        clearCache("/api/dashboard");
+
         return NextResponse.json({ message: "Session finalized" }, { status: 200 });
       } else if (!isSuperAdmin) {
         return NextResponse.json({ message: "Only superadmin can unfinalize" }, { status: 403 });
@@ -97,6 +100,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           details: `Unfinalized session ${id}`,
           targetId: id,
         });
+
+        clearCache("/api/dashboard");
 
         return NextResponse.json({ message: "Session unfinalized" }, { status: 200 });
       }
@@ -131,6 +136,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       details: `Updated session ${id}`,
       targetId: id,
     });
+
+    clearCache("/api/dashboard");
 
     return NextResponse.json({ message: "Session updated" }, { status: 200 });
   } catch (error) {
@@ -169,6 +176,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       details: `Deleted session ${id}`,
       targetId: id,
     });
+
+    clearCache("/api/dashboard");
 
     return NextResponse.json({ message: "Session deleted" }, { status: 200 });
   } catch (error) {

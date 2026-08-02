@@ -2,11 +2,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getCLIToken } from "@/lib/getCLIToken";
 import { db } from "@/lib/db";
-import { clusters, customerClusters, customerVisits } from "@/lib/schema";
+import { clusters, customerClusters } from "@/lib/schema";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
 import { generateId } from "@/lib/utils";
 import { eq, sql } from "drizzle-orm";
-import { getCached, setCache } from "@/lib/cache";
+import { getCached, setCache, clearCache } from "@/lib/cache";
 import { clusterSchema } from "@/lib/validation";
 
 export async function GET(req: NextRequest) {
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const cacheKey = req.url;
     const cached = getCached<{ clusters: any[]; hasMore: boolean; limit: number; offset: number }>(cacheKey);
     if (cached) {
-      return NextResponse.json(cached, { status: 200 });
+      return NextResponse.json(cached, { status: 200, headers: { "Cache-Control": "private, max-age=15" } });
     }
 
     const { searchParams } = new URL(req.url);
@@ -29,13 +29,22 @@ export async function GET(req: NextRequest) {
         name: clusters.name,
         notes: clusters.notes,
         createdAt: clusters.createdAt,
-        customerCount: sql<number>`count(DISTINCT ${customerClusters.customerId})`.mapWith(Number),
-        lastActivity: sql<string | null>`max(${customerVisits.visitedAt})`.mapWith(String),
+        // Scalar subqueries avoid the multiplicative clusters × links × visits join.
+        // The cluster_id index (customer_clusters_cluster_id_idx) backs the first;
+        // the visits index (visits_customer_visited_idx) backs the second.
+        // ${clusters}.id qualifies the outer column so nested subqueries don't
+        // resolve "id" to customer_visits.id.
+        customerCount: sql<number>`(
+          SELECT COUNT(*)::int FROM customer_clusters cc WHERE cc.cluster_id = ${clusters}.id
+        )`.mapWith(Number),
+        lastActivity: sql<string | null>`(
+          SELECT MAX(cv.visited_at) FROM customer_visits cv
+          WHERE cv.customer_id IN (
+            SELECT cc.customer_id FROM customer_clusters cc WHERE cc.cluster_id = ${clusters}.id
+          )
+        )`.mapWith(String),
       })
       .from(clusters)
-      .leftJoin(customerClusters, eq(clusters.id, customerClusters.clusterId))
-      .leftJoin(customerVisits, eq(customerClusters.customerId, customerVisits.customerId))
-      .groupBy(clusters.id)
       .orderBy(clusters.name)
       .limit(limit + 1)
       .offset(offset);
@@ -49,7 +58,7 @@ export async function GET(req: NextRequest) {
     const body = { clusters: allClusters, hasMore, limit, offset, total };
     setCache(cacheKey, body, 15000);
 
-    return NextResponse.json(body, { status: 200 });
+    return NextResponse.json(body, { status: 200, headers: { "Cache-Control": "private, max-age=15" } });
   } catch (error) {
     await logError({
       errorName: "FetchClustersError",
@@ -96,6 +105,9 @@ export async function POST(req: NextRequest) {
       details: `Created new cluster: ${name}`,
       targetId: newCluster.id
     });
+
+    clearCache("/api/clusters");
+    clearCache("/api/dashboard");
 
     return NextResponse.json({ message: "Cluster created successfully" }, { status: 201 });
   } catch (error) {

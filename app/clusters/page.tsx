@@ -289,7 +289,7 @@ function ClustersListContent() {
         ) : (
           <div className="relative overflow-hidden rounded-[2rem] bg-card shadow-sm border border-card-border">
             {isLoading && !fetchError && (
-              <div className="absolute inset-0 z-20 flex items-center justify-center bg-card/60 backdrop-blur-sm rounded-[2rem]">
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-surface-hover/50 rounded-[2rem]">
                 <div className="flex flex-col items-center gap-4">
                   <div className="flex gap-2">
                     {[1,2,3].map(i => (
@@ -377,7 +377,7 @@ function ClustersListContent() {
                           setEditingName(cluster.name || "");
                           setEditingNotes(cluster.notes || "");
                         }}
-                        className="flex h-8 w-8 items-center justify-center rounded-full bg-card/80 backdrop-blur-xl text-secondary shadow-sm ring-1 ring-gray-200/50 dark:ring-slate-800 transition-all hover:bg-blue-50 dark:hover:bg-blue-900/20 active:scale-90"
+                        className="flex h-8 w-8 items-center justify-center rounded-full glass text-secondary shadow-sm ring-1 ring-gray-200/50 dark:ring-slate-800 transition-all hover:bg-blue-50 dark:hover:bg-blue-900/20 active:scale-90"
                       >
                         <Icon name="edit" size={14} />
                       </motion.button>
@@ -396,7 +396,7 @@ function ClustersListContent() {
                 <button
                   onClick={() => setPage(p => Math.max(0, p - 1))}
                   disabled={page === 0 || isLoading}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-card/80 backdrop-blur-xl text-primary shadow-sm ring-1 ring-gray-200/50 dark:ring-slate-800 transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-hover"
+                  className="flex h-9 w-9 items-center justify-center rounded-full glass text-primary shadow-sm ring-1 ring-gray-200/50 dark:ring-slate-800 transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-hover"
                 >
                   <Icon name="chevron-left" size={16} />
                 </button>
@@ -423,7 +423,7 @@ function ClustersListContent() {
                 <button
                   onClick={() => setPage(p => p + 1)}
                   disabled={!hasMore || isLoading}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-card/80 backdrop-blur-xl text-primary shadow-sm ring-1 ring-gray-200/50 dark:ring-slate-800 transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-hover"
+                  className="flex h-9 w-9 items-center justify-center rounded-full glass text-primary shadow-sm ring-1 ring-gray-200/50 dark:ring-slate-800 transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-hover"
                 >
                   <Icon name="chevron-right" size={16} />
                 </button>
@@ -433,7 +433,7 @@ function ClustersListContent() {
                 <select
                   value={pageSize}
                   onChange={e => { setPageSize(Number(e.target.value)); setPage(0); setJumpInput(""); }}
-                  className="rounded-xl bg-card/80 backdrop-blur-xl px-2.5 py-1.5 text-[12px] font-bold text-primary border border-card-border outline-none cursor-pointer active:scale-90 transition-all shadow-sm"
+                  className="rounded-xl bg-input px-2.5 py-1.5 text-[12px] font-bold text-primary border border-card-border outline-none cursor-pointer active:scale-90 transition-all shadow-sm"
                 >
                   <option value={5}>5</option>
                   <option value={10}>10</option>

@@ -4,6 +4,7 @@ import { customers } from "@/lib/schema";
 import { NextResponse, NextRequest } from "next/server";
 import { getCLIToken } from "@/lib/getCLIToken";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
+import { clearCache } from "@/lib/cache";
 import { generateId } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
@@ -42,6 +43,9 @@ export async function POST(req: NextRequest) {
       action: "CUSTOMER_CREATED",
       details: `Bulk added ${body.length} customers`,
     });
+
+    clearCache("/api/customers");
+    clearCache("/api/dashboard");
 
     return NextResponse.json({
       message: `Successfully added ${body.length} customers`,

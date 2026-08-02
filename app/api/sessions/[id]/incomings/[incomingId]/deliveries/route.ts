@@ -5,6 +5,7 @@ import { sessions, incomings, sessionDeliveries } from "@/lib/schema";
 import { eq, sql } from "drizzle-orm";
 import { generateId } from "@/lib/utils";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
+import { clearCache } from "@/lib/cache";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string; incomingId: string }> }) {
   try {
@@ -82,6 +83,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       details: `Added ${addPackages} packages to incoming ${incomingId}`,
       targetId: sessionId,
     });
+
+    clearCache("/api/dashboard");
 
     return NextResponse.json({
       message: "Deliveries added",

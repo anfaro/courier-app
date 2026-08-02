@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { clusters, customerClusters } from "@/lib/schema";
 import { eq, sql } from "drizzle-orm";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
+import { clearCache } from "@/lib/cache";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -98,6 +99,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       targetId: id
     });
 
+    clearCache("/api/clusters");
+    clearCache("/api/customers");
+    clearCache("/api/dashboard");
+
     return NextResponse.json({ message: "Cluster updated successfully" }, { status: 200 });
   } catch (error) {
     await logError({
@@ -125,6 +130,10 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       details: `Deleted cluster ID: ${id}`,
       targetId: id
     });
+
+    clearCache("/api/clusters");
+    clearCache("/api/customers");
+    clearCache("/api/dashboard");
 
     return NextResponse.json({ message: "Cluster deleted successfully" }, { status: 200 });
   } catch (error) {

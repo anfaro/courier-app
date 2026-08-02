@@ -44,7 +44,7 @@ export default function Header() {
 
   if (!session?.user) {
     return (
-      <header className="sticky top-0 z-50 w-full border-b border-card-border/50 bg-background/80 px-4 py-3 sm:px-6 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 w-full border-b border-card-border/50 app-bar px-4 py-3 sm:px-6">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex items-center gap-2">
             <Logo />
@@ -61,7 +61,7 @@ export default function Header() {
     : session.user.email?.charAt(0).toUpperCase() || "U";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-card-border/50 bg-background/80 px-4 py-3 sm:px-6 backdrop-blur-xl transition-all">
+    <header className="sticky top-0 z-50 w-full border-b border-card-border/50 app-bar px-4 py-3 sm:px-6 transition-all">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
 
         {/* App Logo & Title */}
@@ -96,7 +96,7 @@ export default function Header() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
-                placeholder="Search customers, clusters… (Enter to search)"
+                placeholder="Search"
                 className="flex-1 min-w-0 bg-transparent border-none outline-none text-[14px] sm:text-[15px] font-bold text-primary placeholder:text-secondary/50"
               />
 
@@ -136,7 +136,7 @@ export default function Header() {
                     animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: -20, x: 20 }}
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                    className="w-72 rounded-[32px] bg-card/98 p-2 shadow-2xl ring-1 ring-black/10 dark:ring-white/10 backdrop-blur-3xl overflow-hidden"
+                    className="w-72 rounded-[32px] glass p-2 shadow-2xl ring-1 ring-black/10 dark:ring-white/10 overflow-hidden"
                   >
                     <div className="px-6 py-5 mb-1 bg-surface-hover/50 rounded-[24px] border border-card-border/50">
                       <p className="truncate text-[16px] font-black text-primary tracking-tight">

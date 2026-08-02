@@ -156,7 +156,7 @@ export default function IncomingModal({
         const res = await fetch(`/api/customers/search?q=${encodeURIComponent(customerSearch)}`);
         if (res.ok) {
           const data = await res.json();
-          setAvailableCustomers(data);
+          setAvailableCustomers(data.customers || []);
           return;
         }
       } catch {}

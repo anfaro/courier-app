@@ -23,7 +23,7 @@ export default function PageHeader({ title }: PageHeaderProps) {
       {hasBack && (
         <button
           onClick={() => router.back()}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-card/80 dark:bg-slate-900/80 text-secondary shadow-sm ring-1 ring-gray-200/50 dark:ring-slate-800 active:scale-90 backdrop-blur-md"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full glass text-secondary shadow-sm ring-1 ring-gray-200/50 dark:ring-slate-800 active:scale-90"
           aria-label="Back"
         >
           <Icon name="chevron-left" size={16} strokeWidth={2.5} />

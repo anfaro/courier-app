@@ -5,6 +5,7 @@ import { sessions, incomings, sessionDeliveries } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { generateId } from "@/lib/utils";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
+import { clearCache } from "@/lib/cache";
 import { incomingCreateSchema } from "@/lib/validation";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -71,6 +72,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       details: `Added incoming with ${packagesCount} packages to session ${sessionId}`,
       targetId: sessionId,
     });
+
+    clearCache("/api/dashboard");
 
     return NextResponse.json({
       message: "Incoming recorded",

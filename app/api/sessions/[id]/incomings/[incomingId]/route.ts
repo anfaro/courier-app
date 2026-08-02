@@ -5,6 +5,7 @@ import { sessions, incomings, sessionDeliveries, customerVisits } from "@/lib/sc
 import { eq, and, sql, inArray } from "drizzle-orm";
 import { generateId } from "@/lib/utils";
 import { logActivity, logServerAccess, logError } from "@/lib/logger";
+import { clearCache } from "@/lib/cache";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string; incomingId: string }> }) {
   try {
@@ -152,6 +153,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       targetId: sessionId,
     });
 
+    clearCache("/api/dashboard");
+    clearCache("/api/customers");
+
     return NextResponse.json({ message: "Incoming deleted" }, { status: 200 });
   } catch (error) {
     await logError({
@@ -266,6 +270,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       details: `Updated incoming ${incomingId} with ${packagesCount} packages (${preservedPackages} preserved non-pending)`,
       targetId: sessionId,
     });
+
+    clearCache("/api/dashboard");
 
     return NextResponse.json({
       message: "Incoming updated",
