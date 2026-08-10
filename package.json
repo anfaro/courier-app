@@ -23,7 +23,7 @@
     "jimp": "^1.6.1",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
-    "nanoid": "^5.1.11",
+    "nanoid": "^5.1.16",
     "next": "^16.2.6",
     "next-auth": "^4.24.14",
     "postgres": "^3.4.9",
