@@ -174,13 +174,13 @@ export default function SettingsPage() {
               <p className="text-[11px] font-bold text-secondary mb-3 uppercase tracking-wider ml-1">Theme</p>
               <div className="flex rounded-2xl bg-surface-hover p-1.5 border border-card-border">
                 <button
-                  onClick={(e) => setTheme("light", { x: e.clientX, y: e.clientY })}
+                  onClick={() => setTheme("light")}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[13px] font-black transition-all active:scale-90 ${theme === 'light' ? 'bg-card text-blue-600 shadow-sm border border-card-border' : 'text-secondary hover:text-primary'}`}
                 >
                   ☀️ Light
                 </button>
                 <button
-                  onClick={(e) => setTheme("dark", { x: e.clientX, y: e.clientY })}
+                  onClick={() => setTheme("dark")}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[13px] font-black transition-all active:scale-90 ${theme === 'dark' ? 'bg-card text-blue-400 shadow-sm border border-card-border' : 'text-secondary hover:text-primary'}`}
                 >
                   🌙 Dark

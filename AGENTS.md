@@ -180,7 +180,7 @@ SessionProvider → LanguageProvider → ThemeProvider → ToastProvider → Con
 
 **Provider-provided hooks:**
 - `useLanguage()` → `{ t(key), locale, setLocale }`
-- `useTheme()` → `{ theme, toggleTheme(e?), setTheme(theme, opts?) }`
+- `useTheme()` → `{ theme, toggleTheme(), setTheme(theme), setStyle(style) }` — theme/style switches use a simple crossfade (View Transitions API); no circular reveal animation
 - `useToast()` → `{ showToast(msg, type?) }` — types: `success | error | info | warning`
 - `useConfirmation()` → `{ askConfirmation({ title, message, confirmText?, cancelText?, type? }) }` — returns Promise<boolean>
 
@@ -254,6 +254,7 @@ IMPORTANT: Pattern 2 breaks `window.scrollY`-based auto-hide in BottomNav becaus
 9. **Soft auth on resource endpoints**: POST/PUT/DELETE on customers, deliveries, clusters proceed even without a valid token (auth check is middleware-only for page routes).
 10. **No rate limiting or CSRF protection** implemented.
 11. **Severe network performance issue**: Fetching lists of customers, deliveries, or clusters takes ~50s with network spikes exceeding 3.5MB/s. Suspected causes: Supabase connection overhead, no pagination/limit on list queries, or excessive relational includes (e.g., `with: { clusters: { with: { cluster: true } } }` loading N+1 for every row). **Fix later**: add server-side pagination + limit, lazy-load relations, and investigate Supabase pool config. **Workaround for slow connections**: implement optimistic local creation (create record in IndexedDB/local state first, sync to server in background) and add loading skeletons with timeout fallback UI.
+12. **Transparent Android status bar not possible today**: `<meta name="theme-color">` / manifest `theme_color` transparency is ignored by Chrome Android — MDN says the alpha component is dropped, and `rgba(0,0,0,0)` falls back to **black**. Chrome 135+ edge-to-edge only extends content under the *bottom* gesture bar ("chin"); content behind the *top* status bar is still an in-progress Chrome feature ("short-edges cutout mode", not yet released). Current behavior: `ThemeProvider.syncStatusBar()` matches the bar color to `--status-bar` (tracks light/dark x md3/clay/neu via the View Transitions crossfade), with `viewport.themeColor` and manifest `theme_color` defaulting to `#f4f6fb`. Keep that approach; revisit if Chrome ships short-edges support. Note `viewport-fit=cover` + `env(safe-area-inset-*)` only unlocks the bottom bar on Android today (app already uses `pb-safe` on BottomNav).
 
 # Drizzle ORM Usage Patterns
 
@@ -304,7 +305,17 @@ npm run test:watch
 - **Utility functions** (e.g. cache, utils): Test round-trips, TTL, uniqueness, edge cases
 - **Existing tests must not break**: Run `npm test` before committing
 
+# Versioning Policy
+
+**Version bumps are delegated to the agent and happen at commit time.** Whenever the user asks to commit (e.g. "commit", "commit this", "commit and push"), the agent must **bump the version in `package.json` FIRST, then commit**. The version lives in `package.json` (`version` field) and is surfaced to the app via `lib/version.ts` → `APP_VERSION`.
+
+- **Major bump** (e.g. `1.5.0` → `2.0.0`) when the changes are significant: breaking/architectural shifts, new major features, or large-scale refactors.
+- **Minor bump** (e.g. `1.5.0` → `1.6.0`) for small-to-medium feature additions or notable polish.
+- **Patch bump** (e.g. `1.5.0` → `1.5.1`) for small fixes and tweaks.
+- When in doubt, prefer a **minor** bump over no bump.
+- Do NOT bump the version when writing changes during a session — bump only as part of the commit step, alongside the commit.
+- Record the bump in the **Session Change Log** at the bottom of this file, alongside the change it accompanies.
+
 # Session Change Log
 
-> **Clear this section before committing.** Log of every change made during the current session, for reference when writing commit messages.
-
+> **Clear this section before committing.** Log of every change made during the current session, for reference when writing commit messages. When the user asks to commit (e.g. "commit", "commit this", "commit and push"), the agent must **clear the Session Change Log FIRST, then commit** — the log's entries are consumed as the commit message, and the section is left empty after committing.

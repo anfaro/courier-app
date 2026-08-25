@@ -11,6 +11,10 @@
   /* Mapping for text colors to enable @apply utilities */
   --color-primary: var(--text-primary);
   --color-secondary: var(--text-secondary);
+
+  /* Glass soft-wide layered shadows (dark-aware via runtime vars) */
+  --shadow-sm: var(--glass-shadow-sm);
+  --shadow-md: var(--glass-shadow-md);
   
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -23,28 +27,66 @@
    MD3 EXPRESSIVE — Light (default, glassmorphism)
    ============================================================ */
 :root {
-  --background: rgba(244, 246, 251, 0.8);
+  --background: rgba(244, 246, 251, 0.5);
   --foreground: #111827;
-  --card-bg: rgba(255, 255, 255, 0.6);
-  --card-border: rgba(255, 255, 255, 0.65);
-  --input-bg: rgba(241, 245, 249, 0.7);
-  --surface-hover: rgba(226, 232, 240, 0.6);
+  --card-bg: rgba(255, 255, 255, 0.12);
+  --card-border: rgba(255, 255, 255, 0.25);
+  --input-bg: rgba(255, 255, 255, 0.55);
+  --surface-hover: rgba(241, 245, 249, 0.7);
   --text-primary: #111827;
   --text-secondary: #4b5563;
+  /* Status bar / browser chrome color (PWA) */
+  --status-bar: #f4f6fb;
+
+  /* Glass surface recipe */
+  --glass-blur: 16px;
+  --glass-shadow-sm:
+    0 2px 6px -1px rgba(0, 0, 0, 0.06),
+    0 8px 24px -12px rgba(0, 0, 0, 0.18);
+  --glass-shadow-md:
+    0 4px 12px -2px rgba(0, 0, 0, 0.08),
+    0 24px 48px -16px rgba(0, 0, 0, 0.22);
+
+  /* Vivid decorative backdrop palette (swap freely) */
+  --blob-1: rgba(99, 102, 241, 0.4);
+  --blob-2: rgba(236, 72, 153, 0.34);
+  --blob-3: rgba(59, 130, 246, 0.34);
+  --blob-4: rgba(168, 85, 247, 0.3);
+  --backdrop-grad: radial-gradient(120% 120% at 15% 0%, rgba(99, 102, 241, 0.28), transparent 55%), radial-gradient(100% 100% at 90% 15%, rgba(236, 72, 153, 0.22), transparent 50%), radial-gradient(120% 120% at 50% 110%, rgba(59, 130, 246, 0.24), transparent 60%);
+  /* Neutral contrast scrim so text on the backdrop stays readable */
+  --backdrop-scrim: rgba(255, 255, 255, 0.35);
 }
 
 /* ============================================================
    MD3 EXPRESSIVE — Dark (glassmorphism)
    ============================================================ */
 .dark {
-  --background: rgba(12, 14, 26, 0.8);
+  --background: rgba(12, 14, 26, 0.5);
   --foreground: #f8fafc;
-  --card-bg: rgba(22, 28, 48, 0.55);
-  --card-border: rgba(148, 163, 184, 0.14);
-  --input-bg: rgba(30, 41, 59, 0.6);
+  --card-bg: rgba(24, 32, 58, 0.35);
+  --card-border: rgba(255, 255, 255, 0.18);
+  --input-bg: rgba(22, 28, 48, 0.6);
   --surface-hover: rgba(30, 41, 59, 0.6);
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
+  --status-bar: #0c0e1a;
+
+  /* Glass surface recipe — dark equivalent */
+  --glass-blur: 16px;
+  --glass-shadow-sm:
+    0 2px 6px -1px rgba(0, 0, 0, 0.5),
+    0 8px 24px -12px rgba(0, 0, 0, 0.55);
+  --glass-shadow-md:
+    0 4px 12px -2px rgba(0, 0, 0, 0.55),
+    0 24px 48px -16px rgba(0, 0, 0, 0.6);
+
+  /* Deeper, richer backdrop palette for dark mode */
+  --blob-1: rgba(99, 102, 241, 0.4);
+  --blob-2: rgba(236, 72, 153, 0.32);
+  --blob-3: rgba(37, 99, 235, 0.36);
+  --blob-4: rgba(139, 92, 246, 0.34);
+  --backdrop-grad: radial-gradient(120% 120% at 15% 0%, rgba(99, 102, 241, 0.26), transparent 55%), radial-gradient(100% 100% at 90% 15%, rgba(236, 72, 153, 0.2), transparent 50%), radial-gradient(120% 120% at 50% 110%, rgba(37, 99, 235, 0.24), transparent 60%);
+  --backdrop-scrim: rgba(8, 10, 20, 0.45);
 }
 
 /* ============================================================
@@ -62,6 +104,11 @@
   --surface-hover: #f0eaf7;
   --text-primary: #332e3b;
   --text-secondary: #61597a;
+  --status-bar: #eee8f5;
+
+  /* Keep bare shadow utilities at Tailwind defaults (glass shadows are for MD3) */
+  --glass-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --glass-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 
   /* Clay shadow recipe: soft outer drop + light top / dark bottom inner */
   --clay-shadow:
@@ -98,6 +145,7 @@
   --surface-hover: #3d3748;
   --text-primary: #f2ecfd;
   --text-secondary: #b6aed0;
+  --status-bar: #221e2b;
 
   --clay-shadow:
     0 24px 40px rgba(0, 0, 0, 0.45),
@@ -111,6 +159,10 @@
     0 14px 22px rgba(0, 0, 0, 0.5),
     inset 0 -12px 20px rgba(0, 0, 0, 0.5),
     inset 0 12px 20px rgba(150, 130, 190, 0.08);
+
+  /* Keep bare shadow utilities at Tailwind defaults (glass shadows are for MD3) */
+  --glass-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --glass-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 
   /* Independently colored pastel surfaces (dark) */
   --clay-violet: #4a3a6b;   --clay-violet-text: #e0d4ff;
@@ -135,6 +187,7 @@
   --input-bg: #e0e5ec;
   --surface-hover: #dbe0e8;
   --text-primary: #4a5361;
+  --status-bar: #e0e5ec;
   --text-secondary: #68717f;
 
   --accent: #4a7dff;
@@ -149,6 +202,10 @@
   --neu-pressed:
     inset -6px -6px 12px rgba(255, 255, 255, 0.7),
     inset 6px 6px 12px rgba(163, 177, 198, 0.55);
+
+  /* Keep bare shadow utilities at Tailwind defaults (glass shadows are for MD3) */
+  --glass-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --glass-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 
 /* ============================================================
@@ -163,6 +220,7 @@
   --surface-hover: #2f333c;
   --text-primary: #e6e9ef;
   --text-secondary: #9aa3b2;
+  --status-bar: #2a2e35;
 
   --accent: #5b8cff;
 
@@ -175,6 +233,58 @@
   --neu-pressed:
     inset -6px -6px 12px rgba(255, 255, 255, 0.04),
     inset 6px 6px 12px rgba(0, 0, 0, 0.5);
+
+  /* Keep bare shadow utilities at Tailwind defaults (glass shadows are for MD3) */
+  --glass-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --glass-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================================
+   CLI TERMINAL — Light ("paper terminal")
+   Flat opaque surfaces, monospace, squared corners, one accent.
+   Inspired by a modern dark terminal palette (GitHub-dark-like).
+   ============================================================ */
+.cli {
+  --background: #f6f8fa;
+  --foreground: #1f2328;
+  --card-bg: #ffffff;
+  --card-border: #d0d7de;
+  --input-bg: #ffffff;
+  --surface-hover: #f3f4f6;
+  --text-primary: #1f2328;
+  --text-secondary: #59636e;
+  --status-bar: #f6f8fa;
+
+  --cli-accent: #116329;
+  --cli-accent-soft: #dafbe1;
+  --cli-font: ui-monospace, "JetBrains Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+
+  /* Keep bare shadow utilities at Tailwind defaults (glass shadows are for MD3) */
+  --glass-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --glass-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================================
+   CLI TERMINAL — Dark (phosphor-terminal dark)
+   ============================================================ */
+.cli.dark {
+  --background: #0d1117;
+  --foreground: #e6edf3;
+  --card-bg: #161b22;
+  --card-border: #30363d;
+  --input-bg: #0d1117;
+  --surface-hover: #21262d;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --status-bar: #0d1117;
+
+  --cli-accent: #3fb950;
+  --cli-accent-soft: #0f2f18;
+  --cli-font: ui-monospace, "JetBrains Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+
+  /* Keep bare shadow utilities at Tailwind defaults (glass shadows are for MD3) */
+  --glass-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --glass-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 
 body {
@@ -208,20 +318,30 @@ body {
   transition: none !important;
 }
 
-/* View Transitions API Animations */
+/* View Transitions API Animations — simple smooth crossfade for theme switches */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
   display: block;
 }
 
 ::view-transition-old(root) {
   z-index: 1;
+  animation: vt-fade-out 0.3s ease-in-out both;
 }
 
 ::view-transition-new(root) {
   z-index: 2;
+  animation: vt-fade-in 0.45s ease;
+}
+
+@keyframes vt-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes vt-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* --- BOUNCY BUTTON STANDARDIZATION --- */
@@ -258,8 +378,8 @@ body {
 /* MD3 glass surface — frosted translucent card */
 .bg-card {
   background-color: var(--card-bg);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
 }
 .border-card { border-color: var(--card-border); }
 .text-primary { color: var(--text-primary); }
@@ -270,15 +390,15 @@ body {
    glassy when the user switches to claymorphism or neumorphism. */
 .glass {
   background-color: var(--card-bg);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
 }
 
 /* Segmented control container — frosted pill in MD3, inset well in clay/neu */
 .segment-control {
-  background-color: color-mix(in srgb, var(--card-bg) 55%, transparent);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background-color: color-mix(in srgb, var(--input-bg) 70%, transparent);
+  backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
 }
 
 /* App chrome bar — page-colored frosted bar in MD3 (matches the page
@@ -287,8 +407,8 @@ body {
    box-shadow rules. */
 .app-bar {
   background-color: var(--background);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
 }
 
 /* Hide scrollbar everywhere */
@@ -298,6 +418,48 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* --- Masonry gallery (Pinterest-style) ---
+   Native CSS masonry first; multi-column fallback otherwise. The fallback
+   orders items down each column, not across rows — acceptable for a photo
+   gallery. Cards reserve their aspect ratio so nothing jumps on load. */
+.gallery-masonry {
+  columns: 2;
+  column-gap: 12px;
+}
+@media (min-width: 640px) {
+  .gallery-masonry {
+    columns: 3;
+    column-gap: 14px;
+  }
+}
+.gallery-masonry .gallery-card {
+  break-inside: avoid;
+  /* Chromium workaround: transforms/repaints on children of CSS columns can
+     blank the whole paint region on fast scroll. Force a GPU layer. */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+@supports (grid-template-rows: masonry) {
+  .gallery-masonry {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: masonry;
+    align-items: start;
+    gap: 12px;
+    columns: initial;
+  }
+  @media (min-width: 640px) {
+    .gallery-masonry {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+  }
+  .gallery-masonry .gallery-card {
+    margin-bottom: 0;
+  }
 }
 
 /* Water wave animation for progress bars */
@@ -745,12 +907,250 @@ body {
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.5);
 }
 
-/* --- Reduced motion support --- */
+/* ============================================================
+   CLI TERMINAL — Overrides
+   Flat opaque terminal surfaces: monospace, squared corners,
+   one accent color, prompt-style chrome. No blur, no glass.
+   ============================================================ */
+
+/* Hide the MD3 glass background blobs in CLI mode */
+.cli .bg-blobs { opacity: 0; }
+
+/* Monospace everywhere (beats next/font's body class) */
+.cli body {
+  font-family: var(--cli-font);
+}
+
+/* Flat opaque cards — no blur, 1px hard border, no shadows */
+.cli .bg-card {
+  background-color: var(--card-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+/* Neutralize the clay pastel surfaces to the flat terminal card */
+.cli .surface-violet,
+.cli .surface-peach,
+.cli .surface-mint,
+.cli .surface-sky,
+.cli .surface-rose,
+.cli .surface-lavender {
+  background-color: var(--card-bg);
+  background-image: none;
+  box-shadow: none;
+}
+
+/* Recolor white / light-tinted text placed on surfaces */
+.cli [class*="surface-"] .text-white,
+.cli [class*="surface-"] .text-blue-100,
+.cli [class*="surface-"] .text-blue-200,
+.cli [class*="surface-"] .text-indigo-100,
+.cli [class*="surface-"] .text-emerald-100,
+.cli [class*="surface-"] .text-emerald-200,
+.cli [class*="surface-"] .text-slate-100 {
+  color: var(--text-primary);
+}
+/* Convert gradient-clipped transparent text to the text color */
+.cli [class*="surface-"] .text-transparent {
+  background-image: none;
+  -webkit-text-fill-color: var(--text-primary);
+}
+
+/* --- CLI buttons — squared, flat, mono, accent primary --- */
+
+.cli .btn-primary,
+.cli .btn-outline,
+.cli .btn-secondary,
+.cli .btn-danger {
+  border-radius: 0;
+  border: 1px solid var(--card-border);
+  box-shadow: none;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.cli .btn-primary {
+  background-color: var(--cli-accent);
+  color: #ffffff;
+  border-color: var(--cli-accent);
+}
+.cli .btn-primary:hover {
+  background-color: color-mix(in srgb, var(--cli-accent) 85%, black);
+}
+
+.cli .btn-outline,
+.cli .btn-secondary {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+}
+.cli .btn-outline:hover,
+.cli .btn-secondary:hover {
+  background-color: var(--surface-hover);
+}
+
+.cli .btn-danger {
+  background-color: var(--card-bg);
+  color: #cf222e;
+}
+
+/* --- CLI glass surfaces — flat opaque terminal objects --- */
+.cli .glass {
+  background-color: var(--card-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+/* --- CLI app bar — flat terminal chrome --- */
+.cli .app-bar {
+  background-color: var(--background);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* --- CLI segmented control — flat bordered segment --- */
+.cli .segment-control {
+  background-color: var(--card-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+/* --- CLI inputs — flat, bordered, terminal caret --- */
+.cli :is(input, textarea, select) {
+  background-color: var(--input-bg);
+  border-radius: 0;
+  box-shadow: none;
+  caret-color: var(--cli-accent);
+}
+
+/* --- CLI header search pill --- */
+.cli .header-search {
+  background-color: var(--input-bg);
+  box-shadow: none;
+  border: 1px solid var(--card-border);
+}
+.cli .header-search:focus-within {
+  border-color: var(--cli-accent);
+}
+.cli .header-search input {
+  background-color: transparent;
+  box-shadow: none;
+}
+
+/* --- CLI visible focus ring (non-shadow cue for WCAG) --- */
+.cli :focus-visible {
+  outline: 2px solid var(--cli-accent);
+  outline-offset: 1px;
+}
+
+/* --- CLI chrome: header + bottom nav — flat with hard divider --- */
+.cli header {
+  border-bottom: 1px solid var(--card-border);
+  box-shadow: none;
+}
+
+.cli .bottom-nav {
+  background-color: var(--card-bg);
+  border-top: 1px solid var(--card-border);
+  box-shadow: none;
+}
+
+/* ============================================================
+   GLASS (MD3) — accessibility fallbacks
+   ============================================================ */
+
+/* Visible focus ring for the default glass style (WCAG 2.4.7).
+   Excludes clay/neu/cli so their scoped rings keep precedence. */
+:root:not(.clay):not(.neu):not(.cli) :focus-visible {
+  outline: 3px solid rgba(59, 130, 246, 0.55);
+  outline-offset: 2px;
+}
+
+/* Browsers without backdrop-filter: fall back to readable solid panels */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root:not(.clay):not(.neu):not(.cli) {
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --card-border: rgba(255, 255, 255, 0.6);
+    --input-bg: rgba(241, 245, 249, 0.95);
+    --background: rgba(244, 246, 251, 0.98);
+    --status-bar: #f4f6fb;
+  }
+  :root.dark:not(.clay):not(.neu):not(.cli) {
+    --card-bg: rgba(22, 28, 48, 0.96);
+    --card-border: rgba(148, 163, 184, 0.2);
+    --input-bg: rgba(30, 41, 59, 0.96);
+    --background: rgba(12, 14, 26, 0.98);
+    --status-bar: #0c0e1a;
+  }
+  .bg-card, .glass, .app-bar, .segment-control {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* Reduced transparency: flatten glass to near-opaque, drop the backdrop
+   layer's color bleed + scrim so nothing relies on translucency. */
+@media (prefers-reduced-transparency: reduce) {
+  :root:not(.clay):not(.neu):not(.cli) {
+    --card-bg: rgba(255, 255, 255, 0.94);
+    --card-border: rgba(148, 163, 184, 0.35);
+    --input-bg: rgba(241, 245, 249, 0.96);
+    --background: rgba(244, 246, 251, 1);
+    --status-bar: #f4f6fb;
+    --backdrop-grad: none;
+    --backdrop-scrim: none;
+    --blob-1: transparent;
+    --blob-2: transparent;
+    --blob-3: transparent;
+    --blob-4: transparent;
+  }
+  :root.dark:not(.clay):not(.neu):not(.cli) {
+    --card-bg: rgba(22, 28, 48, 0.97);
+    --card-border: rgba(148, 163, 184, 0.25);
+    --input-bg: rgba(30, 41, 59, 0.97);
+    --background: rgba(12, 14, 26, 1);
+    --status-bar: #0c0e1a;
+    --backdrop-grad: none;
+    --backdrop-scrim: none;
+    --blob-1: transparent;
+    --blob-2: transparent;
+    --blob-3: transparent;
+    --blob-4: transparent;
+  }
+  .bg-card, .glass, .app-bar {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* --- Reduced motion: freeze all decorative animation + blur transitions.
+   Covers glass (default) in addition to the pre-existing clay/neu block. --- */
 @media (prefers-reduced-motion: reduce) {
   .neu *,
   .neu *::before,
   .neu *::after {
     transition: none !important;
+    animation: none !important;
+  }
+
+  body,
+  .bg-card, .bg-surface-hover, .border-card,
+  .text-primary, .text-secondary,
+  .glass, .segment-control, .app-bar,
+  .btn-outline, .btn-secondary, .btn-danger {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .wave-surface::before,
+  .b0, .b1, .b2, .b3, .b4 {
+    animation: none !important;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
     animation: none !important;
   }
 }

@@ -55,6 +55,8 @@ export const translations: Translations = {
   "settings.style_clay_desc": { en: "Soft clay, pastel", id: "Tanah liat pastel" },
   "settings.style_neu": { en: "Neumorphism", id: "Neumorfisme" },
   "settings.style_neu_desc": { en: "Soft UI, matte", id: "Soft UI, matte" },
+  "settings.style_cli": { en: "Terminal CLI", id: "Terminal CLI" },
+  "settings.style_cli_desc": { en: "Monospace, flat, squared", id: "Monospace, datar, persegi" },
   "settings.save": { en: "Save Changes", id: "Simpan Perubahan" },
   "settings.saving": { en: "Saving Changes...", id: "Menyimpan..." },
   "settings.success": { en: "Profile updated successfully!", id: "Profil berhasil diperbarui!" },
@@ -215,6 +217,24 @@ export const translations: Translations = {
   "action.resolve": { en: "Resolve", id: "Selesaikan" },
   "action.show_more": { en: "Show More", id: "Lihat Lebih" },
   "action.show_less": { en: "Show Less", id: "Tutup" },
+  "action.clear": { en: "Clear", id: "Bersihkan" },
+  "action.retry": { en: "Retry", id: "Coba Lagi" },
+
+  // Gallery
+  "nav.gallery": { en: "House Gallery", id: "Galeri Rumah" },
+  "gallery.subtitle": { en: "Browse house photos of every customer.", id: "Jelajahi foto rumah setiap pelanggan." },
+  "gallery.search_placeholder": { en: "Search by customer name...", id: "Cari nama pelanggan..." },
+  "gallery.empty": { en: "No house photos yet. Add photos to your customers to fill this gallery.", id: "Belum ada foto rumah. Tambahkan foto ke pelanggan untuk mengisi galeri ini." },
+  "gallery.no_matches": { en: "No customers match your search.", id: "Tidak ada pelanggan yang cocok dengan pencarian." },
+  "gallery.items": { en: "customers", id: "pelanggan" },
+  "gallery.view_profile": { en: "View Profile", id: "Lihat Profil" },
+  "gallery.call": { en: "Call", id: "Telepon" },
+  "gallery.navigate": { en: "Navigate", id: "Navigasi" },
+  "gallery.phone": { en: "Phone", id: "Telepon" },
+  "gallery.landmark": { en: "Landmark", id: "Patokan" },
+  "gallery.notes": { en: "Notes", id: "Catatan" },
+  "gallery.address": { en: "Address", id: "Alamat" },
+  "gallery.no_phone": { en: "No phone number", id: "Tidak ada nomor telepon" },
   
   // Search Results
   "search.no_results": { en: "No matches found", id: "Tidak ada hasil ditemukan" },

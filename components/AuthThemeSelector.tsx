@@ -11,13 +11,13 @@ export default function AuthThemeSelector() {
     <div className="absolute top-6 right-6 z-50 flex flex-col items-end gap-2">
       <div className="segment-control flex rounded-2xl p-1 shadow-sm border border-card-border">
         <button 
-          onClick={(e) => setTheme("light", { x: e.clientX, y: e.clientY })}
+          onClick={() => setTheme("light")}
           className={`px-3 py-2 rounded-xl text-[12px] font-black transition-all active:scale-90 ${theme === 'light' ? 'bg-blue-600 text-white shadow-md' : 'text-secondary hover:text-primary'}`}
         >
           ☀️
         </button>
         <button 
-          onClick={(e) => setTheme("dark", { x: e.clientX, y: e.clientY })}
+          onClick={() => setTheme("dark")}
           className={`px-3 py-2 rounded-xl text-[12px] font-black transition-all active:scale-90 ${theme === 'dark' ? 'bg-blue-600 text-white shadow-md' : 'text-secondary hover:text-primary'}`}
         >
           🌙

@@ -149,6 +149,15 @@ export default function Header() {
 
                     <div className="space-y-1">
                       <Link
+                        href="/gallery"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center gap-3 px-5 py-3.5 text-[14px] font-bold text-primary transition-all hover:bg-surface-hover/50 dark:hover:bg-surface-hover/50 active:scale-90 rounded-2xl group"
+                      >
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-pink-50 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 group-hover:scale-110 transition-transform">🏠</span>
+                        {t("nav.gallery")}
+                      </Link>
+
+                      <Link
                         href="/earnings"
                         onClick={() => setIsMenuOpen(false)}
                         className="flex items-center gap-3 px-5 py-3.5 text-[14px] font-bold text-primary transition-all hover:bg-surface-hover/50 dark:hover:bg-surface-hover/50 active:scale-90 rounded-2xl group"

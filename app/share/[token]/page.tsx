@@ -272,7 +272,7 @@ export default async function SharePage({
             />
           </div>
         ) : (
-          <div className="rounded-[1.75rem] border border-dashed border-card-border bg-card/30 p-5 shadow-sm">
+          <div className="rounded-[1.75rem] border border-dashed border-card-border bg-card/60 p-5 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-hover text-secondary/50">
                 <Icon name="route" size={20} />

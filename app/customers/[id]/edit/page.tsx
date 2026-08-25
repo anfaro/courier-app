@@ -270,7 +270,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
                 <button
                   type="button"
                   onClick={() => setShowLocationPicker(true)}
-                  className="w-full rounded-2xl border-2 border-dashed border-card-border bg-card/60 p-5 text-center transition hover:bg-card hover:border-blue-300 active:scale-90"
+                  className="w-full rounded-2xl border-2 border-dashed border-card-border bg-card p-5 text-center transition hover:border-blue-300 active:scale-90"
                 >
                   {latitude && longitude ? (
                     <div className="flex flex-col items-center gap-1">

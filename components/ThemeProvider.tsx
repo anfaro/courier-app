@@ -4,13 +4,13 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 type ThemeMode = "light" | "dark";
-type ThemeStyle = "md3" | "clay" | "neu";
+type ThemeStyle = "md3" | "clay" | "neu" | "cli";
 
 interface ThemeContextType {
   theme: ThemeMode;
   style: ThemeStyle;
-  toggleTheme: (e?: React.MouseEvent) => void;
-  setTheme: (mode: ThemeMode, options?: { x?: number, y?: number }) => void;
+  toggleTheme: () => void;
+  setTheme: (mode: ThemeMode) => void;
   setStyle: (style: ThemeStyle) => void;
 }
 
@@ -21,6 +21,23 @@ function applyDomClasses(mode: ThemeMode, style: ThemeStyle) {
   document.documentElement.classList.toggle("dark", mode === "dark");
   document.documentElement.classList.toggle("clay", style === "clay");
   document.documentElement.classList.toggle("neu", style === "neu");
+  document.documentElement.classList.toggle("cli", style === "cli");
+}
+
+function syncStatusBar() {
+  if (typeof document === "undefined") return;
+  const color =
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--status-bar")
+      .trim() || "#f4f6fb";
+
+  let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.setAttribute("name", "theme-color");
+    document.head.appendChild(meta);
+  }
+  meta.setAttribute("content", color);
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -34,14 +51,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
 
     const savedStyle = localStorage.getItem("theme-style");
-    const initialStyle: ThemeStyle = savedStyle === "clay" || savedStyle === "neu" ? savedStyle : "md3";
+    const initialStyle: ThemeStyle = savedStyle === "clay" || savedStyle === "neu" || savedStyle === "cli" ? savedStyle : "md3";
 
     setThemeState(initialTheme);
     setStyleState(initialStyle);
     applyDomClasses(initialTheme, initialStyle);
+    syncStatusBar();
   }, []);
 
-  const setTheme = (newTheme: ThemeMode, options?: { x?: number, y?: number }) => {
+  useEffect(() => {
+    syncStatusBar();
+  }, [theme, style]);
+
+  const setTheme = (newTheme: ThemeMode) => {
     const updateDOM = () => {
       setThemeState(newTheme);
       localStorage.setItem("theme", newTheme);
@@ -53,30 +75,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const transition = document.startViewTransition(updateDOM);
-
-    if (options?.x !== undefined && options?.y !== undefined) {
-      const { x, y } = options;
-      const right = window.innerWidth - x;
-      const bottom = window.innerHeight - y;
-      const maxRadius = Math.hypot(Math.max(x, right), Math.max(y, bottom));
-
-      transition.ready.then(() => {
-        document.documentElement.animate(
-          {
-            clipPath: [
-              `circle(0px at ${x}px ${y}px)`,
-              `circle(${maxRadius}px at ${x}px ${y}px)`,
-            ],
-          },
-          {
-            duration: 500,
-            easing: "ease-in-out",
-            pseudoElement: "::view-transition-new(root)",
-          }
-        );
-      });
-    }
+    document.startViewTransition(updateDOM);
   };
 
   const setStyle = (newStyle: ThemeStyle) => {
@@ -94,13 +93,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     document.startViewTransition(updateDOM);
   };
 
-  const toggleTheme = (e?: React.MouseEvent) => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    if (e) {
-      setTheme(newTheme, { x: e.clientX, y: e.clientY });
-    } else {
-      setTheme(newTheme);
-    }
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light");
   };
 
   return (

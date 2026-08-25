@@ -5,10 +5,10 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useLanguage } from "@/components/LanguageProvider";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import Icon from "@/components/Icon";
 
-const cellVariants = {
+const cellVariants: Variants = {
   initial: { opacity: 0, y: 14 },
   animate: (i: number) => ({
     opacity: 1,
@@ -95,7 +95,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <main className="mx-auto max-w-xl p-4 sm:p-6 mt-2 grid grid-cols-2 gap-3">
+      <main className="mx-auto max-w-xl p-4 sm:p-6 grid grid-cols-2 gap-3">
 
         {/* --- HERO WELCOME (full width) --- */}
         <motion.div
@@ -264,6 +264,29 @@ export default function HomePage() {
                 <p className="text-[12px] font-medium text-emerald-100 mt-1 leading-snug">
                   {t("home.manage_db_desc")}
                 </p>
+              </div>
+            </div>
+          </Link>
+        </motion.div>
+
+        {/* --- HOUSE GALLERY (full width) --- */}
+        <motion.div custom={7.5} variants={cellVariants} initial="initial" animate="animate" className="col-span-2">
+          <Link href="/gallery" className="block group">
+            <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-pink-500 via-rose-500 to-purple-600 surface-rose p-5 shadow-xl shadow-rose-500/20 transition-all active:scale-90">
+              <div className="absolute -right-10 -bottom-10 h-36 w-36 rounded-full bg-white/10 blur-2xl group-hover:bg-white/20 transition-colors duration-500" />
+              <div className="relative z-10 flex items-center gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-rose-600 shadow-md group-hover:scale-110 transition-transform">
+                  <Icon name="image" size={22} strokeWidth={2.5} />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-[20px] leading-tight font-black text-white tracking-tight">
+                    {t("nav.gallery")}
+                  </h2>
+                  <p className="text-[12px] font-medium text-rose-100 mt-1 leading-snug">
+                    {t("gallery.subtitle")}
+                  </p>
+                </div>
+                <Icon name="chevron-right" size={20} strokeWidth={3} className="text-white/70 shrink-0" />
               </div>
             </div>
           </Link>

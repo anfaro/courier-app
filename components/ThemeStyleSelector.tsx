@@ -31,6 +31,12 @@ export default function ThemeStyleSelector({ variant = "full" }: { variant?: Var
         >
           Neu
         </button>
+        <button
+          onClick={() => setStyle("cli")}
+          className={`px-2.5 py-2 rounded-xl text-[11px] font-black transition-all active:scale-90 ${style === "cli" ? "bg-[#3fb950] text-black shadow-md" : "text-secondary hover:text-primary"}`}
+        >
+          CLI
+        </button>
       </div>
     );
   }
@@ -75,6 +81,21 @@ export default function ThemeStyleSelector({ variant = "full" }: { variant?: Var
             <div className="h-8 w-10 rounded-xl bg-[#e0e5ec] shadow-[-4px_-4px_8px_rgba(255,255,255,0.8),4px_4px_8px_rgba(163,177,198,0.55)]" />
             <div className="h-8 w-10 rounded-xl bg-[#4a7dff] shadow-[-4px_-4px_8px_rgba(255,255,255,0.6),4px_4px_8px_rgba(163,177,198,0.4)]" />
             <div className="h-8 w-10 rounded-xl bg-[#e0e5ec] shadow-[inset_-4px_-4px_8px_rgba(255,255,255,0.7),inset_4px_4px_8px_rgba(163,177,198,0.55)]" />
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "cli" as const,
+      label: t("settings.style_cli"),
+      desc: t("settings.style_cli_desc"),
+      active: style === "cli",
+      preview: (
+        <div className="h-16 rounded-2xl bg-[#0d1117] p-2 border border-[#30363d]">
+          <div className="flex h-full flex-col justify-center gap-1 font-mono">
+            <p className="text-[10px] font-bold text-[#3fb950] leading-none">$ courier --status</p>
+            <p className="text-[9px] text-[#8b949e] leading-none">0 errors · 12 routes ✓</p>
+            <p className="text-[9px] text-[#e6edf3] leading-none">▌</p>
           </div>
         </div>
       ),
