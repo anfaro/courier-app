@@ -50,3 +50,6 @@ public/backup-*.json.gz
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# large local backups
+backup-*.json.gz

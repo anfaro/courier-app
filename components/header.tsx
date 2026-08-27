@@ -97,7 +97,7 @@ export default function Header() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
                 placeholder="Search"
-                className="flex-1 min-w-0 bg-transparent border-none outline-none text-[14px] sm:text-[15px] font-bold text-primary placeholder:text-secondary/50"
+                className="flex-1 min-w-0 bg-transparent border-none outline-none rounded-full text-[14px] sm:text-[15px] font-bold text-primary placeholder:text-secondary/50"
               />
 
               {searchQuery && (

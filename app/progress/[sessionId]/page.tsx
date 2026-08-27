@@ -212,29 +212,29 @@ export default function SessionDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-[24px] font-extrabold tracking-tight text-primary flex items-center gap-2">
+            <h1 className="text-[24px] font-extrabold tracking-tight text-primary">
               {(() => {
                 const [y, m, d] = sessionData.date.split("-").map(Number);
                 return new Date(y, m - 1, d).toLocaleDateString(dateLocale, {
                   weekday: "long", day: "2-digit", month: "long", year: "numeric", timeZone: "Asia/Jakarta"
                 });
               })()}
-              {canEdit && (
-                <motion.button
-                  whileTap={{ scale: 0.85 }}
-                  onClick={() => { setEditDate(sessionData.date); setShowDateEdit(true); }}
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-hover text-secondary hover:text-blue-600 dark:hover:text-blue-400 border border-card-border active:scale-90"
-                  aria-label={t("session.edit_date")}
-                >
-                  <Icon name="edit" size={14} />
-                </motion.button>
-              )}
             </h1>
             <p className="text-[13px] font-medium text-secondary mt-1">
               {total} {t("session.packages")} · {delivered} {t("session.delivered")}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
+            {canEdit && (
+              <motion.button
+                whileTap={{ scale: 0.85 }}
+                onClick={() => { setEditDate(sessionData.date); setShowDateEdit(true); }}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-hover text-secondary hover:text-blue-600 dark:hover:text-blue-400 border border-card-border active:scale-90"
+                aria-label={t("session.edit_date")}
+              >
+                <Icon name="edit" size={14} />
+              </motion.button>
+            )}
             {showFinalized ? (
               <>
                 <span className="text-[11px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-3 py-1.5 rounded-full border border-amber-200 dark:border-amber-800/50">

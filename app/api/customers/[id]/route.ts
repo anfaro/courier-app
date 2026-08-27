@@ -80,6 +80,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     clearCache("/api/customers");
     clearCache("/api/clusters");
     clearCache("/api/dashboard");
+    clearCache("gallery:");
+    clearCache("gallery:analytics");
 
     return NextResponse.json({ message: "Customer updated successfully" }, { status: 200 });
   } catch (error) {
@@ -112,6 +114,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     clearCache("/api/customers");
     clearCache("/api/clusters");
     clearCache("/api/dashboard");
+    clearCache("gallery:");
+    clearCache("gallery:analytics");
 
     return NextResponse.json({ message: "Customer deleted successfully" }, { status: 200 });
   } catch (error) {

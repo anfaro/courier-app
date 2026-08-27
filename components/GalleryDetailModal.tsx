@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLanguage } from "./LanguageProvider";
+import { useConfirmation } from "./ConfirmationProvider";
+import { useToast } from "./ToastProvider";
 import { useScrollLock } from "@/lib/useScrollLock";
 import GalleryImage from "./GalleryImage";
 import Icon from "@/components/Icon";
@@ -34,17 +36,23 @@ export default function GalleryDetailModal({
   onClose: () => void;
 }) {
   const { t } = useLanguage();
+  const { askConfirmation } = useConfirmation();
+  const { showToast } = useToast();
   useScrollLock(customer !== null);
 
   const [detail, setDetail] = useState<FullDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     if (!customer) {
       setDetail(null);
       setDetailLoading(false);
+      setPhotos([]);
       return;
     }
+    setPhotos(customer.housePictures);
     let cancelled = false;
     const customerId = customer.id;
     setDetailLoading(true);
@@ -73,6 +81,39 @@ export default function GalleryDetailModal({
     return () => { cancelled = true; };
   }, [customer]);
 
+  async function handleDeleteImage(imageUrl: string) {
+    const confirmed = await askConfirmation({
+      title: t("gallery.delete_confirm_title"),
+      message: t("gallery.delete_confirm_msg"),
+      type: "danger",
+      confirmText: t("action.delete"),
+    });
+    if (!confirmed) return;
+
+    setDeleting(imageUrl);
+    try {
+      const res = await fetch("/api/gallery/delete-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerId: customer!.id, imageUrl }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPhotos(data.photos);
+        showToast(t("gallery.image_deleted"), "success");
+        if (data.photos.length === 0) {
+          onClose();
+        }
+      } else {
+        showToast("Failed to delete image", "error");
+      }
+    } catch {
+      showToast("Failed to delete image", "error");
+    } finally {
+      setDeleting(null);
+    }
+  }
+
   const phone = detail?.phoneNumber ?? customer?.phoneNumber ?? null;
   const phoneDigits = phone?.replace(/\D/g, "");
   const waLink = phoneDigits ? `https://wa.me/${phoneDigits}` : null;
@@ -93,33 +134,64 @@ export default function GalleryDetailModal({
             onClick={onClose}
           />
 
-          {/* Floating card: media → header → body → metadata → footer (mt-auto) */}
+          {/* Floating card */}
           <motion.div
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            className="relative flex w-full max-w-sm flex-col overflow-hidden rounded-[32px] border border-card-border bg-card shadow-2xl"
+            className="relative flex w-full max-w-sm max-h-[85vh] flex-col overflow-hidden rounded-[32px] border border-card-border bg-card shadow-2xl"
             role="dialog"
             aria-modal="true"
             aria-label={customer.name}
           >
-            {/* Close */}
-            <button
-              onClick={onClose}
-              aria-label="Close"
-              className="absolute right-4 top-4 z-50 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition hover:bg-black/60 focus:outline-none focus:ring-2 focus:ring-white active:scale-90"
-            >
-              <Icon name="close" size={18} strokeWidth={2.5} />
-            </button>
+            {/* Close + Delete buttons */}
+            <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
+              {photos.length > 0 && (
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  onClick={() => handleDeleteImage(photos[0])}
+                  disabled={deleting !== null}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-red-500/80 text-white backdrop-blur transition hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 active:scale-90 disabled:opacity-50"
+                  aria-label={t("gallery.delete_image")}
+                >
+                  {deleting !== null ? (
+                    <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                  ) : (
+                    <Icon name="trash" size={16} strokeWidth={2.5} />
+                  )}
+                </motion.button>
+              )}
+              <button
+                onClick={onClose}
+                aria-label="Close"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition hover:bg-black/60 focus:outline-none focus:ring-2 focus:ring-white active:scale-90"
+              >
+                <Icon name="close" size={18} strokeWidth={2.5} />
+              </button>
+            </div>
 
-            {/* Media — opaque image */}
-            <div className="relative aspect-[4/3] w-full shrink-0 bg-black">
-              <GalleryImage srcs={customer.housePictures} alt={customer.name} />
+            {/* Media — scrollable image gallery */}
+            <div className="shrink-0 overflow-y-auto no-scrollbar bg-black">
+              {photos.length === 1 ? (
+                <div className="relative aspect-[4/3] w-full">
+                  <GalleryImage srcs={photos} alt={customer.name} />
+                </div>
+              ) : (
+                <div className="flex snap-x snap-mandatory overflow-x-auto no-scrollbar">
+                  {photos.map((url, i) => (
+                    <div key={url} className="relative shrink-0 w-full snap-center">
+                      <div className="relative aspect-[4/3] w-full">
+                        <GalleryImage srcs={[url]} alt={`${customer.name} ${i + 1}`} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Content slots */}
-            <div className="flex flex-col gap-3 p-5 pb-4">
+            <div className="flex flex-col gap-3 p-5 pb-4 overflow-y-auto">
               {/* Header */}
               <div>
                 <h2 className="truncate text-[20px] font-black text-primary tracking-tight">
@@ -154,7 +226,7 @@ export default function GalleryDetailModal({
               {/* Metadata row */}
               <div className="flex items-center gap-2">
                 <span className="rounded-full bg-surface-hover px-3 py-1 text-[11px] font-bold text-secondary border border-card-border">
-                  {customer.housePictures.length} 📷
+                  {photos.length} 📷
                 </span>
               </div>
             </div>

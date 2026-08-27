@@ -9,6 +9,8 @@ import { filterGalleryByName, galleryAspectRatio } from "@/lib/gallery";
 import GalleryDetailModal from "@/components/GalleryDetailModal";
 import GalleryImage from "@/components/GalleryImage";
 import Icon from "@/components/Icon";
+import Link from "next/link";
+import { motion } from "framer-motion";
 
 interface GalleryCustomer {
   id: string;
@@ -20,6 +22,13 @@ interface GalleryCustomer {
 
 const PAGE_SIZE = 30;
 
+interface AnalyticsData {
+  total: number;
+  withPhotos: number;
+  brokenUrls: number;
+  noPhotos: number;
+}
+
 export default function GalleryPage() {
   const { t } = useLanguage();
   const [customers, setCustomers] = useState<GalleryCustomer[]>([]);
@@ -29,6 +38,8 @@ export default function GalleryPage() {
   const [hasMore, setHasMore] = useState(false);
   const [fetchError, setFetchError] = useState("");
   const [activeCustomer, setActiveCustomer] = useState<GalleryCustomer | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const offsetRef = useRef(0);
   const loadingRef = useRef(false);
@@ -64,6 +75,14 @@ export default function GalleryPage() {
     loadPage(0, false);
   }, [loadPage]);
 
+  useEffect(() => {
+    fetch("/api/gallery/analytics")
+      .then((r) => r.json())
+      .then((d) => { if (!d.message) setAnalytics(d); })
+      .catch(() => {})
+      .finally(() => setAnalyticsLoading(false));
+  }, []);
+
   // Infinite scroll — load next page when the sentinel approaches the viewport.
   useEffect(() => {
     const el = sentinelRef.current;
@@ -93,6 +112,65 @@ export default function GalleryPage() {
           <h1 className="text-[30px] font-extrabold tracking-tight text-primary">{t("nav.gallery")}</h1>
           <p className="mt-1 text-[14px] font-medium text-secondary">{t("gallery.subtitle")}</p>
         </div>
+
+        {/* Analytics */}
+        <div className="rounded-[24px] bg-card border border-card-border p-5 shadow-sm mb-4">
+          <h2 className="text-[14px] font-bold tracking-tight text-primary mb-4">{t("gallery.analytics_title")}</h2>
+          {analyticsLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i}>
+                  <div className="flex justify-between mb-1.5">
+                    <div className="h-3 w-20 animate-pulse rounded bg-surface-hover" />
+                    <div className="h-3 w-12 animate-pulse rounded bg-surface-hover" />
+                  </div>
+                  <div className="h-2 w-full animate-pulse rounded-full bg-surface-hover" />
+                </div>
+              ))}
+            </div>
+          ) : analytics ? (
+            <div className="space-y-3">
+              {[
+                { label: t("gallery.with_photos"), count: analytics.withPhotos, color: "bg-emerald-500" },
+                { label: t("gallery.broken_urls"), count: analytics.brokenUrls, color: "bg-red-500" },
+                { label: t("gallery.no_photos"), count: analytics.noPhotos, color: "bg-gray-400 dark:bg-gray-600" },
+              ].map((row) => {
+                const pct = analytics.total > 0 ? Math.round((row.count / analytics.total) * 100) : 0;
+                return (
+                  <div key={row.label}>
+                    <div className="flex justify-between mb-1.5">
+                      <span className="text-[12px] font-medium text-secondary">{row.label}</span>
+                      <span className="text-[12px] font-bold text-primary">{row.count} ({pct}%)</span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-surface-hover overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        className={`h-full rounded-full ${row.color}`}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
+        </div>
+
+        {/* Editor Button */}
+        <Link
+          href="/gallery/editor"
+          className="flex items-center justify-between rounded-[24px] bg-blue-600 p-4 text-white shadow-lg shadow-blue-500/20 active:scale-95 transition-all hover:bg-blue-700 mb-6"
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center text-[18px]">🖊️</div>
+            <div className="flex flex-col items-start">
+              <span className="font-black leading-tight text-[15px]">{t("gallery.editor")}</span>
+              <span className="text-[10px] font-bold opacity-70 uppercase tracking-tighter">{t("gallery.editor_subtitle")}</span>
+            </div>
+          </div>
+          <Icon name="chevron-right" size={20} strokeWidth={3} className="text-white/70" />
+        </Link>
 
         {/* Search — customer name only */}
         <div className="relative mb-6">

@@ -316,6 +316,12 @@ npm run test:watch
 - Do NOT bump the version when writing changes during a session — bump only as part of the commit step, alongside the commit.
 - Record the bump in the **Session Change Log** at the bottom of this file, alongside the change it accompanies.
 
+# Currently Working
+
+> No active work. All planned features complete.
+
+---
+
 # Session Change Log
 
 > **Clear this section before committing.** Log of every change made during the current session, for reference when writing commit messages. When the user asks to commit (e.g. "commit", "commit this", "commit and push"), the agent must **clear the Session Change Log FIRST, then commit** — the log's entries are consumed as the commit message, and the section is left empty after committing.
