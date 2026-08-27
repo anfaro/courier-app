@@ -51,5 +51,8 @@ public/backup-*.json.gz
 *.tsbuildinfo
 next-env.d.ts
 
+# go binary
+cli/courier-cli
+
 # large local backups
 backup-*.json.gz

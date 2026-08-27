@@ -1,6 +1,6 @@
 # Courier SuperApps
 
-> **v1.4.2** — Mobile-first courier management system for Indonesian logistics teams.
+> **v1.7.0** — Mobile-first courier management system for Indonesian logistics teams.
 
 [![Next.js](https://img.shields.io/badge/Next.js_16-000000?logo=next.js)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React_19-087EA4?logo=react)](https://react.dev)
@@ -78,6 +78,8 @@ CSS variable–driven dark/light theme with 180+ lines of Tailwind v4 customizat
 | **Icons** | Inline SVG (Heroicons-style) | No icon library dependency |
 | **i18n** | Custom LanguageProvider (context) | English & Indonesian |
 | **Hosting** | Supabase / Aiven / any PostgreSQL | Database hosting |
+| **CLI** | Go 1.22+, pgx/v5, cobra | Database backup/restore, user management |
+| **Build** | Make | Build automation |
 
 ---
 
@@ -131,6 +133,41 @@ All 44 components are `"use client"`. Patterns include:
 
 ---
 
+## CLI Companion (`cli/`)
+
+Go CLI for database and user management. Auto-reads `DATABASE_URL` from `.env.local` in the project root.
+
+```bash
+# Build the CLI
+cd cli && go build -o courier-cli .
+
+# Or via Make (from project root)
+make build
+```
+
+### Commands
+
+| Command | Description |
+|---|---|
+| `courier-cli db backup` | Dump all tables as INSERT statements |
+| `courier-cli db backup --tables users` | Backup specific table(s) |
+| `courier-cli db backup --output backup.sql` | Backup to file |
+| `courier-cli db restore --input backup.sql` | Restore from SQL file |
+| `courier-cli user list` | List all users |
+| `courier-cli user add --name --email --password` | Create user (default role: courier) |
+| `courier-cli user remove --email` | Delete user |
+| `courier-cli user role --email --role` | Change role (courier/superadmin) |
+| `courier-cli user reset-password --email --new-password` | Reset password |
+| `courier-cli version` | Print version |
+
+### Flags
+
+| Flag | Description |
+|---|---|
+| `--database-url` | PostgreSQL connection string (overrides env) |
+
+---
+
 ## Quick Start
 
 ```bash
@@ -138,16 +175,15 @@ All 44 components are `"use client"`. Patterns include:
 git clone <repo-url>
 cd courier-app
 
-# Install dependencies
-npm install
-
 # Configure environment (see below)
 cp .env.local.example .env.local
 
-# Apply database schema
-npx drizzle-kit push
+# Install + build everything (Next.js + Go CLI)
+make build
 
-# Start development server
+# Or step by step
+npm install
+npx drizzle-kit push
 npm run dev
 ```
 
@@ -170,11 +206,13 @@ npm run dev
 ### Common Commands
 
 ```bash
-npm run dev          # Start dev server (webpack, no turbopack)
+make build          # Install + build Next.js + Go CLI
+make start          # Start production server
+npm run dev         # Start dev server (webpack, no turbopack)
 npx drizzle-kit generate  # Generate migration from schema changes
 npx drizzle-kit push      # Push schema/migrations to database
-npm run lint         # Lint (may not work in Termux)
-npm run typecheck    # TypeScript type checking
+npm run lint        # Lint (may not work in Termux)
+npm run typecheck   # TypeScript type checking
 ```
 
 > **Note:** Development is done on non-root Termux Android. `next build` may fail in this environment.
@@ -213,9 +251,14 @@ npm run typecheck    # TypeScript type checking
 │   ├── utils.ts        # generateId() via nanoid
 │   └── cache.ts        # In-memory cache with TTL
 ├── drizzle/             # Migration files & meta
+├── cli/                 # Go CLI companion (backup, user management)
+│   ├── cmd/            # CLI commands (db, user, version)
+│   ├── internal/       # nanoid, bcrypt helpers
+│   └── main.go         # Entry point
 ├── proxy.ts             # Middleware (auth, mobile-only, admin guard)
 ├── public/              # Static assets, service worker
-└── ROADMAP.md           # Future plans
+├── Makefile             # Build automation
+└── package.json
 ```
 
 ---
@@ -224,12 +267,10 @@ npm run typecheck    # TypeScript type checking
 
 | Version | Focus | Highlights |
 |---|---|---|
-| **v1.x** ✅ | Foundation | Current: customer/cluster/session CRUD, map, earnings, admin, PWA |
+| **v1.x** ✅ | Foundation | Customer/cluster/session CRUD, map, earnings, admin, PWA, Go CLI |
 | **v2.0** 🚧 | Local-First | IndexedDB store, offline queue, sync engine, no-login local mode |
 | **v3.0** | Desktop Era | Full-screen command center, AI route optimization, Redis, real-time chat |
 | **v4.0** | Native Mobile | Expo Android & iOS, push notifications, GPS background tracking |
-
-See [ROADMAP.md](./ROADMAP.md) for full details.
 
 ---
 
